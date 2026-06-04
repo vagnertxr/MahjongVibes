@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+set -eu
+
+mkdir -p "dist/windows"
+
+if [ ! -x ".venv-build/bin/python" ]; then
+  python3 -m venv .venv-build
+fi
+
+.venv-build/bin/python -m pip install ziglang
+ZIG=".venv-build/lib/python3.14/site-packages/ziglang/zig"
+ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-/tmp/zig-cache}" "$ZIG" cc \
+  -target x86_64-windows-gnu \
+  -municode \
+  windows-launcher.c \
+  -lshell32 \
+  -o "dist/windows/Mahjong Vibes.exe"
+
+cp index.html styles.css game.js AGENTS.md "dist/windows/"
+
+echo "Windows app folder built at: dist/windows"
+echo "Run on Windows by opening: dist/windows/Mahjong Vibes.exe"

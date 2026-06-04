@@ -1,0 +1,45 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.venv/
+venv/
+env/
+.venv-build/
+.venv-build-windows/
+
+# Python packaging and test caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# PyInstaller and generated desktop builds
+build/
+dist/
+*.spec~
+
+# Local server/debug logs
+*.log
+
+# Node/editor caches, in case frontend tooling is added later
+node_modules/
+.cache/
+.parcel-cache/
+.vite/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Codex/local agent workspace metadata
+.agents/
+.codex/
