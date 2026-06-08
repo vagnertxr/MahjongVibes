@@ -43,3 +43,5 @@ desktop.ini
 # Codex/local agent workspace metadata
 .agents/
 .codex/
+
+AGENTS.md
