@@ -1,5 +1,6 @@
 import functools
 import socket
+import sys
 import threading
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -26,6 +27,8 @@ class AppHandler(SimpleHTTPRequestHandler):
 
 
 def app_root():
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
     return Path(__file__).resolve().parent
 
 

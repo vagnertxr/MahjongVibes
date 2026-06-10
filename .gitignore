@@ -43,5 +43,9 @@ desktop.ini
 # Codex/local agent workspace metadata
 .agents/
 .codex/
+<<<<<<< HEAD
 
 AGENTS.md
+=======
+AGENTS.md
+>>>>>>> 842f959 (1.0)

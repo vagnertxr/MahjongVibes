@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Mahjong Vibes icon</title>
+  <desc id="desc">A cream Mahjong tile on a green table with the red dragon mark.</desc>
+  <rect width="512" height="512" rx="96" fill="#116149"/>
+  <path d="M86 106h340v300H86z" fill="#08382f" opacity=".45"/>
+  <rect x="146" y="82" width="220" height="330" rx="34" fill="#fff9e8"/>
+  <path d="M166 96h180a20 20 0 0 1 20 20v262a34 34 0 0 1-34 34H180a34 34 0 0 1-34-34V116a20 20 0 0 1 20-20z" fill="#d8cab0"/>
+  <rect x="146" y="82" width="220" height="300" rx="34" fill="#fff9e8"/>
+  <text x="256" y="256" text-anchor="middle" dominant-baseline="middle" font-family="Noto Sans SC, 'Noto Sans CJK SC', 'SimSun', serif" font-size="140" fill="#c62828" font-weight="700">中</text>
+</svg>

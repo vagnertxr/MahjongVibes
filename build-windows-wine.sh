@@ -16,7 +16,9 @@ ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-/tmp/zig-cache}" "$ZIG" cc \
   -lshell32 \
   -o "dist/windows/Mahjong Vibes.exe"
 
-cp index.html styles.css game.js AGENTS.md "dist/windows/"
+cp index.html styles.css game.js manifest.webmanifest sw.js "dist/windows/"
+mkdir -p "dist/windows/assets"
+cp assets/icon.svg "dist/windows/assets/"
 
 echo "Windows app folder built at: dist/windows"
 echo "Run on Windows by opening: dist/windows/Mahjong Vibes.exe"
