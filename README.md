@@ -1,4 +1,4 @@
-# Mahjong Vibes
+# Mahjong Vibes 🀄
 
 Mahjong Vibes is a lightweight Riichi Mahjong game for the browser. It runs as plain HTML, CSS, and JavaScript, with a small Python server for local debugging and optional desktop packaging scripts.
 
