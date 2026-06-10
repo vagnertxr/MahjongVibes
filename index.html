@@ -17,13 +17,18 @@
     <main class="app" aria-label="Mahjong Vibes game board">
       <section class="table">
         <div class="topbar">
-          <div>
-            <h1>Mahjong Vibes</h1>
-            <p id="roundLabel">East 1</p>
+          <div class="brand">
+            <img src="assets/icon.svg" alt="" class="logo" width="56" height="56">
+            <div>
+              <h1>Mahjong Vibes</h1>
+              <p id="roundLabel">East 1</p>
+            </div>
           </div>
           <div class="meters">
             <span id="wallCount">Wall 0</span>
             <span id="doraIndicator">Dora --</span>
+            <button id="langBtn" type="button" title="Mudar para Português">🇧🇷</button>
+            <button id="rulesBtn" type="button" title="Open beginner rules">Rules</button>
             <button id="newGameBtn" type="button" title="Start a new hand">New Hand</button>
           </div>
         </div>
@@ -42,6 +47,151 @@
         </div>
       </section>
     </main>
+
+    <div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" hidden>
+      <section class="welcome-dialog">
+        <div class="welcome-head">
+          <div class="brand compact">
+            <img src="assets/icon.svg" alt="" class="logo" width="44" height="44">
+            <div>
+              <h2 id="welcomeTitle">Welcome to Mahjong Vibes</h2>
+              <p>Riichi Mahjong, local table, quick hands.</p>
+            </div>
+          </div>
+          <button id="closeWelcomeBtn" type="button" class="ghost-btn" title="Close welcome">Close</button>
+        </div>
+
+        <div class="welcome-body">
+          <p class="intro-copy">Make four groups and one pair. Draw a tile, discard a tile, and watch for chances to call, declare riichi, or win.</p>
+
+          <div class="welcome-actions">
+            <button id="welcomeLangBtn" type="button">🇧🇷</button>
+            <button id="showRulesBtn" type="button">Beginner Rules</button>
+            <button id="startPlayingBtn" type="button" class="win">Start Playing</button>
+          </div>
+
+          <div id="rulesPanel" class="rules-panel" tabindex="-1" hidden>
+            <div class="rules-pager" aria-label="Riichi Mahjong beginner guide">
+              <article class="rules-page active" data-rules-page="0">
+                <h3>1. What Makes Riichi Different</h3>
+                <p>Riichi Mahjong is the Japanese four-player version of Mahjong. Like most Mahjong games, you build a complete hand by drawing and discarding tiles. The big Riichi twist is that a complete shape is not enough: most winning hands also need at least one scoring pattern, called a yaku.</p>
+                <p>Compared with many Chinese Mahjong rulesets, Riichi puts more weight on closed-hand play, defensive discarding, declared riichi, dora bonus tiles, and exact win conditions. You often choose between opening your hand for speed or keeping it closed for stronger scoring options.</p>
+                <p>Mahjong Vibes keeps the table lightweight, but the core rhythm is the same: draw, discard, read the rivers, call when useful, and win by Tsumo or Ron.</p>
+              </article>
+
+              <article class="rules-page" data-rules-page="1">
+                <h3>2. The Tiles</h3>
+                <p>There are 34 unique tile types, with four copies of each, for 136 tiles in the wall.</p>
+                <div class="rules-example">
+                  <strong>Manzu / Characters</strong>
+                  <div class="guide-tiles">
+                    <span class="tile small man">1M</span><span class="tile small man">2M</span><span class="tile small man">3M</span><span class="tile small man">4M</span><span class="tile small man">5M</span><span class="tile small man">6M</span><span class="tile small man">7M</span><span class="tile small man">8M</span><span class="tile small man">9M</span>
+                  </div>
+                </div>
+                <div class="rules-example">
+                  <strong>Pinzu / Circles</strong>
+                  <div class="guide-tiles">
+                    <span class="tile small pin">1P</span><span class="tile small pin">2P</span><span class="tile small pin">3P</span><span class="tile small pin">4P</span><span class="tile small pin">5P</span><span class="tile small pin">6P</span><span class="tile small pin">7P</span><span class="tile small pin">8P</span><span class="tile small pin">9P</span>
+                  </div>
+                </div>
+                <div class="rules-example">
+                  <strong>Souzu / Bamboo</strong>
+                  <div class="guide-tiles">
+                    <span class="tile small bamboo">1S</span><span class="tile small bamboo">2S</span><span class="tile small bamboo">3S</span><span class="tile small bamboo">4S</span><span class="tile small bamboo">5S</span><span class="tile small bamboo">6S</span><span class="tile small bamboo">7S</span><span class="tile small bamboo">8S</span><span class="tile small bamboo">9S</span>
+                  </div>
+                </div>
+                <div class="rules-example">
+                  <strong>Honors: winds and dragons</strong>
+                  <div class="guide-tiles">
+                    <span class="tile small honor">東</span><span class="tile small honor">南</span><span class="tile small honor">西</span><span class="tile small honor">北</span><span class="tile small honor">白</span><span class="tile small honor">發</span><span class="tile small honor red">中</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="rules-page" data-rules-page="2">
+                <h3>3. How a Hand Is Built</h3>
+                <p>The normal winning shape is four groups plus one pair. Groups are sequences, triplets, or sometimes quads. Honors cannot make sequences.</p>
+                <div class="rules-example">
+                  <strong>Sequence / Shuntsu</strong>
+                  <div class="guide-tiles"><span class="tile small bamboo">2S</span><span class="tile small bamboo">3S</span><span class="tile small bamboo">4S</span></div>
+                </div>
+                <div class="rules-example">
+                  <strong>Triplet / Koutsu</strong>
+                  <div class="guide-tiles"><span class="tile small honor">東</span><span class="tile small honor">東</span><span class="tile small honor">東</span></div>
+                </div>
+                <div class="rules-example">
+                  <strong>Pair / Toitsu</strong>
+                  <div class="guide-tiles"><span class="tile small pin">5P</span><span class="tile small pin">5P</span></div>
+                </div>
+                <div class="rules-example">
+                  <strong>Complete example: four groups and one pair</strong>
+                  <div class="guide-tiles long">
+                    <span class="tile small man">2M</span><span class="tile small man">3M</span><span class="tile small man">4M</span>
+                    <span class="tile small pin">3P</span><span class="tile small pin">4P</span><span class="tile small pin">5P</span>
+                    <span class="tile small bamboo">6S</span><span class="tile small bamboo">7S</span><span class="tile small bamboo">8S</span>
+                    <span class="tile small honor red">中</span><span class="tile small honor red">中</span><span class="tile small honor red">中</span>
+                    <span class="tile small honor">白</span><span class="tile small honor">白</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="rules-page" data-rules-page="3">
+                <h3>4. Turn Flow, Calls, and Winning</h3>
+                <p>On your turn, you draw one tile and discard one tile. Discards go into each player's river, which is public information. Reading those rivers helps you attack and defend.</p>
+                <p><strong>Chi</strong> uses the player-left discard to complete a sequence. <strong>Pon</strong> uses any player's discard to complete a triplet. Calling opens your hand, which is faster but removes some closed-only yaku.</p>
+                <p><strong>Tsumo</strong> means you draw your own winning tile. <strong>Ron</strong> means another player discards your winning tile. If a tile seems dangerous because an opponent may be waiting on it, discarding it can deal into Ron.</p>
+                <div class="rules-example">
+                  <strong>Waiting example: this hand wants 3M or 6M to finish the sequence</strong>
+                  <div class="guide-tiles"><span class="tile small man">4M</span><span class="tile small man">5M</span><span class="tile small muted-tile">?</span></div>
+                </div>
+              </article>
+
+              <article class="rules-page" data-rules-page="4">
+                <h3>5. Common Beginner Yaku</h3>
+                <p>A yaku is a scoring condition that lets the hand win. Dora are bonuses, not yaku. A hand full of dora still needs a yaku.</p>
+                <div class="rules-example">
+                  <strong>Riichi:</strong> closed hand, one tile from winning, declare riichi and pay 1,000 points.
+                </div>
+                <div class="rules-example">
+                  <strong>Tanyao / All Simples:</strong> no terminals, no winds, no dragons.
+                  <div class="guide-tiles"><span class="tile small man">2M</span><span class="tile small man">3M</span><span class="tile small man">4M</span><span class="tile small pin">4P</span><span class="tile small pin">5P</span><span class="tile small pin">6P</span><span class="tile small bamboo">6S</span><span class="tile small bamboo">7S</span><span class="tile small bamboo">8S</span></div>
+                </div>
+                <div class="rules-example">
+                  <strong>Yakuhai / Value honors:</strong> triplet of dragons, seat wind, or round wind.
+                  <div class="guide-tiles"><span class="tile small honor red">中</span><span class="tile small honor red">中</span><span class="tile small honor red">中</span></div>
+                </div>
+                <div class="rules-example">
+                  <strong>Pinfu:</strong> closed hand with only sequences, a non-value pair, and a two-sided wait.
+                </div>
+                <div class="rules-example">
+                  <strong>Seven Pairs / Chiitoitsu:</strong> seven different pairs instead of four groups and one pair.
+                  <div class="guide-tiles long"><span class="tile small man">2M</span><span class="tile small man">2M</span><span class="tile small pin">4P</span><span class="tile small pin">4P</span><span class="tile small bamboo">6S</span><span class="tile small bamboo">6S</span><span class="tile small honor">白</span><span class="tile small honor">白</span></div>
+                </div>
+              </article>
+
+              <article class="rules-page" data-rules-page="5">
+                <h3>6. Dora, Defense, and First Tips</h3>
+                <p>Dora increase points after you win. In this game the dora display shows the bonus tile directly. In full Riichi rules, the indicator points to the next tile in order.</p>
+                <p>Defense matters because Ron punishes the discarder. When another player looks threatening, safer discards are usually tiles they have already discarded or honors that are visibly exhausted.</p>
+                <p>Good beginner habits: keep useful sequences, avoid breaking pairs too early, do not call every tile, and remember that a closed hand can declare riichi. If your hand has no obvious yaku, staying closed and aiming for riichi is often the simplest plan.</p>
+              </article>
+            </div>
+
+            <div class="rules-nav">
+              <button id="prevRulesBtn" type="button">Previous</button>
+              <span id="rulesPageLabel">1 / 6</span>
+              <button id="nextRulesBtn" type="button">Next</button>
+            </div>
+          </div>
+
+          <label class="remember-choice">
+            <input id="hideWelcomeCheck" type="checkbox">
+            Do not show this welcome next time
+          </label>
+          <p class="credits">Created by <a href="https://github.com/vagnertxr" target="_blank" rel="noopener noreferrer">vagnertxr</a></p>
+        </div>
+      </section>
+    </div>
 
     <script src="game.js"></script>
     <script>

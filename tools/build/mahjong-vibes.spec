@@ -3,7 +3,7 @@
 block_cipher = None
 
 a = Analysis(
-    ["launcher.py"],
+    ["tools/desktop/launcher.py"],
     pathex=[],
     binaries=[],
     datas=[

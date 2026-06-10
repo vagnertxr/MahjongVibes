@@ -9,7 +9,7 @@ The current game includes a four-player table, local bot turns, draw/discard flo
 Use Python 3.10 or newer.
 
 ```sh
-python3 server.py
+python3 tools/server.py
 ```
 
 Then open the URL printed by the server, usually:
@@ -21,13 +21,13 @@ http://127.0.0.1:8000
 To use a different port:
 
 ```sh
-python3 server.py --port 8080
+python3 tools/server.py --port 8080
 ```
 
 To only serve this computer:
 
 ```sh
-python3 server.py --host 127.0.0.1
+python3 tools/server.py --host 127.0.0.1
 ```
 
 You can also open `index.html` directly in a browser. The Python server is better for testing installability, service workers, mobile devices on the same Wi-Fi, and browser caching behavior.
@@ -61,7 +61,7 @@ GitHub Pages serves over HTTPS, so the PWA manifest and service worker can work 
 Linux build:
 
 ```sh
-sh build-linux.sh
+sh tools/build/build-linux.sh
 ```
 
 Run the Linux build with:
@@ -73,7 +73,7 @@ dist/linux/Mahjong\ Vibes
 Windows build from Windows PowerShell:
 
 ```powershell
-.\build-windows.ps1
+.\tools\build\build-windows.ps1
 ```
 
 Then double-click:
@@ -85,7 +85,7 @@ dist\windows\Mahjong Vibes.exe
 Windows folder build from Linux with Zig:
 
 ```sh
-sh build-windows-wine.sh
+sh tools/build/build-windows-wine.sh
 ```
 
 This creates a Windows app folder at `dist/windows/`. Double-click `dist/windows/Mahjong Vibes.exe` on Windows to open the game in the default browser without typing a terminal command.
@@ -96,7 +96,7 @@ Generated output goes under `dist/`, which is ignored by Git.
 
 Before publishing a release:
 
-1. Run `python3 server.py` and play at least one full hand.
+1. Run `python3 tools/server.py` and play at least one full hand.
 2. Check desktop and mobile widths in the browser.
 3. Confirm the browser console has no errors.
 4. Build the target package under `dist/`.
@@ -106,14 +106,16 @@ Before publishing a release:
 ## Project Layout
 
 ```text
-index.html              Browser entry point
-styles.css              Responsive table and tile styling
-game.js                 Game state, rules, bots, and rendering
-server.py               Local debug web server
-launcher.py             PyInstaller launcher for desktop builds
-manifest.webmanifest    Installable web app metadata
-sw.js                   Offline cache service worker
-assets/icon.svg         App icon
+index.html                     Browser entry point for GitHub Pages
+styles.css                     Responsive table, tile, and mobile styling
+game.js                        Game state, rules, bots, and rendering
+manifest.webmanifest           Installable web app metadata
+sw.js                          Offline cache service worker
+assets/icon.svg                App icon and page logo
+tools/server.py                Local debug web server
+tools/desktop/launcher.py      PyInstaller launcher for desktop builds
+tools/build/                   Desktop build scripts and PyInstaller spec
+docs/RELEASE.md                Release notes
 ```
 
 ## License

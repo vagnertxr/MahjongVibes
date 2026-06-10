@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
+cd "$(dirname "$0")/../.."
 mkdir -p "dist/windows"
 
 if [ ! -x ".venv-build/bin/python" ]; then
@@ -12,7 +13,7 @@ ZIG=".venv-build/lib/python3.14/site-packages/ziglang/zig"
 ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-/tmp/zig-cache}" "$ZIG" cc \
   -target x86_64-windows-gnu \
   -municode \
-  windows-launcher.c \
+  tools/desktop/windows-launcher.c \
   -lshell32 \
   -o "dist/windows/Mahjong Vibes.exe"
 

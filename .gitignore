@@ -18,8 +18,8 @@ htmlcov/
 *.egg-info/
 
 # PyInstaller and generated desktop builds
-build/
-dist/
+/build/
+/dist/
 *.spec~
 
 # Local server/debug logs
@@ -43,9 +43,4 @@ desktop.ini
 # Codex/local agent workspace metadata
 .agents/
 .codex/
-<<<<<<< HEAD
-
 AGENTS.md
-=======
-AGENTS.md
->>>>>>> 842f959 (1.0)

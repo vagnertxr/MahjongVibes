@@ -47,7 +47,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    root = Path(__file__).resolve().parent
+    root = Path(__file__).resolve().parents[1]
     address = (args.host, args.port)
     server = ThreadingHTTPServer(address, lambda *args, **kwargs: MahjongVibesHandler(*args, directory=root, **kwargs))
     print("Mahjong Vibes debug server")

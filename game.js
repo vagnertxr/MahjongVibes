@@ -1,7 +1,7 @@
 const SUITS = ["m", "p", "s"];
 const WINDS = ["East", "South", "West", "North"];
 const HONORS = ["E", "S", "W", "N", "Wh", "G", "R"];
-const NAMES = ["You", "Mika", "Ren", "Aoi"];
+const NAMES = ["You", "Cartola", "Alcione", "Adoniran"];
 const TILE_ORDER = [
   "1m","2m","3m","4m","5m","6m","7m","8m","9m",
   "1p","2p","3p","4p","5p","6p","7p","8p","9p",
@@ -25,6 +25,151 @@ const HONOR_NAMES = {
   G: "Green Dragon",
   R: "Red Dragon"
 };
+const WIND_LABELS = {
+  en: ["East", "South", "West", "North"],
+  pt: ["Leste", "Sul", "Oeste", "Norte"]
+};
+const HONOR_NAMES_PT = {
+  E: "Vento Leste",
+  S: "Vento Sul",
+  W: "Vento Oeste",
+  N: "Vento Norte",
+  Wh: "Dragão Branco",
+  G: "Dragão Verde",
+  R: "Dragão Vermelho"
+};
+const WELCOME_STORAGE_KEY = "mahjong-vibes-hide-welcome";
+const LANGUAGE_STORAGE_KEY = "mahjong-vibes-language";
+const I18N = {
+  en: {
+    lang: "en",
+    langButton: "🇧🇷",
+    langTitle: "Mudar para Português",
+    you: "You",
+    points: "pts",
+    wall: "Wall {count}",
+    dora: "Dora {tile}",
+    rules: "Rules",
+    rulesTitle: "Open beginner rules",
+    newHand: "New Hand",
+    newHandTitle: "Start a new hand",
+    close: "Close",
+    closeTitle: "Close welcome",
+    welcomeTitle: "Welcome to Mahjong Vibes",
+    welcomeSubtitle: "Riichi Mahjong, local table, quick hands.",
+    welcomeIntro: "Make four groups and one pair. Draw a tile, discard a tile, and watch for chances to call, declare riichi, or win.",
+    beginnerRules: "Beginner Rules",
+    hideRules: "Hide Rules",
+    startPlaying: "Start Playing",
+    previous: "Previous",
+    next: "Next",
+    hideWelcome: "Do not show this welcome next time",
+    creditsPrefix: "Created by ",
+    lastDiscard: "Last discard",
+    winningHand: "Winning hand",
+    loading: "Loading table...",
+    dealer: "Dealer",
+    river: "River",
+    melds: "Melds",
+    riichi: "Riichi",
+    tsumo: "Tsumo",
+    ron: "Ron",
+    pass: "Pass",
+    pon: "Pon",
+    chi: "Chi {tiles}",
+    nextHand: "Next Hand",
+    discardTitle: "Discard {tile}",
+    noTile: "No tile",
+    standardHand: "Standard hand",
+    sevenPairs: "Seven Pairs",
+    menzen: "Menzen",
+    dealerStarts: "{player} deals. Draw and discard to chase Mahjong Vibes.",
+    playerDraws: "{player} draws.",
+    playerDiscards: "{player} discards {tile}.",
+    callPon: "You call Pon on {tile}. Discard a tile.",
+    callChi: "You call Chi. Discard a tile.",
+    wins: "{player} wins by {type}: {hand} for {points} points.",
+    exhaustiveDraw: "Exhaustive draw. Nobody completed a winning hand before the wall ran out.",
+    declareRiichi: "You declare Riichi. Discard to lock in the chase.",
+    suits: {
+      m: "Characters / Manzu",
+      p: "Circles / Pinzu",
+      s: "Bamboo / Souzu"
+    },
+    rulesPages: [
+      `<h3>1. What Makes Riichi Different</h3><p>Riichi Mahjong is the Japanese four-player version of Mahjong. Like most Mahjong games, you build a complete hand by drawing and discarding tiles. The big Riichi twist is that a complete shape is not enough: most winning hands also need at least one scoring pattern, called a yaku.</p><p>Compared with many Chinese Mahjong rulesets, Riichi puts more weight on closed-hand play, defensive discarding, declared riichi, dora bonus tiles, and exact win conditions. You often choose between opening your hand for speed or keeping it closed for stronger scoring options.</p><p>Mahjong Vibes keeps the table lightweight, but the core rhythm is the same: draw, discard, read the rivers, call when useful, and win by Tsumo or Ron.</p>`,
+      `<h3>2. The Tiles</h3><p>There are 34 unique tile types, with four copies of each, for 136 tiles in the wall.</p><div class="rules-example"><strong>Manzu / Characters</strong><div class="guide-tiles">${guideTiles(["1m","2m","3m","4m","5m","6m","7m","8m","9m"])}</div></div><div class="rules-example"><strong>Pinzu / Circles</strong><div class="guide-tiles">${guideTiles(["1p","2p","3p","4p","5p","6p","7p","8p","9p"])}</div></div><div class="rules-example"><strong>Souzu / Bamboo</strong><div class="guide-tiles">${guideTiles(["1s","2s","3s","4s","5s","6s","7s","8s","9s"])}</div></div><div class="rules-example"><strong>Honors: winds and dragons</strong><div class="guide-tiles">${guideTiles(["E","S","W","N","Wh","G","R"])}</div></div>`,
+      `<h3>3. How a Hand Is Built</h3><p>The normal winning shape is four groups plus one pair. Groups are sequences, triplets, or sometimes quads. Honors cannot make sequences.</p><div class="rules-example"><strong>Sequence / Shuntsu</strong><div class="guide-tiles">${guideTiles(["2s","3s","4s"])}</div></div><div class="rules-example"><strong>Triplet / Koutsu</strong><div class="guide-tiles">${guideTiles(["E","E","E"])}</div></div><div class="rules-example"><strong>Pair / Toitsu</strong><div class="guide-tiles">${guideTiles(["5p","5p"])}</div></div><div class="rules-example"><strong>Complete example: four groups and one pair</strong><div class="guide-tiles long">${guideTiles(["2m","3m","4m","3p","4p","5p","6s","7s","8s","R","R","R","Wh","Wh"])}</div></div>`,
+      `<h3>4. Turn Flow, Calls, and Winning</h3><p>On your turn, you draw one tile and discard one tile. Discards go into each player's river, which is public information. Reading those rivers helps you attack and defend.</p><p><strong>Chi</strong> uses the player-left discard to complete a sequence. <strong>Pon</strong> uses any player's discard to complete a triplet. Calling opens your hand, which is faster but removes some closed-only yaku.</p><p><strong>Tsumo</strong> means you draw your own winning tile. <strong>Ron</strong> means another player discards your winning tile. If a tile seems dangerous because an opponent may be waiting on it, discarding it can deal into Ron.</p><div class="rules-example"><strong>Waiting example: this hand wants 3M or 6M to finish the sequence</strong><div class="guide-tiles">${guideTiles(["4m","5m"])}<span class="tile small muted-tile">?</span></div></div>`,
+      `<h3>5. Common Beginner Yaku</h3><p>A yaku is a scoring condition that lets the hand win. Dora are bonuses, not yaku. A hand full of dora still needs a yaku.</p><div class="rules-example"><strong>Riichi:</strong> closed hand, one tile from winning, declare riichi and pay 1,000 points.</div><div class="rules-example"><strong>Tanyao / All Simples:</strong> no terminals, no winds, no dragons.<div class="guide-tiles">${guideTiles(["2m","3m","4m","4p","5p","6p","6s","7s","8s"])}</div></div><div class="rules-example"><strong>Yakuhai / Value honors:</strong> triplet of dragons, seat wind, or round wind.<div class="guide-tiles">${guideTiles(["R","R","R"])}</div></div><div class="rules-example"><strong>Pinfu:</strong> closed hand with only sequences, a non-value pair, and a two-sided wait.</div><div class="rules-example"><strong>Seven Pairs / Chiitoitsu:</strong> seven different pairs instead of four groups and one pair.<div class="guide-tiles long">${guideTiles(["2m","2m","4p","4p","6s","6s","Wh","Wh"])}</div></div>`,
+      `<h3>6. Dora, Defense, and First Tips</h3><p>Dora increase points after you win. In this game the dora display shows the bonus tile directly. In full Riichi rules, the indicator points to the next tile in order.</p><p>Defense matters because Ron punishes the discarder. When another player looks threatening, safer discards are usually tiles they have already discarded or honors that are visibly exhausted.</p><p>Good beginner habits: keep useful sequences, avoid breaking pairs too early, do not call every tile, and remember that a closed hand can declare riichi. If your hand has no obvious yaku, staying closed and aiming for riichi is often the simplest plan.</p>`
+    ]
+  },
+  pt: {
+    lang: "pt-BR",
+    langButton: "🇬🇧",
+    langTitle: "Switch to English",
+    you: "Você",
+    points: "pts",
+    wall: "Muro {count}",
+    dora: "Dora {tile}",
+    rules: "Regras",
+    rulesTitle: "Abrir regras para iniciantes",
+    newHand: "Nova Mão",
+    newHandTitle: "Começar uma nova mão",
+    close: "Fechar",
+    closeTitle: "Fechar boas-vindas",
+    welcomeTitle: "Bem-vindo ao Mahjong Vibes",
+    welcomeSubtitle: "Riichi Mahjong, mesa local, partidas rápidas.",
+    welcomeIntro: "Faça quatro grupos e um par. Compre uma peça, descarte uma peça e procure chances de chamar, declarar riichi ou vencer.",
+    beginnerRules: "Regras Iniciais",
+    hideRules: "Ocultar Regras",
+    startPlaying: "Jogar",
+    previous: "Anterior",
+    next: "Próxima",
+    hideWelcome: "Não mostrar estas boas-vindas novamente",
+    creditsPrefix: "Criado por ",
+    lastDiscard: "Último descarte",
+    winningHand: "Mão vencedora",
+    loading: "Carregando mesa...",
+    dealer: "Oya",
+    river: "Rio",
+    melds: "Chamadas",
+    riichi: "Riichi",
+    tsumo: "Tsumo",
+    ron: "Ron",
+    pass: "Passar",
+    pon: "Pon",
+    chi: "Chi {tiles}",
+    nextHand: "Próxima Mão",
+    discardTitle: "Descartar {tile}",
+    noTile: "Nenhuma peça",
+    standardHand: "Mão comum",
+    sevenPairs: "Sete Pares",
+    menzen: "Fechada",
+    dealerStarts: "{player} distribui. Compre e descarte para entrar no Mahjong Vibes.",
+    playerDraws: "{player} compra.",
+    playerDiscards: "{player} descarta {tile}.",
+    callPon: "Você chama Pon em {tile}. Descarte uma peça.",
+    callChi: "Você chama Chi. Descarte uma peça.",
+    wins: "{player} vence por {type}: {hand}, {points} pontos.",
+    exhaustiveDraw: "Empate exaustivo. Ninguém completou uma mão antes do muro acabar.",
+    declareRiichi: "Você declara Riichi. Descarte para travar a espera.",
+    suits: {
+      m: "Caracteres / Manzu",
+      p: "Círculos / Pinzu",
+      s: "Bambus / Souzu"
+    },
+    rulesPages: [
+      `<h3>1. O Que Diferencia o Riichi</h3><p>Riichi Mahjong é a versão japonesa para quatro jogadores. Como em outras variantes, você monta uma mão completa comprando e descartando peças. A diferença principal é que a forma completa normalmente também precisa de pelo menos um padrão de pontuação, chamado yaku.</p><p>Comparado a muitas regras chinesas, o Riichi valoriza mais a mão fechada, defesa pelos descartes, declaração de riichi, bônus de dora e condições exatas de vitória. Você escolhe entre abrir a mão para correr ou manter fechada para pontuar melhor.</p><p>Mahjong Vibes é leve, mas o ritmo central é o mesmo: comprar, descartar, ler os rios, chamar quando vale a pena e vencer por Tsumo ou Ron.</p>`,
+      `<h3>2. As Peças</h3><p>Existem 34 tipos de peça, com quatro cópias de cada uma, formando um muro de 136 peças.</p><div class="rules-example"><strong>Manzu / Caracteres</strong><div class="guide-tiles">${guideTiles(["1m","2m","3m","4m","5m","6m","7m","8m","9m"])}</div></div><div class="rules-example"><strong>Pinzu / Círculos</strong><div class="guide-tiles">${guideTiles(["1p","2p","3p","4p","5p","6p","7p","8p","9p"])}</div></div><div class="rules-example"><strong>Souzu / Bambus</strong><div class="guide-tiles">${guideTiles(["1s","2s","3s","4s","5s","6s","7s","8s","9s"])}</div></div><div class="rules-example"><strong>Honras: ventos e dragões</strong><div class="guide-tiles">${guideTiles(["E","S","W","N","Wh","G","R"])}</div></div>`,
+      `<h3>3. Como Montar uma Mão</h3><p>A forma normal de vitória é quatro grupos e um par. Grupos podem ser sequências, trincas ou, em regras completas, quadras. Honras não formam sequências.</p><div class="rules-example"><strong>Sequência / Shuntsu</strong><div class="guide-tiles">${guideTiles(["2s","3s","4s"])}</div></div><div class="rules-example"><strong>Trinca / Koutsu</strong><div class="guide-tiles">${guideTiles(["E","E","E"])}</div></div><div class="rules-example"><strong>Par / Toitsu</strong><div class="guide-tiles">${guideTiles(["5p","5p"])}</div></div><div class="rules-example"><strong>Exemplo completo: quatro grupos e um par</strong><div class="guide-tiles long">${guideTiles(["2m","3m","4m","3p","4p","5p","6s","7s","8s","R","R","R","Wh","Wh"])}</div></div>`,
+      `<h3>4. Turno, Chamadas e Vitória</h3><p>No seu turno, você compra uma peça e descarta uma peça. Os descartes ficam no rio de cada jogador, uma informação pública. Ler esses rios ajuda a atacar e defender.</p><p><strong>Chi</strong> usa o descarte do jogador à sua esquerda para completar uma sequência. <strong>Pon</strong> usa o descarte de qualquer jogador para completar uma trinca. Chamar abre a mão: é mais rápido, mas remove alguns yaku de mão fechada.</p><p><strong>Tsumo</strong> é vencer comprando sua própria peça. <strong>Ron</strong> é vencer com o descarte de outra pessoa. Se uma peça parece perigosa porque alguém pode estar esperando nela, descartá-la pode dar Ron ao adversário.</p><div class="rules-example"><strong>Exemplo de espera: esta forma quer 3M ou 6M para completar a sequência</strong><div class="guide-tiles">${guideTiles(["4m","5m"])}<span class="tile small muted-tile">?</span></div></div>`,
+      `<h3>5. Yaku Fáceis para Começar</h3><p>Yaku é uma condição de pontuação que permite vencer. Dora é bônus, não yaku. Uma mão cheia de dora ainda precisa de um yaku.</p><div class="rules-example"><strong>Riichi:</strong> mão fechada, a uma peça da vitória; declare riichi e pague 1.000 pontos.</div><div class="rules-example"><strong>Tanyao / Todas Simples:</strong> sem terminais, sem ventos e sem dragões.<div class="guide-tiles">${guideTiles(["2m","3m","4m","4p","5p","6p","6s","7s","8s"])}</div></div><div class="rules-example"><strong>Yakuhai / Honras de valor:</strong> trinca de dragão, vento do assento ou vento da rodada.<div class="guide-tiles">${guideTiles(["R","R","R"])}</div></div><div class="rules-example"><strong>Pinfu:</strong> mão fechada só com sequências, par sem valor e espera dos dois lados.</div><div class="rules-example"><strong>Sete Pares / Chiitoitsu:</strong> sete pares diferentes em vez de quatro grupos e um par.<div class="guide-tiles long">${guideTiles(["2m","2m","4p","4p","6s","6s","Wh","Wh"])}</div></div>`,
+      `<h3>6. Dora, Defesa e Primeiras Dicas</h3><p>Dora aumenta os pontos depois que você vence. Neste jogo, o mostrador exibe diretamente a peça de bônus. Nas regras completas, o indicador aponta para a próxima peça na ordem.</p><p>Defesa importa porque Ron pune quem descartou. Quando alguém parece perigoso, descartes mais seguros costumam ser peças que essa pessoa já descartou ou honras que você já viu esgotadas.</p><p>Bons hábitos iniciais: mantenha sequências úteis, não quebre pares cedo demais, não chame todas as peças e lembre que uma mão fechada pode declarar riichi. Se sua mão não tem yaku claro, ficar fechado e mirar riichi costuma ser o plano mais simples.</p>`
+    ]
+  }
+};
 const state = {
   round: 0,
   dealer: 0,
@@ -37,6 +182,9 @@ const state = {
   pendingDiscard: false,
   gameOver: false,
   message: "",
+  messageKey: "",
+  messageParams: {},
+  win: null,
   players: []
 };
 
@@ -47,11 +195,46 @@ const els = {
   lastDiscard: document.querySelector("#lastDiscard"),
   statusText: document.querySelector("#statusText"),
   actionBar: document.querySelector("#actionBar"),
+  langBtn: document.querySelector("#langBtn"),
+  rulesBtn: document.querySelector("#rulesBtn"),
   newGameBtn: document.querySelector("#newGameBtn"),
+  welcomeOverlay: document.querySelector("#welcomeOverlay"),
+  welcomeTitle: document.querySelector("#welcomeTitle"),
+  welcomeSubtitle: document.querySelector("#welcomeTitle + p"),
+  welcomeIntro: document.querySelector(".intro-copy"),
+  closeWelcomeBtn: document.querySelector("#closeWelcomeBtn"),
+  welcomeLangBtn: document.querySelector("#welcomeLangBtn"),
+  startPlayingBtn: document.querySelector("#startPlayingBtn"),
+  showRulesBtn: document.querySelector("#showRulesBtn"),
+  rulesPanel: document.querySelector("#rulesPanel"),
+  rulesPages: Array.from(document.querySelectorAll(".rules-page")),
+  prevRulesBtn: document.querySelector("#prevRulesBtn"),
+  nextRulesBtn: document.querySelector("#nextRulesBtn"),
+  rulesPageLabel: document.querySelector("#rulesPageLabel"),
+  hideWelcomeCheck: document.querySelector("#hideWelcomeCheck"),
+  rememberChoice: document.querySelector(".remember-choice"),
+  credits: document.querySelector(".credits"),
+  riverTitle: document.querySelector(".river-title"),
   seats: Array.from({ length: 4 }, (_, i) => document.querySelector(`#seat-${i}`))
 };
+let currentRulesPage = 0;
+let currentLanguage = getStoredPreference(LANGUAGE_STORAGE_KEY) === "pt" ? "pt" : "en";
 
 els.newGameBtn.addEventListener("click", startHand);
+els.langBtn.addEventListener("click", toggleLanguage);
+els.welcomeLangBtn.addEventListener("click", toggleLanguage);
+els.rulesBtn.addEventListener("click", () => openWelcome(true));
+els.closeWelcomeBtn.addEventListener("click", closeWelcome);
+els.startPlayingBtn.addEventListener("click", closeWelcome);
+els.showRulesBtn.addEventListener("click", toggleRules);
+els.prevRulesBtn.addEventListener("click", () => setRulesPage(currentRulesPage - 1));
+els.nextRulesBtn.addEventListener("click", () => setRulesPage(currentRulesPage + 1));
+els.welcomeOverlay.addEventListener("click", event => {
+  if (event.target === els.welcomeOverlay) closeWelcome();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !els.welcomeOverlay.hidden) closeWelcome();
+});
 
 function startHand() {
   state.wall = shuffle(buildWall());
@@ -62,6 +245,7 @@ function startHand() {
   state.lastDiscardFrom = null;
   state.pendingDiscard = false;
   state.gameOver = false;
+  state.win = null;
   state.players = Array.from({ length: 4 }, (_, i) => ({
     name: NAMES[i],
     wind: WINDS[(i - state.dealer + 4) % 4],
@@ -80,7 +264,7 @@ function startHand() {
     }
   }
   sortAllHands();
-  state.message = `${state.players[state.dealer].name} deals. Draw and discard to chase Mahjong Vibes.`;
+  setMessage("dealerStarts", { player: playerLabel(state.dealer) });
   drawForTurn();
 }
 
@@ -119,7 +303,7 @@ function drawForTurn() {
   player.hand.push(player.drawnTile);
   player.hand.sort(compareTiles);
   state.pendingDiscard = true;
-  state.message = `${player.name} draws.`;
+  setMessage("playerDraws", { player: playerLabel(state.turn) });
   render();
 
   if (canWin(player.hand, player.melds.length)) {
@@ -141,15 +325,15 @@ function discardTile(seat, tileIndex) {
   state.lastDiscard = tile;
   state.lastDiscardFrom = seat;
   state.pendingDiscard = false;
-  state.message = `${player.name} discards ${tileText(tile)}.`;
+  setMessage("playerDiscards", { player: playerLabel(seat), tile: tileText(tile) });
   render();
 
   const ronSeat = findRon(tile, seat);
   if (ronSeat !== null) {
     if (ronSeat === 0) {
       showActions([
-        { label: "Ron", cls: "win", onClick: () => winHand(0, seat, "Ron") },
-        { label: "Pass", cls: "pass", onClick: nextTurn }
+        { labelKey: "ron", cls: "win", onClick: () => winHand(0, seat, "Ron") },
+        { labelKey: "pass", cls: "pass", onClick: nextTurn }
       ]);
       return;
     }
@@ -184,12 +368,12 @@ function showCallActions(tile, fromSeat) {
   const human = state.players[0];
   const actions = [];
   if (human.hand.filter(t => t === tile).length >= 2) {
-    actions.push({ label: "Pon", onClick: () => callPon(tile, fromSeat) });
+    actions.push({ labelKey: "pon", onClick: () => callPon(tile, fromSeat) });
   }
   for (const option of chiOptions(human.hand, tile)) {
-    actions.push({ label: `Chi ${option.map(tileText).join("")}`, onClick: () => callChi(tile, option, fromSeat) });
+    actions.push({ labelKey: "chi", labelParams: { tiles: option.map(tileText).join("") }, onClick: () => callChi(tile, option, fromSeat) });
   }
-  actions.push({ label: "Pass", cls: "pass", onClick: nextTurn });
+  actions.push({ labelKey: "pass", cls: "pass", onClick: nextTurn });
   showActions(actions);
 }
 
@@ -199,7 +383,7 @@ function callPon(tile, fromSeat) {
   human.melds.push({ type: "pon", tiles: [tile, tile, tile], from: fromSeat });
   state.turn = 0;
   state.pendingDiscard = true;
-  state.message = `You call Pon on ${tileText(tile)}. Discard a tile.`;
+  setMessage("callPon", { tile: tileText(tile) });
   clearActions();
   render();
 }
@@ -210,7 +394,7 @@ function callChi(tile, option, fromSeat) {
   human.melds.push({ type: "chi", tiles: [...option, tile].sort(compareTiles), from: fromSeat });
   state.turn = 0;
   state.pendingDiscard = true;
-  state.message = `You call Chi. Discard a tile.`;
+  setMessage("callChi");
   clearActions();
   render();
 }
@@ -344,6 +528,17 @@ function winHand(winner, loser, type) {
   state.gameOver = true;
   clearActions();
   const player = state.players[winner];
+  const winTile = type === "Ron" && state.lastDiscardFrom === loser ? state.lastDiscard : null;
+  const revealedHand = [...player.hand];
+  if (winTile) revealedHand.push(winTile);
+  revealedHand.sort(compareTiles);
+  state.win = {
+    winner,
+    type,
+    tile: winTile,
+    hand: revealedHand,
+    melds: player.melds.map(meld => [...meld.tiles])
+  };
   const base = type === "Tsumo" ? 1500 : 3900;
   const bonus = player.riichi ? 1000 : 0;
   const doraBonus = countTiles(player.hand)[state.dora] ? 1000 : 0;
@@ -359,24 +554,24 @@ function winHand(winner, loser, type) {
     player.score += points;
   }
 
-  state.message = `${player.name} wins by ${type}: ${describeWin(player)} for ${points} points.`;
+  setMessage("wins", { player: playerLabel(winner), type, hand: describeWin(player), points });
   state.round += 1;
   state.dealer = (state.dealer + 1) % 4;
   render();
 }
 
 function describeWin(player) {
-  if (isSevenPairs(player.hand)) return "Seven Pairs";
+  if (isSevenPairs(player.hand)) return t("sevenPairs");
   const labels = [];
-  if (player.riichi) labels.push("Riichi");
-  if (player.melds.length === 0) labels.push("Menzen");
+  if (player.riichi) labels.push(t("riichi"));
+  if (player.melds.length === 0) labels.push(t("menzen"));
   if ((countTiles(player.hand)[state.dora] ?? 0) > 0) labels.push("Dora");
-  return labels.length ? labels.join(", ") : "Standard hand";
+  return labels.length ? labels.join(", ") : t("standardHand");
 }
 
 function endDraw() {
   state.gameOver = true;
-  state.message = "Exhaustive draw. Nobody completed a winning hand before the wall ran out.";
+  setMessage("exhaustiveDraw");
   state.round += 1;
   state.dealer = (state.dealer + 1) % 4;
   render();
@@ -387,7 +582,7 @@ function declareRiichi() {
   if (state.turn !== 0 || !state.pendingDiscard || human.melds.length > 0 || human.score < 1000) return;
   human.riichi = true;
   human.score -= 1000;
-  state.message = "You declare Riichi. Discard to lock in the chase.";
+  setMessage("declareRiichi");
   render();
 }
 
@@ -397,7 +592,7 @@ function showActions(actions) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = action.cls ?? "";
-    button.textContent = action.label;
+    button.textContent = action.labelKey ? t(action.labelKey, action.labelParams) : action.label;
     button.addEventListener("click", action.onClick);
     els.actionBar.append(button);
   });
@@ -407,12 +602,145 @@ function clearActions() {
   els.actionBar.innerHTML = "";
 }
 
+function t(key, params = {}) {
+  const template = I18N[currentLanguage][key] ?? I18N.en[key] ?? key;
+  if (typeof template !== "string") return template;
+  return template.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? "");
+}
+
+function setMessage(key, params = {}) {
+  state.messageKey = key;
+  state.messageParams = params;
+  state.message = t(key, params);
+}
+
+function playerLabel(seat) {
+  return seat === 0 ? t("you") : NAMES[seat];
+}
+
+function windLabel(wind) {
+  const index = WINDS.indexOf(wind);
+  return WIND_LABELS[currentLanguage][index] ?? wind;
+}
+
+function guideTiles(tiles) {
+  return tiles.map(tile => `<span class="tile small ${tileClass(tile)}">${tileFaceText(tile)}</span>`).join("");
+}
+
+function toggleLanguage() {
+  currentLanguage = currentLanguage === "en" ? "pt" : "en";
+  setStoredPreference(LANGUAGE_STORAGE_KEY, currentLanguage);
+  applyLanguage();
+  if (state.messageKey) {
+    state.message = t(state.messageKey, state.messageParams);
+  }
+  render();
+}
+
+function applyLanguage() {
+  const copy = I18N[currentLanguage];
+  document.documentElement.lang = copy.lang;
+  els.langBtn.textContent = copy.langButton;
+  els.langBtn.title = copy.langTitle;
+  els.welcomeLangBtn.textContent = copy.langButton;
+  els.welcomeLangBtn.title = copy.langTitle;
+  els.rulesBtn.textContent = copy.rules;
+  els.rulesBtn.title = copy.rulesTitle;
+  els.newGameBtn.textContent = copy.newHand;
+  els.newGameBtn.title = copy.newHandTitle;
+  els.closeWelcomeBtn.textContent = copy.close;
+  els.closeWelcomeBtn.title = copy.closeTitle;
+  els.welcomeTitle.textContent = copy.welcomeTitle;
+  els.welcomeSubtitle.textContent = copy.welcomeSubtitle;
+  els.welcomeIntro.textContent = copy.welcomeIntro;
+  els.startPlayingBtn.textContent = copy.startPlaying;
+  els.prevRulesBtn.textContent = copy.previous;
+  els.nextRulesBtn.textContent = copy.next;
+  els.riverTitle.textContent = copy.lastDiscard;
+  els.rememberChoice.lastChild.textContent = ` ${copy.hideWelcome}`;
+  els.credits.innerHTML = `${copy.creditsPrefix}<a href="https://github.com/vagnertxr" target="_blank" rel="noopener noreferrer">vagnertxr</a>`;
+  renderRulePages();
+  updateRulesToggleLabel();
+  setRulesPage(currentRulesPage);
+}
+
+function renderRulePages() {
+  I18N[currentLanguage].rulesPages.forEach((content, index) => {
+    if (els.rulesPages[index]) els.rulesPages[index].innerHTML = content;
+  });
+}
+
+function updateRulesToggleLabel() {
+  els.showRulesBtn.textContent = els.rulesPanel.hidden ? t("beginnerRules") : t("hideRules");
+}
+
+function openWelcome(showRules = false) {
+  els.welcomeOverlay.hidden = false;
+  els.rulesPanel.hidden = !showRules;
+  updateRulesToggleLabel();
+  setRulesPage(currentRulesPage);
+  (showRules ? els.rulesPanel : els.startPlayingBtn).focus();
+}
+
+function closeWelcome() {
+  if (els.hideWelcomeCheck.checked) {
+    setStoredPreference(WELCOME_STORAGE_KEY, "1");
+  }
+  els.welcomeOverlay.hidden = true;
+}
+
+function toggleRules() {
+  const shouldShow = els.rulesPanel.hidden;
+  els.rulesPanel.hidden = !shouldShow;
+  updateRulesToggleLabel();
+  if (shouldShow) {
+    setRulesPage(currentRulesPage);
+    els.rulesPanel.focus();
+  }
+}
+
+function setRulesPage(pageIndex) {
+  const pageCount = els.rulesPages.length;
+  currentRulesPage = Math.min(Math.max(pageIndex, 0), pageCount - 1);
+  els.rulesPages.forEach((page, index) => {
+    page.classList.toggle("active", index === currentRulesPage);
+  });
+  els.prevRulesBtn.disabled = currentRulesPage === 0;
+  els.nextRulesBtn.disabled = currentRulesPage === pageCount - 1;
+  els.rulesPageLabel.textContent = `${currentRulesPage + 1} / ${pageCount}`;
+}
+
+function shouldShowWelcome() {
+  return getStoredPreference(WELCOME_STORAGE_KEY) !== "1";
+}
+
+function getStoredPreference(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStoredPreference(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Browsers can block storage in private contexts; the game still works.
+  }
+}
+
 function render() {
-  els.roundLabel.textContent = `${WINDS[state.round % 4]} ${Math.floor(state.round / 4) + 1}`;
-  els.wallCount.textContent = `Wall ${state.wall.length}`;
-  els.doraIndicator.textContent = `Dora ${tileText(state.dora)}`;
-  els.statusText.textContent = state.message;
+  els.roundLabel.textContent = `${WIND_LABELS[currentLanguage][state.round % 4]} ${Math.floor(state.round / 4) + 1}`;
+  els.wallCount.textContent = t("wall", { count: state.wall.length });
+  els.doraIndicator.textContent = t("dora", { tile: tileText(state.dora) });
+  els.statusText.textContent = state.messageKey ? t(state.messageKey, state.messageParams) : t("loading");
   els.lastDiscard.innerHTML = state.lastDiscard ? tileHtml(state.lastDiscard) : "--";
+  const winReveal = document.querySelector("#winReveal");
+  if (winReveal) winReveal.remove();
+  if (state.win) {
+    els.actionBar.insertAdjacentHTML("beforebegin", renderWinReveal());
+  }
 
   state.players.forEach((player, seat) => {
     const seatEl = els.seats[seat];
@@ -420,16 +748,12 @@ function render() {
     seatEl.innerHTML = `
       <div class="seat-header">
         <div>
-          <div class="name">${player.name} · ${player.wind}</div>
-          <div class="score">${player.score.toLocaleString()} pts</div>
+          <div class="name">${playerLabel(seat)} · ${windLabel(player.wind)}</div>
+          <div class="score">${player.score.toLocaleString()} ${t("points")}</div>
         </div>
-        <div class="badges">${player.riichi ? `<span class="badge">Riichi</span>` : ""}${seat === state.dealer ? `<span class="badge">Dealer</span>` : ""}</div>
+        <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}</div>
       </div>
-      ${renderHand(player, seat)}
-      <div class="section-label">Melds</div>
-      <div class="melds">${player.melds.map(m => m.tiles.map(tile => tileHtml(tile, true)).join("")).join("") || "None"}</div>
-      <div class="section-label">River</div>
-      <div class="river">${player.discards.map(tile => tileHtml(tile, true)).join("")}</div>
+      ${renderSeatBody(player, seat)}
     `;
   });
 
@@ -437,17 +761,78 @@ function render() {
     const actions = [];
     const human = state.players[0];
     if (!human.riichi && human.melds.length === 0 && human.score >= 1000) {
-      actions.push({ label: "Riichi", onClick: declareRiichi });
+      actions.push({ labelKey: "riichi", onClick: declareRiichi });
     }
     if (canWin(human.hand, human.melds.length)) {
-      actions.push({ label: "Tsumo", cls: "win", onClick: () => winHand(0, 0, "Tsumo") });
+      actions.push({ labelKey: "tsumo", cls: "win", onClick: () => winHand(0, 0, "Tsumo") });
     }
     showActions(actions);
   }
 
   if (state.gameOver) {
-    showActions([{ label: "Next Hand", cls: "win", onClick: startHand }]);
+    showActions([{ labelKey: "nextHand", cls: "win", onClick: startHand }]);
   }
+}
+
+function renderSeatBody(player, seat) {
+  const hand = renderHand(player, seat);
+  const melds = renderMeldTiles(player);
+  const river = player.discards.map(tile => tileHtml(tile, true)).join("");
+
+  if (seat === 0) {
+    return `
+      <div class="human-table">
+        ${hand}
+        <div class="human-public">
+          ${renderTileLane(t("melds"), "melds", melds)}
+          ${renderTileLane(t("river"), "river", river)}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    ${hand}
+    ${melds ? renderTileLane(t("melds"), "melds", melds) : ""}
+    ${renderTileLane(t("river"), "river", river)}
+  `;
+}
+
+function renderMelds(player) {
+  if (player.melds.length === 0) return "";
+  const meldTiles = renderMeldTiles(player);
+  return `
+    <div class="section-label">${t("melds")}</div>
+    <div class="melds">${meldTiles}</div>
+  `;
+}
+
+function renderMeldTiles(player) {
+  return player.melds.map(m => m.tiles.map(tile => tileHtml(tile, true)).join("")).join("");
+}
+
+function renderTileLane(label, className, content) {
+  return `
+    <div class="tile-lane">
+      <div class="section-label">${label}</div>
+      <div class="${className}">${content}</div>
+    </div>
+  `;
+}
+
+function renderWinReveal() {
+  const winner = playerLabel(state.win.winner);
+  const handTiles = state.win.hand.map((tile, index) => {
+    const isWinTile = state.win.tile && index === state.win.hand.lastIndexOf(state.win.tile);
+    return tileHtml(tile, true, isWinTile);
+  }).join("");
+  const meldTiles = state.win.melds.flat().map(tile => tileHtml(tile, true)).join("");
+  return `
+    <div id="winReveal" class="win-reveal" aria-live="polite">
+      <div class="section-label">${t("winningHand")} · ${winner}</div>
+      <div class="win-hand">${handTiles}${meldTiles ? `<span class="win-divider"></span>${meldTiles}` : ""}</div>
+    </div>
+  `;
 }
 
 function renderHand(player, seat) {
@@ -455,12 +840,30 @@ function renderHand(player, seat) {
     const backs = player.hand.map(() => `<span class="tile small back">?</span>`).join("");
     return `<div class="concealed">${backs}</div>`;
   }
-  const buttons = player.hand.map((tile, index) => {
-    const disabled = state.turn !== 0 || !state.pendingDiscard || state.gameOver ? "disabled" : "";
-    return `<button type="button" class="tile ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="Discard ${tileName(tile)}" aria-label="Discard ${tileName(tile)}">${tileText(tile)}</button>`;
-  }).join("");
+  const drawnIndex = state.turn === 0 && state.pendingDiscard && !state.gameOver && player.drawnTile
+    ? player.hand.lastIndexOf(player.drawnTile)
+    : -1;
+  const handButtons = player.hand
+    .map((tile, index) => ({ tile, index }))
+    .filter(entry => entry.index !== drawnIndex)
+    .map(entry => tileButton(entry.tile, entry.index))
+    .join("");
+  const drawSlot = drawnIndex >= 0
+    ? tileButton(player.hand[drawnIndex], drawnIndex, "drawn")
+    : `<span class="draw-placeholder" aria-hidden="true"></span>`;
   setTimeout(bindHumanTiles, 0);
-  return `<div class="hand">${buttons}</div>`;
+  return `
+    <div class="hand-row">
+      <div class="hand">${handButtons}</div>
+      <div class="draw-slot">${drawSlot}</div>
+    </div>
+  `;
+}
+
+function tileButton(tile, index, extraClass = "") {
+    const disabled = state.turn !== 0 || !state.pendingDiscard || state.gameOver ? "disabled" : "";
+    const title = t("discardTitle", { tile: tileName(tile) });
+    return `<button type="button" class="tile ${extraClass} ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="${title}" aria-label="${title}">${tileFaceText(tile)}</button>`;
 }
 
 function bindHumanTiles() {
@@ -469,8 +872,13 @@ function bindHumanTiles() {
   });
 }
 
-function tileHtml(tile, small = false) {
-  return `<span class="tile ${small ? "small" : ""} ${tileClass(tile)}" title="${tileName(tile)}" aria-label="${tileName(tile)}">${tileText(tile)}</span>`;
+function tileHtml(tile, small = false, winning = false) {
+  return `<span class="tile ${small ? "small" : ""} ${winning ? "winning" : ""} ${tileClass(tile)}" title="${tileName(tile)}" aria-label="${tileName(tile)}">${tileFaceText(tile)}</span>`;
+}
+
+function tileFaceText(tile) {
+  if (tile === "Wh") return "";
+  return tileText(tile);
 }
 
 function tileText(tile) {
@@ -480,9 +888,10 @@ function tileText(tile) {
 }
 
 function tileName(tile) {
-  if (!tile) return "No tile";
+  if (!tile) return t("noTile");
+  if (currentLanguage === "pt" && HONOR_NAMES_PT[tile]) return HONOR_NAMES_PT[tile];
   if (HONOR_NAMES[tile]) return HONOR_NAMES[tile];
-  return `${Number(tile[0])} of ${SUIT_NAMES[tile[1]]}`;
+  return `${Number(tile[0])} ${currentLanguage === "pt" ? "de" : "of"} ${I18N[currentLanguage].suits[tile[1]]}`;
 }
 
 function tileClass(tile) {
@@ -490,6 +899,7 @@ function tileClass(tile) {
   if (tile.endsWith("s")) return "bamboo";
   if (tile.endsWith("p")) return "pin";
   if (tile.endsWith("m")) return "man";
+  if (tile === "G") return "honor green";
   if (tile === "R") return "honor red";
   return "honor";
 }
@@ -498,4 +908,8 @@ function isSuit(tile) {
   return SUITS.includes(tile?.[1]);
 }
 
+applyLanguage();
 startHand();
+if (shouldShowWelcome()) {
+  openWelcome(false);
+}

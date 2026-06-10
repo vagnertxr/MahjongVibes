@@ -1,4 +1,4 @@
-const CACHE_NAME = "mahjong-vibes-v1";
+const CACHE_NAME = "mahjong-vibes-v11";
 const APP_ASSETS = [
   "./",
   "./index.html",
