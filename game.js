@@ -11,6 +11,20 @@ const TILE_ORDER = [
 const TILE_LABELS = {
   E: "東", S: "南", W: "西", N: "北", Wh: "白", G: "發", R: "中"
 };
+const SUIT_NAMES = {
+  m: "Characters / Manzu",
+  p: "Circles / Pinzu",
+  s: "Bamboo / Souzu"
+};
+const HONOR_NAMES = {
+  E: "East Wind",
+  S: "South Wind",
+  W: "West Wind",
+  N: "North Wind",
+  Wh: "White Dragon",
+  G: "Green Dragon",
+  R: "Red Dragon"
+};
 const state = {
   round: 0,
   dealer: 0,
@@ -443,7 +457,7 @@ function renderHand(player, seat) {
   }
   const buttons = player.hand.map((tile, index) => {
     const disabled = state.turn !== 0 || !state.pendingDiscard || state.gameOver ? "disabled" : "";
-    return `<button type="button" class="tile ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="Discard ${tileText(tile)}">${tileText(tile)}</button>`;
+    return `<button type="button" class="tile ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="Discard ${tileName(tile)}" aria-label="Discard ${tileName(tile)}">${tileText(tile)}</button>`;
   }).join("");
   setTimeout(bindHumanTiles, 0);
   return `<div class="hand">${buttons}</div>`;
@@ -456,13 +470,19 @@ function bindHumanTiles() {
 }
 
 function tileHtml(tile, small = false) {
-  return `<span class="tile ${small ? "small" : ""} ${tileClass(tile)}">${tileText(tile)}</span>`;
+  return `<span class="tile ${small ? "small" : ""} ${tileClass(tile)}" title="${tileName(tile)}" aria-label="${tileName(tile)}">${tileText(tile)}</span>`;
 }
 
 function tileText(tile) {
   if (!tile) return "--";
   if (TILE_LABELS[tile]) return TILE_LABELS[tile];
   return tile[0] + tile[1].toUpperCase();
+}
+
+function tileName(tile) {
+  if (!tile) return "No tile";
+  if (HONOR_NAMES[tile]) return HONOR_NAMES[tile];
+  return `${Number(tile[0])} of ${SUIT_NAMES[tile[1]]}`;
 }
 
 function tileClass(tile) {
