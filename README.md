@@ -1,122 +1,33 @@
 # Mahjong Vibes 🀄
 
 Mahjong Vibes is a lightweight Riichi Mahjong game for the browser. It runs as plain HTML, CSS, and JavaScript, with a small Python server for local debugging and optional desktop packaging scripts.
+Supports desktop and mobile.
 
-The current game includes a four-player table, local bot turns, draw/discard flow, pon, chi, ron, tsumo, riichi, dora display, scoring movement, responsive layout, and PWA metadata for installable/offline-friendly browser use.
+**[Play Mahjong Vibes](https://vagnertxr.github.io/MahjongVibes/)**
 
-## Run Locally
+Run locally:
 
-Use Python 3.10 or newer.
+- **Easiest:** double-click `index.html` to open it in your browser.
+- **Better experience (recommended):** run a tiny local server so the game can save data and work offline:
+  ```sh
+  python3 tools/server.py
+  ```
+  Then open the link it prints (usually `http://127.0.0.1:8000`).
 
-```sh
-python3 tools/server.py
-```
+## What You Get
 
-Then open the URL printed by the server, usually:
+- A full four-player table with smart local bots, so you can always start a game
+- Standard Riichi flow: draw, discard, pon, chi, ron, tsumo, and riichi declarations
+- Live dora indicator display
+- Automatic scoring and score movement between players
+- A responsive layout that works on phones, tablets, and desktops
 
-```text
-http://127.0.0.1:8000
-```
-
-To use a different port:
-
-```sh
-python3 tools/server.py --port 8080
-```
-
-To only serve this computer:
-
-```sh
-python3 tools/server.py --host 127.0.0.1
-```
-
-You can also open `index.html` directly in a browser. The Python server is better for testing installability, service workers, mobile devices on the same Wi-Fi, and browser caching behavior.
-
-## Installable Web App
+## Desktop App
 
 Mahjong Vibes is prepared as a small PWA:
 
-- `manifest.webmanifest` describes the app shell.
-- `assets/icon.svg` provides the app icon.
-- `sw.js` caches the game files for offline replay after the first load.
-
-For public hosting, any static host works: GitHub Pages, Netlify, Cloudflare Pages, Vercel static output, or a simple web server. Serve the project root over HTTPS so browser install prompts and service workers work reliably.
-
-## GitHub Pages
-
-Yes, Mahjong Vibes can run on GitHub Pages because the playable game is static HTML, CSS, JavaScript, and assets.
-
-To publish it:
-
-1. Push the repo to GitHub.
-2. Open the repo settings.
-3. Go to Pages.
-4. Set the source to the main branch and the project root.
-5. Save, then open the GitHub Pages URL after it finishes deploying.
-
-GitHub Pages serves over HTTPS, so the PWA manifest and service worker can work there.
-
-## Desktop Builds
-
-Linux build:
-
-```sh
-sh tools/build/build-linux.sh
-```
-
-Run the Linux build with:
-
-```sh
-dist/linux/Mahjong\ Vibes
-```
-
-Windows build from Windows PowerShell:
-
-```powershell
-.\tools\build\build-windows.ps1
-```
-
-Then double-click:
-
-```text
-dist\windows\Mahjong Vibes.exe
-```
-
-Windows folder build from Linux with Zig:
-
-```sh
-sh tools/build/build-windows-wine.sh
-```
-
-This creates a Windows app folder at `dist/windows/`. Double-click `dist/windows/Mahjong Vibes.exe` on Windows to open the game in the default browser without typing a terminal command.
-
-Generated output goes under `dist/`, which is ignored by Git.
-
-## Release Checklist
-
-Before publishing a release:
-
-1. Run `python3 tools/server.py` and play at least one full hand.
-2. Check desktop and mobile widths in the browser.
-3. Confirm the browser console has no errors.
-4. Build the target package under `dist/`.
-5. Launch the packaged app and confirm `index.html`, `styles.css`, `game.js`, `manifest.webmanifest`, `sw.js`, and `assets/icon.svg` are present.
-6. Tag the release and upload only the final distributable files, not `build/`, virtual environments, or local agent files.
-
-## Project Layout
-
-```text
-index.html                     Browser entry point for GitHub Pages
-styles.css                     Responsive table, tile, and mobile styling
-game.js                        Game state, rules, bots, and rendering
-manifest.webmanifest           Installable web app metadata
-sw.js                          Offline cache service worker
-assets/icon.svg                App icon and page logo
-tools/server.py                Local debug web server
-tools/desktop/launcher.py      PyInstaller launcher for desktop builds
-tools/build/                   Desktop build scripts and PyInstaller spec
-docs/RELEASE.md                Release notes
-```
+manifest.webmanifest describes the app shell.
+sw.js caches the game files for offline replay after the first load.
 
 ## License
 
