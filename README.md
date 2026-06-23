@@ -18,6 +18,7 @@ Run locally:
 
 - A full four-player table with smart local bots, so you can always start a game
 - Standard Riichi flow: draw, discard, pon, chi, ron, tsumo, and riichi declarations
+- Selectable Tonpuusen and Hanchan match lengths with end-of-match handling
 - Live dora indicator display
 - Automatic scoring and score movement between players
 - A responsive layout that works on phones, tablets, and desktops

@@ -27,9 +27,16 @@
           <div class="meters">
             <span id="wallCount">Wall 0</span>
             <span id="doraIndicator">Dora --</span>
+            <label class="format-picker">
+              <span id="formatLabel">Format</span>
+              <select id="formatSelect" title="Match format">
+                <option value="tonpuusen">Tonpuusen</option>
+                <option value="hanchan">Hanchan</option>
+              </select>
+            </label>
             <button id="langBtn" type="button" title="Mudar para Português">🇧🇷</button>
             <button id="rulesBtn" type="button" title="Open beginner rules">Rules</button>
-            <button id="newGameBtn" type="button" title="Start a new hand">New Hand</button>
+            <button id="newGameBtn" type="button" title="Start a new match">New Match</button>
           </div>
         </div>
 
@@ -175,11 +182,18 @@
                 <p>Defense matters because Ron punishes the discarder. When another player looks threatening, safer discards are usually tiles they have already discarded or honors that are visibly exhausted.</p>
                 <p>Good beginner habits: keep useful sequences, avoid breaking pairs too early, do not call every tile, and remember that a closed hand can declare riichi. If your hand has no obvious yaku, staying closed and aiming for riichi is often the simplest plan.</p>
               </article>
+
+              <article class="rules-page" data-rules-page="6">
+                <h3>7. Match Formats</h3>
+                <p><strong>Tonpuusen</strong> is an East-only match: East 1 through East 4. <strong>Hanchan</strong> plays East and South: East 1 through South 4.</p>
+                <p>The dealer repeats the same hand after a dealer win. Other wins and exhaustive draws advance the dealer and hand number.</p>
+                <p>At the scheduled end, the match finishes when the leader has at least 30,000 points. If nobody has reached that mark, play continues into the next wind until someone leads with 30,000 or more. The match also ends immediately if any player drops below 0 points.</p>
+              </article>
             </div>
 
             <div class="rules-nav">
               <button id="prevRulesBtn" type="button">Previous</button>
-              <span id="rulesPageLabel">1 / 6</span>
+              <span id="rulesPageLabel">1 / 7</span>
               <button id="nextRulesBtn" type="button">Next</button>
             </div>
           </div>

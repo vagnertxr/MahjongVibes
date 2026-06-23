@@ -40,6 +40,11 @@ const HONOR_NAMES_PT = {
 };
 const WELCOME_STORAGE_KEY = "mahjong-vibes-hide-welcome";
 const LANGUAGE_STORAGE_KEY = "mahjong-vibes-language";
+const FORMAT_STORAGE_KEY = "mahjong-vibes-format";
+const MATCH_FORMATS = {
+  tonpuusen: { key: "tonpuusen", rounds: 4 },
+  hanchan: { key: "hanchan", rounds: 8 }
+};
 const I18N = {
   en: {
     lang: "en",
@@ -51,8 +56,14 @@ const I18N = {
     dora: "Dora {tile}",
     rules: "Rules",
     rulesTitle: "Open beginner rules",
-    newHand: "New Hand",
-    newHandTitle: "Start a new hand",
+    newHand: "Next Hand",
+    newHandTitle: "Start the next hand",
+    newMatch: "New Match",
+    newMatchTitle: "Start a new match",
+    format: "Format",
+    formatTitle: "Match format",
+    tonpuusen: "Tonpuusen",
+    hanchan: "Hanchan",
     close: "Close",
     closeTitle: "Close welcome",
     welcomeTitle: "Welcome to Mahjong Vibes",
@@ -88,8 +99,9 @@ const I18N = {
     playerDiscards: "{player} discards {tile}.",
     callPon: "You call Pon on {tile}. Discard a tile.",
     callChi: "You call Chi. Discard a tile.",
-    wins: "{player} wins by {type}: {hand} for {points} points.",
+    wins: "{player} {winVerb} by {type}: {hand} for {points} points.",
     exhaustiveDraw: "Exhaustive draw. Nobody completed a winning hand before the wall ran out.",
+    matchComplete: "{player} {winVerb} the {format} after {round}.",
     declareRiichi: "You declare Riichi. Discard to lock in the chase.",
     suits: {
       m: "Characters / Manzu",
@@ -102,7 +114,8 @@ const I18N = {
       `<h3>3. How a Hand Is Built</h3><p>The normal winning shape is four groups plus one pair. Groups are sequences, triplets, or sometimes quads. Honors cannot make sequences.</p><div class="rules-example"><strong>Sequence / Shuntsu</strong><div class="guide-tiles">${guideTiles(["2s","3s","4s"])}</div></div><div class="rules-example"><strong>Triplet / Koutsu</strong><div class="guide-tiles">${guideTiles(["E","E","E"])}</div></div><div class="rules-example"><strong>Pair / Toitsu</strong><div class="guide-tiles">${guideTiles(["5p","5p"])}</div></div><div class="rules-example"><strong>Complete example: four groups and one pair</strong><div class="guide-tiles long">${guideTiles(["2m","3m","4m","3p","4p","5p","6s","7s","8s","R","R","R","Wh","Wh"])}</div></div>`,
       `<h3>4. Turn Flow, Calls, and Winning</h3><p>On your turn, you draw one tile and discard one tile. Discards go into each player's river, which is public information. Reading those rivers helps you attack and defend.</p><p><strong>Chi</strong> uses the player-left discard to complete a sequence. <strong>Pon</strong> uses any player's discard to complete a triplet. Calling opens your hand, which is faster but removes some closed-only yaku.</p><p><strong>Tsumo</strong> means you draw your own winning tile. <strong>Ron</strong> means another player discards your winning tile. If a tile seems dangerous because an opponent may be waiting on it, discarding it can deal into Ron.</p><div class="rules-example"><strong>Waiting example: this hand wants 3M or 6M to finish the sequence</strong><div class="guide-tiles">${guideTiles(["4m","5m"])}<span class="tile small muted-tile">?</span></div></div>`,
       `<h3>5. Common Beginner Yaku</h3><p>A yaku is a scoring condition that lets the hand win. Dora are bonuses, not yaku. A hand full of dora still needs a yaku.</p><div class="rules-example"><strong>Riichi:</strong> closed hand, one tile from winning, declare riichi and pay 1,000 points.</div><div class="rules-example"><strong>Tanyao / All Simples:</strong> no terminals, no winds, no dragons.<div class="guide-tiles">${guideTiles(["2m","3m","4m","4p","5p","6p","6s","7s","8s"])}</div></div><div class="rules-example"><strong>Yakuhai / Value honors:</strong> triplet of dragons, seat wind, or round wind.<div class="guide-tiles">${guideTiles(["R","R","R"])}</div></div><div class="rules-example"><strong>Pinfu:</strong> closed hand with only sequences, a non-value pair, and a two-sided wait.</div><div class="rules-example"><strong>Seven Pairs / Chiitoitsu:</strong> seven different pairs instead of four groups and one pair.<div class="guide-tiles long">${guideTiles(["2m","2m","4p","4p","6s","6s","Wh","Wh"])}</div></div>`,
-      `<h3>6. Dora, Defense, and First Tips</h3><p>Dora increase points after you win. In this game the dora display shows the bonus tile directly. In full Riichi rules, the indicator points to the next tile in order.</p><p>Defense matters because Ron punishes the discarder. When another player looks threatening, safer discards are usually tiles they have already discarded or honors that are visibly exhausted.</p><p>Good beginner habits: keep useful sequences, avoid breaking pairs too early, do not call every tile, and remember that a closed hand can declare riichi. If your hand has no obvious yaku, staying closed and aiming for riichi is often the simplest plan.</p>`
+      `<h3>6. Dora, Defense, and First Tips</h3><p>Dora increase points after you win. In this game the dora display shows the bonus tile directly. In full Riichi rules, the indicator points to the next tile in order.</p><p>Defense matters because Ron punishes the discarder. When another player looks threatening, safer discards are usually tiles they have already discarded or honors that are visibly exhausted.</p><p>Good beginner habits: keep useful sequences, avoid breaking pairs too early, do not call every tile, and remember that a closed hand can declare riichi. If your hand has no obvious yaku, staying closed and aiming for riichi is often the simplest plan.</p>`,
+      `<h3>7. Match Formats</h3><p><strong>Tonpuusen</strong> is an East-only match: East 1 through East 4. <strong>Hanchan</strong> plays East and South: East 1 through South 4.</p><p>The dealer repeats the same hand after a dealer win. Other wins and exhaustive draws advance the dealer and hand number.</p><p>At the scheduled end, the match finishes when the leader has at least 30,000 points. If nobody has reached that mark, play continues into the next wind until someone leads with 30,000 or more. The match also ends immediately if any player drops below 0 points.</p>`
     ]
   },
   pt: {
@@ -115,8 +128,14 @@ const I18N = {
     dora: "Dora {tile}",
     rules: "Regras",
     rulesTitle: "Abrir regras para iniciantes",
-    newHand: "Nova Mão",
-    newHandTitle: "Começar uma nova mão",
+    newHand: "Próxima Mão",
+    newHandTitle: "Começar a próxima mão",
+    newMatch: "Nova Partida",
+    newMatchTitle: "Começar uma nova partida",
+    format: "Formato",
+    formatTitle: "Formato da partida",
+    tonpuusen: "Tonpuusen",
+    hanchan: "Hanchan",
     close: "Fechar",
     closeTitle: "Fechar boas-vindas",
     welcomeTitle: "Bem-vindo ao Mahjong Vibes",
@@ -152,8 +171,9 @@ const I18N = {
     playerDiscards: "{player} descarta {tile}.",
     callPon: "Você chama Pon em {tile}. Descarte uma peça.",
     callChi: "Você chama Chi. Descarte uma peça.",
-    wins: "{player} vence por {type}: {hand}, {points} pontos.",
+    wins: "{player} {winVerb} por {type}: {hand}, {points} pontos.",
     exhaustiveDraw: "Empate exaustivo. Ninguém completou uma mão antes do muro acabar.",
+    matchComplete: "{player} {winVerb} o {format} após {round}.",
     declareRiichi: "Você declara Riichi. Descarte para travar a espera.",
     suits: {
       m: "Caracteres / Manzu",
@@ -167,11 +187,14 @@ const I18N = {
       `<h3>4. Turno, Chamadas e Vitória</h3><p>No seu turno, você compra uma peça e descarta uma peça. Os descartes ficam no rio de cada jogador, uma informação pública. Ler esses rios ajuda a atacar e defender.</p><p><strong>Chi</strong> usa o descarte do jogador à sua esquerda para completar uma sequência. <strong>Pon</strong> usa o descarte de qualquer jogador para completar uma trinca. Chamar abre a mão: é mais rápido, mas remove alguns yaku de mão fechada.</p><p><strong>Tsumo</strong> é vencer comprando sua própria peça. <strong>Ron</strong> é vencer com o descarte de outra pessoa. Se uma peça parece perigosa porque alguém pode estar esperando nela, descartá-la pode dar Ron ao adversário.</p><div class="rules-example"><strong>Exemplo de espera: esta forma quer 3M ou 6M para completar a sequência</strong><div class="guide-tiles">${guideTiles(["4m","5m"])}<span class="tile small muted-tile">?</span></div></div>`,
       `<h3>5. Yaku Fáceis para Começar</h3><p>Yaku é uma condição de pontuação que permite vencer. Dora é bônus, não yaku. Uma mão cheia de dora ainda precisa de um yaku.</p><div class="rules-example"><strong>Riichi:</strong> mão fechada, a uma peça da vitória; declare riichi e pague 1.000 pontos.</div><div class="rules-example"><strong>Tanyao / Todas Simples:</strong> sem terminais, sem ventos e sem dragões.<div class="guide-tiles">${guideTiles(["2m","3m","4m","4p","5p","6p","6s","7s","8s"])}</div></div><div class="rules-example"><strong>Yakuhai / Honras de valor:</strong> trinca de dragão, vento do assento ou vento da rodada.<div class="guide-tiles">${guideTiles(["R","R","R"])}</div></div><div class="rules-example"><strong>Pinfu:</strong> mão fechada só com sequências, par sem valor e espera dos dois lados.</div><div class="rules-example"><strong>Sete Pares / Chiitoitsu:</strong> sete pares diferentes em vez de quatro grupos e um par.<div class="guide-tiles long">${guideTiles(["2m","2m","4p","4p","6s","6s","Wh","Wh"])}</div></div>`,
       `<h3>6. Dora, Defesa e Primeiras Dicas</h3><p>Dora aumenta os pontos depois que você vence. Neste jogo, o mostrador exibe diretamente a peça de bônus. Nas regras completas, o indicador aponta para a próxima peça na ordem.</p><p>Defesa importa porque Ron pune quem descartou. Quando alguém parece perigoso, descartes mais seguros costumam ser peças que essa pessoa já descartou ou honras que você já viu esgotadas.</p><p>Bons hábitos iniciais: mantenha sequências úteis, não quebre pares cedo demais, não chame todas as peças e lembre que uma mão fechada pode declarar riichi. Se sua mão não tem yaku claro, ficar fechado e mirar riichi costuma ser o plano mais simples.</p>`
+      ,
+      `<h3>7. Formatos de Partida</h3><p><strong>Tonpuusen</strong> Ã© uma partida sÃ³ de Leste: Leste 1 atÃ© Leste 4. <strong>Hanchan</strong> joga Leste e Sul: Leste 1 atÃ© Sul 4.</p><p>O dealer repete a mesma mÃ£o depois de uma vitÃ³ria do dealer. Outras vitÃ³rias e empates exaustivos avanÃ§am o dealer e o nÃºmero da mÃ£o.</p><p>No fim programado, a partida termina quando o lÃ­der tem pelo menos 30.000 pontos. Se ninguÃ©m chegou a essa marca, o jogo continua para o prÃ³ximo vento atÃ© alguÃ©m liderar com 30.000 ou mais. A partida tambÃ©m termina imediatamente se qualquer jogador ficar abaixo de 0 ponto.</p>`
     ]
   }
 };
 const state = {
   round: 0,
+  format: "tonpuusen",
   dealer: 0,
   turn: 0,
   wall: [],
@@ -181,6 +204,7 @@ const state = {
   lastDiscardFrom: null,
   pendingDiscard: false,
   gameOver: false,
+  matchOver: false,
   message: "",
   messageKey: "",
   messageParams: {},
@@ -198,6 +222,8 @@ const els = {
   langBtn: document.querySelector("#langBtn"),
   rulesBtn: document.querySelector("#rulesBtn"),
   newGameBtn: document.querySelector("#newGameBtn"),
+  formatLabel: document.querySelector("#formatLabel"),
+  formatSelect: document.querySelector("#formatSelect"),
   welcomeOverlay: document.querySelector("#welcomeOverlay"),
   welcomeTitle: document.querySelector("#welcomeTitle"),
   welcomeSubtitle: document.querySelector("#welcomeTitle + p"),
@@ -220,7 +246,12 @@ const els = {
 let currentRulesPage = 0;
 let currentLanguage = getStoredPreference(LANGUAGE_STORAGE_KEY) === "pt" ? "pt" : "en";
 
-els.newGameBtn.addEventListener("click", startHand);
+els.newGameBtn.addEventListener("click", startMatch);
+els.formatSelect.addEventListener("change", () => {
+  state.format = normalizeFormat(els.formatSelect.value);
+  setStoredPreference(FORMAT_STORAGE_KEY, state.format);
+  startMatch();
+});
 els.langBtn.addEventListener("click", toggleLanguage);
 els.welcomeLangBtn.addEventListener("click", toggleLanguage);
 els.rulesBtn.addEventListener("click", () => openWelcome(true));
@@ -236,7 +267,20 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape" && !els.welcomeOverlay.hidden) closeWelcome();
 });
 
+function startMatch() {
+  state.format = normalizeFormat(els.formatSelect.value);
+  state.round = 0;
+  state.dealer = 0;
+  state.matchOver = false;
+  state.players = [];
+  startHand();
+}
+
 function startHand() {
+  if (state.matchOver) {
+    startMatch();
+    return;
+  }
   state.wall = shuffle(buildWall());
   state.deadWall = state.wall.splice(-14);
   state.dora = state.deadWall[4];
@@ -264,7 +308,7 @@ function startHand() {
     }
   }
   sortAllHands();
-  setMessage("dealerStarts", { player: playerLabel(state.dealer) });
+  setMessage("dealerStarts", { playerSeat: state.dealer });
   drawForTurn();
 }
 
@@ -303,7 +347,7 @@ function drawForTurn() {
   player.hand.push(player.drawnTile);
   player.hand.sort(compareTiles);
   state.pendingDiscard = true;
-  setMessage("playerDraws", { player: playerLabel(state.turn) });
+  setMessage("playerDraws", { playerSeat: state.turn });
   render();
 
   if (canWin(player.hand, player.melds.length)) {
@@ -325,7 +369,7 @@ function discardTile(seat, tileIndex) {
   state.lastDiscard = tile;
   state.lastDiscardFrom = seat;
   state.pendingDiscard = false;
-  setMessage("playerDiscards", { player: playerLabel(seat), tile: tileText(tile) });
+  setMessage("playerDiscards", { playerSeat: seat, tile: tileText(tile) });
   render();
 
   const ronSeat = findRon(tile, seat);
@@ -554,9 +598,8 @@ function winHand(winner, loser, type) {
     player.score += points;
   }
 
-  setMessage("wins", { player: playerLabel(winner), type, hand: describeWin(player), points });
-  state.round += 1;
-  state.dealer = (state.dealer + 1) % 4;
+  setMessage("wins", { winner, type, points });
+  finishHand(winner === state.dealer);
   render();
 }
 
@@ -572,9 +615,41 @@ function describeWin(player) {
 function endDraw() {
   state.gameOver = true;
   setMessage("exhaustiveDraw");
-  state.round += 1;
-  state.dealer = (state.dealer + 1) % 4;
+  finishHand(false);
   render();
+}
+
+function finishHand(dealerRepeats) {
+  const completedRound = state.round;
+  if (!dealerRepeats) {
+    state.round += 1;
+    state.dealer = state.round % 4;
+  }
+  if (isMatchComplete(dealerRepeats)) {
+    state.matchOver = true;
+    const leader = leadingPlayerSeat();
+    setMessage("matchComplete", {
+      winner: leader,
+      formatKey: state.format,
+      roundNumber: completedRound
+    });
+  }
+}
+
+function isMatchComplete(dealerRepeats) {
+  if (state.players.some(player => player.score < 0)) return true;
+  const scheduledRounds = MATCH_FORMATS[state.format].rounds;
+  const leader = leadingPlayerSeat();
+  const scheduledEndReached = state.round >= scheduledRounds
+    || (dealerRepeats && state.round >= scheduledRounds - 1 && leader === state.dealer);
+  if (!scheduledEndReached) return false;
+  return state.players[leader].score >= 30000;
+}
+
+function leadingPlayerSeat() {
+  return state.players
+    .map((player, seat) => ({ seat, score: player.score }))
+    .sort((a, b) => b.score - a.score || a.seat - b.seat)[0].seat;
 }
 
 function declareRiichi() {
@@ -611,11 +686,39 @@ function t(key, params = {}) {
 function setMessage(key, params = {}) {
   state.messageKey = key;
   state.messageParams = params;
-  state.message = t(key, params);
+  state.message = formatMessage(key, params);
+}
+
+function formatMessage(key, params = {}) {
+  return t(key, localizeMessageParams(key, params));
+}
+
+function localizeMessageParams(key, params) {
+  const localized = { ...params };
+  if (Number.isInteger(params.playerSeat)) {
+    localized.player = playerLabel(params.playerSeat);
+  }
+  if (key === "wins") {
+    localized.player = playerLabel(params.winner);
+    localized.winVerb = winVerb(params.winner);
+    localized.hand = describeWin(state.players[params.winner]);
+  }
+  if (key === "matchComplete") {
+    localized.player = playerLabel(params.winner);
+    localized.winVerb = winVerb(params.winner);
+    localized.format = t(params.formatKey);
+    localized.round = roundLabel(params.roundNumber);
+  }
+  return localized;
 }
 
 function playerLabel(seat) {
   return seat === 0 ? t("you") : NAMES[seat];
+}
+
+function winVerb(seat) {
+  if (currentLanguage === "pt") return "vence";
+  return seat === 0 ? "win" : "wins";
 }
 
 function windLabel(wind) {
@@ -632,7 +735,7 @@ function toggleLanguage() {
   setStoredPreference(LANGUAGE_STORAGE_KEY, currentLanguage);
   applyLanguage();
   if (state.messageKey) {
-    state.message = t(state.messageKey, state.messageParams);
+    state.message = formatMessage(state.messageKey, state.messageParams);
   }
   render();
 }
@@ -646,8 +749,13 @@ function applyLanguage() {
   els.welcomeLangBtn.title = copy.langTitle;
   els.rulesBtn.textContent = copy.rules;
   els.rulesBtn.title = copy.rulesTitle;
-  els.newGameBtn.textContent = copy.newHand;
-  els.newGameBtn.title = copy.newHandTitle;
+  els.newGameBtn.textContent = copy.newMatch;
+  els.newGameBtn.title = copy.newMatchTitle;
+  els.formatLabel.textContent = copy.format;
+  els.formatSelect.title = copy.formatTitle;
+  Array.from(els.formatSelect.options).forEach(option => {
+    option.textContent = t(option.value);
+  });
   els.closeWelcomeBtn.textContent = copy.close;
   els.closeWelcomeBtn.title = copy.closeTitle;
   els.welcomeTitle.textContent = copy.welcomeTitle;
@@ -731,10 +839,10 @@ function setStoredPreference(key, value) {
 }
 
 function render() {
-  els.roundLabel.textContent = `${WIND_LABELS[currentLanguage][state.round % 4]} ${Math.floor(state.round / 4) + 1}`;
+  els.roundLabel.textContent = roundLabel();
   els.wallCount.textContent = t("wall", { count: state.wall.length });
   els.doraIndicator.textContent = t("dora", { tile: tileText(state.dora) });
-  els.statusText.textContent = state.messageKey ? t(state.messageKey, state.messageParams) : t("loading");
+  els.statusText.textContent = state.messageKey ? formatMessage(state.messageKey, state.messageParams) : t("loading");
   els.lastDiscard.innerHTML = state.lastDiscard ? tileHtml(state.lastDiscard) : "--";
   const winReveal = document.querySelector("#winReveal");
   if (winReveal) winReveal.remove();
@@ -770,8 +878,22 @@ function render() {
   }
 
   if (state.gameOver) {
-    showActions([{ labelKey: "nextHand", cls: "win", onClick: startHand }]);
+    showActions([state.matchOver
+      ? { labelKey: "newMatch", cls: "win", onClick: startMatch }
+      : { labelKey: "nextHand", cls: "win", onClick: startHand }
+    ]);
   }
+}
+
+function normalizeFormat(format) {
+  if (format === "topusen") return "tonpuusen";
+  return MATCH_FORMATS[format]?.key ?? "tonpuusen";
+}
+
+function roundLabel(round = state.round) {
+  const windIndex = Math.floor(round / 4) % WIND_LABELS[currentLanguage].length;
+  const handNumber = (round % 4) + 1;
+  return `${WIND_LABELS[currentLanguage][windIndex]} ${handNumber}`;
 }
 
 function renderSeatBody(player, seat) {
@@ -908,8 +1030,10 @@ function isSuit(tile) {
   return SUITS.includes(tile?.[1]);
 }
 
+state.format = normalizeFormat(getStoredPreference(FORMAT_STORAGE_KEY));
+els.formatSelect.value = state.format;
 applyLanguage();
-startHand();
+startMatch();
 if (shouldShowWelcome()) {
   openWelcome(false);
 }
