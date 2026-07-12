@@ -7,8 +7,8 @@ from pathlib import Path
 class MahjongVibesHandler(SimpleHTTPRequestHandler):
     extensions_map = {
         **SimpleHTTPRequestHandler.extensions_map,
-        ".js": "application/javascript",
-        ".css": "text/css",
+        ".js": "application/javascript; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
         ".html": "text/html; charset=utf-8",
         ".svg": "image/svg+xml",
         ".webmanifest": "application/manifest+json",

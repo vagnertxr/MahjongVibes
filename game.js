@@ -38,9 +38,27 @@ const HONOR_NAMES_PT = {
   G: "Dragão Verde",
   R: "Dragão Vermelho"
 };
+const DRAGONS = ["Wh", "G", "R"];
+const WIND_TILES = ["E", "S", "W", "N"];
+const GREEN_TILES = ["2s", "3s", "4s", "6s", "8s", "G"];
+const KOKUSHI_TILES = ["1m", "9m", "1p", "9p", "1s", "9s", "E", "S", "W", "N", "Wh", "G", "R"];
+const YAKUMAN_HAN = 13;
+
 const WELCOME_STORAGE_KEY = "mahjong-vibes-hide-welcome";
 const LANGUAGE_STORAGE_KEY = "mahjong-vibes-language";
 const FORMAT_STORAGE_KEY = "mahjong-vibes-format";
+const SOUND_STORAGE_KEY = "mahjong-vibes-sound";
+const SFX = {
+  discard: new Audio("assets/sfx/discard.ogg"),
+  call: new Audio("assets/sfx/call.ogg"),
+  riichi: new Audio("assets/sfx/riichi.ogg"),
+  win: new Audio("assets/sfx/win.ogg"),
+  shuffle: new Audio("assets/sfx/shuffle.ogg")
+};
+Object.values(SFX).forEach(audio => {
+  audio.preload = "auto";
+  audio.volume = 0.5;
+});
 const MATCH_FORMATS = {
   tonpuusen: { key: "tonpuusen", rounds: 4 },
   hanchan: { key: "hanchan", rounds: 8 }
@@ -50,6 +68,8 @@ const I18N = {
     lang: "en",
     langButton: "🇧🇷",
     langTitle: "Mudar para Português",
+    muteSound: "Mute sound",
+    unmuteSound: "Unmute sound",
     you: "You",
     points: "pts",
     wall: "Wall {count}",
@@ -83,11 +103,14 @@ const I18N = {
     river: "River",
     melds: "Melds",
     riichi: "Riichi",
+    furiten: "Furiten",
+    tenpaiBadge: "Tenpai",
     tsumo: "Tsumo",
     ron: "Ron",
     pass: "Pass",
     pon: "Pon",
     chi: "Chi {tiles}",
+    kan: "Kan {tile}",
     nextHand: "Next Hand",
     discardTitle: "Discard {tile}",
     noTile: "No tile",
@@ -99,10 +122,12 @@ const I18N = {
     playerDiscards: "{player} discards {tile}.",
     callPon: "You call Pon on {tile}. Discard a tile.",
     callChi: "You call Chi. Discard a tile.",
+    callKan: "You call Kan on {tile}. A new tile is drawn.",
     wins: "{player} {winVerb} by {type}: {hand} for {points} points.",
     exhaustiveDraw: "Exhaustive draw. Nobody completed a winning hand before the wall ran out.",
     matchComplete: "{player} {winVerb} the {format} after {round}.",
     declareRiichi: "You declare Riichi. Discard to lock in the chase.",
+    declareKan: "You declare Kan on {tile}. A new tile is drawn.",
     suits: {
       m: "Characters / Manzu",
       p: "Circles / Pinzu",
@@ -122,6 +147,8 @@ const I18N = {
     lang: "pt-BR",
     langButton: "🇬🇧",
     langTitle: "Switch to English",
+    muteSound: "Silenciar som",
+    unmuteSound: "Ativar som",
     you: "Você",
     points: "pts",
     wall: "Muro {count}",
@@ -155,11 +182,14 @@ const I18N = {
     river: "Rio",
     melds: "Chamadas",
     riichi: "Riichi",
+    furiten: "Furiten",
+    tenpaiBadge: "Tenpai",
     tsumo: "Tsumo",
     ron: "Ron",
     pass: "Passar",
     pon: "Pon",
     chi: "Chi {tiles}",
+    kan: "Kan {tile}",
     nextHand: "Próxima Mão",
     discardTitle: "Descartar {tile}",
     noTile: "Nenhuma peça",
@@ -171,10 +201,12 @@ const I18N = {
     playerDiscards: "{player} descarta {tile}.",
     callPon: "Você chama Pon em {tile}. Descarte uma peça.",
     callChi: "Você chama Chi. Descarte uma peça.",
+    callKan: "Você chama Kan em {tile}. Uma nova peça é comprada.",
     wins: "{player} {winVerb} por {type}: {hand}, {points} pontos.",
     exhaustiveDraw: "Empate exaustivo. Ninguém completou uma mão antes do muro acabar.",
     matchComplete: "{player} {winVerb} o {format} após {round}.",
     declareRiichi: "Você declara Riichi. Descarte para travar a espera.",
+    declareKan: "Você declara Kan em {tile}. Uma nova peça é comprada.",
     suits: {
       m: "Caracteres / Manzu",
       p: "Círculos / Pinzu",
@@ -188,10 +220,59 @@ const I18N = {
       `<h3>5. Yaku Fáceis para Começar</h3><p>Yaku é uma condição de pontuação que permite vencer. Dora é bônus, não yaku. Uma mão cheia de dora ainda precisa de um yaku.</p><div class="rules-example"><strong>Riichi:</strong> mão fechada, a uma peça da vitória; declare riichi e pague 1.000 pontos.</div><div class="rules-example"><strong>Tanyao / Todas Simples:</strong> sem terminais, sem ventos e sem dragões.<div class="guide-tiles">${guideTiles(["2m","3m","4m","4p","5p","6p","6s","7s","8s"])}</div></div><div class="rules-example"><strong>Yakuhai / Honras de valor:</strong> trinca de dragão, vento do assento ou vento da rodada.<div class="guide-tiles">${guideTiles(["R","R","R"])}</div></div><div class="rules-example"><strong>Pinfu:</strong> mão fechada só com sequências, par sem valor e espera dos dois lados.</div><div class="rules-example"><strong>Sete Pares / Chiitoitsu:</strong> sete pares diferentes em vez de quatro grupos e um par.<div class="guide-tiles long">${guideTiles(["2m","2m","4p","4p","6s","6s","Wh","Wh"])}</div></div>`,
       `<h3>6. Dora, Defesa e Primeiras Dicas</h3><p>Dora aumenta os pontos depois que você vence. Neste jogo, o mostrador exibe diretamente a peça de bônus. Nas regras completas, o indicador aponta para a próxima peça na ordem.</p><p>Defesa importa porque Ron pune quem descartou. Quando alguém parece perigoso, descartes mais seguros costumam ser peças que essa pessoa já descartou ou honras que você já viu esgotadas.</p><p>Bons hábitos iniciais: mantenha sequências úteis, não quebre pares cedo demais, não chame todas as peças e lembre que uma mão fechada pode declarar riichi. Se sua mão não tem yaku claro, ficar fechado e mirar riichi costuma ser o plano mais simples.</p>`
       ,
-      `<h3>7. Formatos de Partida</h3><p><strong>Tonpuusen</strong> Ã© uma partida sÃ³ de Leste: Leste 1 atÃ© Leste 4. <strong>Hanchan</strong> joga Leste e Sul: Leste 1 atÃ© Sul 4.</p><p>O dealer repete a mesma mÃ£o depois de uma vitÃ³ria do dealer. Outras vitÃ³rias e empates exaustivos avanÃ§am o dealer e o nÃºmero da mÃ£o.</p><p>No fim programado, a partida termina quando o lÃ­der tem pelo menos 30.000 pontos. Se ninguÃ©m chegou a essa marca, o jogo continua para o prÃ³ximo vento atÃ© alguÃ©m liderar com 30.000 ou mais. A partida tambÃ©m termina imediatamente se qualquer jogador ficar abaixo de 0 ponto.</p>`
+      `<h3>7. Formatos de Partida</h3><p><strong>Tonpuusen</strong> é uma partida só de Leste: Leste 1 até Leste 4. <strong>Hanchan</strong> joga Leste e Sul: Leste 1 até Sul 4.</p><p>O dealer repete a mesma mão depois de uma vitória do dealer. Outras vitórias e empates exaustivos avançam o dealer e o número da mão.</p><p>No fim programado, a partida termina quando o líder tem pelo menos 30.000 pontos. Se ninguém chegou a essa marca, o jogo continua para o próximo vento até alguém liderar com 30.000 ou mais. A partida também termina imediatamente se qualquer jogador ficar abaixo de 0 ponto.</p>`
     ]
   }
 };
+const YAKU_NAMES = {
+  doubleRiichi: { en: "Double Riichi", pt: "Riichi Duplo" },
+  riichi: { en: "Riichi", pt: "Riichi" },
+  ippatsu: { en: "Ippatsu", pt: "Ippatsu" },
+  menzenTsumo: { en: "Menzen Tsumo", pt: "Menzen Tsumo" },
+  haitei: { en: "Haitei Raoyue", pt: "Haitei Raoyue" },
+  houtei: { en: "Houtei Raoyui", pt: "Houtei Raoyui" },
+  rinshan: { en: "Rinshan Kaihou", pt: "Rinshan Kaihou" },
+  chankan: { en: "Chankan", pt: "Chankan" },
+  tenhou: { en: "Tenhou", pt: "Tenhou" },
+  chiihou: { en: "Chiihou", pt: "Chiihou" },
+  tanyao: { en: "Tanyao", pt: "Tanyao" },
+  honitsu: { en: "Honitsu", pt: "Honitsu" },
+  chinitsu: { en: "Chinitsu", pt: "Chinitsu" },
+  tsuuiisou: { en: "Tsuuiisou", pt: "Tsuuiisou" },
+  chinroutou: { en: "Chinroutou", pt: "Chinroutou" },
+  ryuuiisou: { en: "Ryuuiisou", pt: "Ryuuiisou" },
+  suukantsu: { en: "Suukantsu", pt: "Suukantsu" },
+  chuurenPoutou: { en: "Chuuren Poutou", pt: "Chuuren Poutou" },
+  chuurenPoutouPure: { en: "Pure Chuuren Poutou", pt: "Chuuren Poutou Puro" },
+  pinfu: { en: "Pinfu", pt: "Pinfu" },
+  yakuhai: { en: "Yakuhai", pt: "Yakuhai" },
+  iipeiko: { en: "Iipeiko", pt: "Iipeiko" },
+  sanshokuDoujun: { en: "Sanshoku Doujun", pt: "Sanshoku Doujun" },
+  sanshokuDoukou: { en: "Sanshoku Doukou", pt: "Sanshoku Doukou" },
+  ittsuu: { en: "Ittsuu", pt: "Ittsuu" },
+  junchan: { en: "Junchan", pt: "Junchan" },
+  chanta: { en: "Chanta", pt: "Chanta" },
+  toitoi: { en: "Toitoi", pt: "Toitoi" },
+  sanankou: { en: "Sanankou", pt: "Sanankou" },
+  shousangen: { en: "Shousangen", pt: "Shousangen" },
+  daisangen: { en: "Daisangen", pt: "Daisangen" },
+  shousuushii: { en: "Shousuushii", pt: "Shousuushii" },
+  daisuushii: { en: "Daisuushii", pt: "Daisuushii" },
+  suuankou: { en: "Suuankou", pt: "Suuankou" },
+  kokushi: { en: "Kokushi Musou", pt: "Kokushi Musou" },
+  kokushiJuusanmen: { en: "Kokushi Musou (13-wait)", pt: "Kokushi Musou (espera de 13)" },
+  chiitoitsu: { en: "Chiitoitsu", pt: "Chiitoitsu" },
+  dora: { en: "Dora", pt: "Dora" },
+  uraDora: { en: "Ura Dora", pt: "Ura Dora" }
+};
+
+function yakuDisplayName(entry) {
+  if (entry.labelTile) {
+    return `${YAKU_NAMES.yakuhai[currentLanguage]} (${tileName(entry.labelTile)})`;
+  }
+  return YAKU_NAMES[entry.key]?.[currentLanguage] ?? entry.key;
+}
+
 const state = {
   round: 0,
   format: "tonpuusen",
@@ -199,7 +280,9 @@ const state = {
   turn: 0,
   wall: [],
   deadWall: [],
-  dora: "",
+  doraTiles: [],
+  callHappenedThisHand: false,
+  drawTenpaiSeats: [],
   lastDiscard: null,
   lastDiscardFrom: null,
   pendingDiscard: false,
@@ -219,6 +302,7 @@ const els = {
   lastDiscard: document.querySelector("#lastDiscard"),
   statusText: document.querySelector("#statusText"),
   actionBar: document.querySelector("#actionBar"),
+  soundBtn: document.querySelector("#soundBtn"),
   langBtn: document.querySelector("#langBtn"),
   rulesBtn: document.querySelector("#rulesBtn"),
   newGameBtn: document.querySelector("#newGameBtn"),
@@ -245,6 +329,7 @@ const els = {
 };
 let currentRulesPage = 0;
 let currentLanguage = getStoredPreference(LANGUAGE_STORAGE_KEY) === "pt" ? "pt" : "en";
+let soundEnabled = getStoredPreference(SOUND_STORAGE_KEY) !== "0";
 
 els.newGameBtn.addEventListener("click", startMatch);
 els.formatSelect.addEventListener("change", () => {
@@ -252,6 +337,7 @@ els.formatSelect.addEventListener("change", () => {
   setStoredPreference(FORMAT_STORAGE_KEY, state.format);
   startMatch();
 });
+els.soundBtn.addEventListener("click", toggleSound);
 els.langBtn.addEventListener("click", toggleLanguage);
 els.welcomeLangBtn.addEventListener("click", toggleLanguage);
 els.rulesBtn.addEventListener("click", () => openWelcome(true));
@@ -281,15 +367,18 @@ function startHand() {
     startMatch();
     return;
   }
+  playSound("shuffle");
   state.wall = shuffle(buildWall());
   state.deadWall = state.wall.splice(-14);
-  state.dora = state.deadWall[4];
+  state.doraTiles = [state.deadWall[4]];
   state.turn = state.dealer;
   state.lastDiscard = null;
   state.lastDiscardFrom = null;
   state.pendingDiscard = false;
   state.gameOver = false;
   state.win = null;
+  state.callHappenedThisHand = false;
+  state.drawTenpaiSeats = [];
   state.players = Array.from({ length: 4 }, (_, i) => ({
     name: NAMES[i],
     wind: WINDS[(i - state.dealer + 4) % 4],
@@ -298,6 +387,8 @@ function startHand() {
     discards: [],
     melds: [],
     riichi: false,
+    riichiDeclaring: false,
+    doubleRiichi: false,
     ippatsu: false,
     drawnTile: null
   }));
@@ -350,7 +441,7 @@ function drawForTurn() {
   setMessage("playerDraws", { playerSeat: state.turn });
   render();
 
-  if (canWin(player.hand, player.melds.length)) {
+  if (canWin(player.hand, player.melds.length) && checkWin(state.turn, "Tsumo", player.drawnTile)) {
     winHand(state.turn, state.turn, "Tsumo");
     return;
   }
@@ -363,12 +454,17 @@ function drawForTurn() {
 function discardTile(seat, tileIndex) {
   if (state.gameOver || !state.pendingDiscard || seat !== state.turn) return;
   const player = state.players[seat];
+  const drawnIndex = player.drawnTile !== null ? player.hand.lastIndexOf(player.drawnTile) : -1;
+  if (player.riichi && !player.riichiDeclaring && tileIndex !== drawnIndex) return;
+  if (player.riichi && !player.riichiDeclaring) player.ippatsu = false;
   const [tile] = player.hand.splice(tileIndex, 1);
   player.drawnTile = null;
+  player.riichiDeclaring = false;
   player.discards.push(tile);
   state.lastDiscard = tile;
   state.lastDiscardFrom = seat;
   state.pendingDiscard = false;
+  playSound("discard");
   setMessage("playerDiscards", { playerSeat: seat, tile: tileText(tile) });
   render();
 
@@ -393,17 +489,20 @@ function discardTile(seat, tileIndex) {
   setTimeout(nextTurn, 450);
 }
 
-function findRon(tile, fromSeat) {
+function findRon(tile, fromSeat, extra = {}) {
   for (let offset = 1; offset < 4; offset += 1) {
     const seat = (fromSeat + offset) % 4;
     const player = state.players[seat];
-    if (canWin([...player.hand, tile], player.melds.length)) return seat;
+    if (!canWin([...player.hand, tile], player.melds.length)) continue;
+    if (isFuriten(player)) continue;
+    if (checkWin(seat, "Ron", tile, extra)) return seat;
   }
   return null;
 }
 
 function canHumanCall(tile, fromSeat) {
   const human = state.players[0];
+  if (human.riichi) return false;
   const same = human.hand.filter(t => t === tile).length;
   return same >= 2 || (fromSeat === 3 && chiOptions(human.hand, tile).length > 0);
 }
@@ -411,6 +510,9 @@ function canHumanCall(tile, fromSeat) {
 function showCallActions(tile, fromSeat) {
   const human = state.players[0];
   const actions = [];
+  if (human.hand.filter(t => t === tile).length >= 3) {
+    actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => callMinkan(tile, fromSeat) });
+  }
   if (human.hand.filter(t => t === tile).length >= 2) {
     actions.push({ labelKey: "pon", onClick: () => callPon(tile, fromSeat) });
   }
@@ -427,6 +529,9 @@ function callPon(tile, fromSeat) {
   human.melds.push({ type: "pon", tiles: [tile, tile, tile], from: fromSeat });
   state.turn = 0;
   state.pendingDiscard = true;
+  state.callHappenedThisHand = true;
+  breakIppatsu();
+  playSound("call");
   setMessage("callPon", { tile: tileText(tile) });
   clearActions();
   render();
@@ -438,6 +543,9 @@ function callChi(tile, option, fromSeat) {
   human.melds.push({ type: "chi", tiles: [...option, tile].sort(compareTiles), from: fromSeat });
   state.turn = 0;
   state.pendingDiscard = true;
+  state.callHappenedThisHand = true;
+  breakIppatsu();
+  playSound("call");
   setMessage("callChi");
   clearActions();
   render();
@@ -465,6 +573,107 @@ function removeTiles(hand, tiles) {
   }
 }
 
+function ankanOptions(hand) {
+  const counts = countTiles(hand);
+  return Object.keys(counts).filter(tile => counts[tile] === 4);
+}
+
+function kakanOptions(player) {
+  const counts = countTiles(player.hand);
+  return player.melds
+    .filter(meld => meld.type === "pon" && counts[meld.tiles[0]] >= 1)
+    .map(meld => meld.tiles[0]);
+}
+
+function legalAnkanOptions(player) {
+  if (player.riichiDeclaring) return [];
+  const options = ankanOptions(player.hand);
+  if (!player.riichi) return options;
+  return options.filter(tile => tile === player.drawnTile && riichiAnkanPreservesWait(player, tile));
+}
+
+function riichiAnkanPreservesWait(player, tile) {
+  const drawnIndex = player.hand.lastIndexOf(player.drawnTile);
+  const preDrawHand = [...player.hand.slice(0, drawnIndex), ...player.hand.slice(drawnIndex + 1)];
+  const preWaits = getWaits(preDrawHand, player.melds.length);
+  const postHand = preDrawHand.filter(t => t !== tile);
+  const postWaits = getWaits(postHand, player.melds.length + 1);
+  return sameTileSet(preWaits, postWaits);
+}
+
+function declareAnkan(tile) {
+  const human = state.players[0];
+  if (state.turn !== 0 || !state.pendingDiscard || !legalAnkanOptions(human).includes(tile)) return;
+  removeTiles(human.hand, [tile, tile, tile, tile]);
+  human.melds.push({ type: "ankan", tiles: [tile, tile, tile, tile], from: null });
+  state.callHappenedThisHand = true;
+  breakIppatsu();
+  playSound("call");
+  setMessage("declareKan", { tile: tileText(tile) });
+  revealKanDora();
+  clearActions();
+  if (!drawReplacementTile(human, 0)) render();
+}
+
+function declareKakan(tile) {
+  const human = state.players[0];
+  if (state.turn !== 0 || !state.pendingDiscard || !kakanOptions(human).includes(tile)) return;
+  const chankanSeat = findRon(tile, 0, { isChankan: true });
+  if (chankanSeat !== null) {
+    removeTiles(human.hand, [tile]);
+    state.lastDiscard = tile;
+    state.lastDiscardFrom = 0;
+    setTimeout(() => winHand(chankanSeat, 0, "Ron", { isChankan: true }), 400);
+    return;
+  }
+  const meld = human.melds.find(m => m.type === "pon" && m.tiles[0] === tile);
+  removeTiles(human.hand, [tile]);
+  meld.type = "kakan";
+  meld.tiles.push(tile);
+  state.callHappenedThisHand = true;
+  breakIppatsu();
+  playSound("call");
+  setMessage("declareKan", { tile: tileText(tile) });
+  revealKanDora();
+  clearActions();
+  if (!drawReplacementTile(human, 0)) render();
+}
+
+function callMinkan(tile, fromSeat) {
+  const human = state.players[0];
+  removeTiles(human.hand, [tile, tile, tile]);
+  human.melds.push({ type: "minkan", tiles: [tile, tile, tile, tile], from: fromSeat });
+  state.turn = 0;
+  state.callHappenedThisHand = true;
+  breakIppatsu();
+  playSound("call");
+  setMessage("callKan", { tile: tileText(tile) });
+  revealKanDora();
+  clearActions();
+  if (!drawReplacementTile(human, 0)) render();
+}
+
+function drawReplacementTile(player, seat) {
+  if (state.wall.length === 0) {
+    endDraw();
+    return true;
+  }
+  player.drawnTile = state.wall.pop();
+  player.hand.push(player.drawnTile);
+  player.hand.sort(compareTiles);
+  state.pendingDiscard = true;
+  if (canWin(player.hand, player.melds.length) && checkWin(seat, "Tsumo", player.drawnTile, { isRinshan: true })) {
+    winHand(seat, seat, "Tsumo", { isRinshan: true });
+    return true;
+  }
+  return false;
+}
+
+function revealKanDora() {
+  const nextIndex = 4 + state.doraTiles.length;
+  if (state.deadWall[nextIndex]) state.doraTiles.push(state.deadWall[nextIndex]);
+}
+
 function nextTurn() {
   clearActions();
   if (state.gameOver) return;
@@ -490,7 +699,7 @@ function chooseBotDiscard(player) {
 
 function tileValue(tile, player) {
   let value = 0;
-  if (tile === state.dora) value += 5;
+  if (state.doraTiles.includes(tile)) value += 5;
   if (tile === player.wind[0] || tile === "E" || ["Wh", "G", "R"].includes(tile)) value += 2;
   if (isSuit(tile)) {
     const n = Number(tile[0]);
@@ -568,55 +777,559 @@ function canMakeGroups(counts, groupsLeft) {
   return false;
 }
 
-function winHand(winner, loser, type) {
+// --- Full-decomposition engine (used for yaku/fu scoring, not tenpai checks) ---
+// Unlike canMakeGroups (which only asks "is this possible?"), this collects every
+// distinct way to break the concealed tiles into groups, since different readings
+// of the same hand can qualify for different yaku (e.g. pinfu vs. an alternate
+// triplet reading), and real scoring always picks whichever reading scores highest.
+
+function enumerateGroupings(counts, groupsLeft) {
+  if (groupsLeft === 0) {
+    return Object.values(counts).every(n => n === 0) ? [[]] : [];
+  }
+  const tile = TILE_ORDER.find(t => counts[t] > 0);
+  if (!tile) return [];
+  const results = [];
+
+  if (counts[tile] >= 3) {
+    counts[tile] -= 3;
+    for (const rest of enumerateGroupings(counts, groupsLeft - 1)) {
+      results.push([{ type: "triplet", tiles: [tile, tile, tile] }, ...rest]);
+    }
+    counts[tile] += 3;
+  }
+
+  if (isSuit(tile)) {
+    const n = Number(tile[0]);
+    const suit = tile[1];
+    const t2 = `${n + 1}${suit}`;
+    const t3 = `${n + 2}${suit}`;
+    if (n <= 7 && counts[t2] > 0 && counts[t3] > 0) {
+      counts[tile] -= 1;
+      counts[t2] -= 1;
+      counts[t3] -= 1;
+      for (const rest of enumerateGroupings(counts, groupsLeft - 1)) {
+        results.push([{ type: "sequence", tiles: [tile, t2, t3] }, ...rest]);
+      }
+      counts[tile] += 1;
+      counts[t2] += 1;
+      counts[t3] += 1;
+    }
+  }
+
+  return results;
+}
+
+function enumerateHandDecompositions(concealedTiles, groupsNeeded) {
+  const counts = countTiles(concealedTiles);
+  const decompositions = [];
+  const pairCandidates = [...new Set(concealedTiles)].filter(t => counts[t] >= 2);
+  for (const pairTile of pairCandidates) {
+    counts[pairTile] -= 2;
+    for (const groups of enumerateGroupings(counts, groupsNeeded)) {
+      decompositions.push({ pair: pairTile, groups });
+    }
+    counts[pairTile] += 2;
+  }
+  return decompositions;
+}
+
+function meldToGroup(meld) {
+  if (meld.type === "chi") {
+    const sorted = [...meld.tiles].sort((a, b) => Number(a[0]) - Number(b[0]));
+    return { type: "sequence", tiles: sorted, concealed: false, kan: false, meld };
+  }
+  if (meld.type === "pon") {
+    return { type: "triplet", tiles: meld.tiles.slice(0, 3), concealed: false, kan: false, meld };
+  }
+  if (meld.type === "ankan") {
+    return { type: "triplet", tiles: meld.tiles.slice(0, 3), concealed: true, kan: true, meld };
+  }
+  // minkan and kakan are both open kans: kakan is a pon upgraded by adding the
+  // player's own 4th tile, but it was never concealed (the first 3 came from a call).
+  return { type: "triplet", tiles: meld.tiles.slice(0, 3), concealed: false, kan: true, meld };
+}
+
+// --- Yaku / fu / score engine ---
+// evaluateWin(concealedHand, melds, context) is the single entry point: it tries
+// every legal way to read the hand (every decomposition x every way the winning
+// tile could complete it) and returns whichever reading scores highest, or null
+// if no reading has a yaku at all (a shape with no yaku cannot legally win).
+
+function removeOne(tiles, tile) {
+  const index = tiles.indexOf(tile);
+  return [...tiles.slice(0, index), ...tiles.slice(index + 1)];
+}
+
+function seatWindTile(seat) {
+  return WIND_TILES[(seat - state.dealer + 4) % 4];
+}
+
+function roundWindTile() {
+  return WIND_TILES[Math.floor(state.round / 4) % 4];
+}
+
+function countMatchingTiles(tiles, targetList) {
+  return tiles.filter(t => targetList.includes(t)).length;
+}
+
+function waitTypeForSequence(seqTiles, winTile) {
+  const nums = seqTiles.map(t => Number(t[0])).sort((a, b) => a - b);
+  const winN = Number(winTile[0]);
+  if (winN === nums[1]) return "kanchan";
+  if (winN === nums[2] && nums[0] === 1) return "penchan";
+  if (winN === nums[0] && nums[2] === 9) return "penchan";
+  return "ryanmen";
+}
+
+function findCompletionCandidates(fullGroups, pair, winTile) {
+  const candidates = [];
+  if (pair === winTile) candidates.push({ kind: "pair" });
+  for (const group of fullGroups) {
+    if (group.meld) continue; // pre-existing melds can't be "completed" by the winning tile
+    if (!group.tiles.includes(winTile)) continue;
+    if (group.type === "triplet") {
+      candidates.push({ kind: "triplet", group });
+    } else {
+      candidates.push({ kind: "sequence", group, waitType: waitTypeForSequence(group.tiles, winTile) });
+    }
+  }
+  return candidates;
+}
+
+function isPinfuComposition(fullGroups, pair, completion, isOpen, context) {
+  return !isOpen
+    && fullGroups.every(g => g.type === "sequence")
+    && pairFu(pair, context) === 0
+    && completion.kind === "sequence" && completion.waitType === "ryanmen";
+}
+
+function pairFu(pairTile, context) {
+  let fu = 0;
+  if (DRAGONS.includes(pairTile)) fu += 2;
+  if (pairTile === context.seatWindTile) fu += 2;
+  if (pairTile === context.roundWindTile) fu += 2;
+  return fu;
+}
+
+function waitFu(completion) {
+  if (completion.kind === "pair") return 2;
+  if (completion.kind === "sequence") return completion.waitType === "ryanmen" ? 0 : 2;
+  return 0;
+}
+
+function groupFu(group, completion, isTsumo) {
+  if (group.type === "sequence") return 0;
+  const isKan = !!group.kan;
+  let concealed = group.meld ? !!group.concealed : true;
+  if (!group.meld && completion.kind === "triplet" && completion.group === group) {
+    concealed = isTsumo; // ron "opens" the triplet it completes, even in a closed hand
+  }
+  const valueTile = isTerminalOrHonor(group.tiles[0]);
+  let base = valueTile ? 4 : 2;
+  if (concealed) base *= 2;
+  if (isKan) base *= 4;
+  return base;
+}
+
+function computeFu(fullGroups, pair, completion, isOpen, isTsumo, context) {
+  let fu = 20;
+  for (const group of fullGroups) fu += groupFu(group, completion, isTsumo);
+  fu += pairFu(pair, context);
+  fu += waitFu(completion);
+  if (isTsumo) {
+    if (!isPinfuComposition(fullGroups, pair, completion, isOpen, context)) fu += 2;
+  } else if (!isOpen) {
+    fu += 10; // menzen ron bonus
+  } else if (fu === 20) {
+    fu = 30; // open, otherwise-zero-fu hand ("kuipinfu") floors to 30
+  }
+  return Math.ceil(fu / 10) * 10;
+}
+
+function baseScorePoints(han, fu) {
+  if (han >= 11) return 6000; // sanbaiman
+  if (han >= 8) return 4000; // baiman
+  if (han >= 6) return 3000; // haneman
+  if (han === 5) return 2000; // mangan
+  return Math.min(fu * Math.pow(2, 2 + han), 2000);
+}
+
+function roundUp100(n) {
+  return Math.ceil(n / 100) * 100;
+}
+
+function computeScore(han, fu, isDealer, isTsumo) {
+  const yakumanUnits = han >= YAKUMAN_HAN ? Math.round(han / YAKUMAN_HAN) : 0;
+  const base = yakumanUnits > 0 ? 8000 * yakumanUnits : baseScorePoints(han, fu);
+  if (isTsumo) {
+    if (isDealer) {
+      const each = roundUp100(base * 2);
+      return { total: each * 3, dealerPay: 0, otherPay: each };
+    }
+    const dealerPay = roundUp100(base * 2);
+    const otherPay = roundUp100(base * 1);
+    return { total: dealerPay + otherPay * 2, dealerPay, otherPay };
+  }
+  const mult = isDealer ? 6 : 4;
+  const total = roundUp100(base * mult);
+  return { total, loserPay: total };
+}
+
+function detectGlobalYaku(allTiles, meldGroups, isOpen, context) {
+  const yaku = [];
+  if (context.isDoubleRiichi) yaku.push({ key: "doubleRiichi", han: 2 });
+  else if (context.isRiichi) yaku.push({ key: "riichi", han: 1 });
+  if (context.isIppatsu && context.isRiichi) yaku.push({ key: "ippatsu", han: 1 });
+  if (context.isTsumo && !isOpen) yaku.push({ key: "menzenTsumo", han: 1 });
+  if (context.isHaitei) yaku.push({ key: "haitei", han: 1 });
+  if (context.isHoutei) yaku.push({ key: "houtei", han: 1 });
+  if (context.isRinshan) yaku.push({ key: "rinshan", han: 1 });
+  if (context.isChankan) yaku.push({ key: "chankan", han: 1 });
+  if (context.isTenhou) yaku.push({ key: "tenhou", han: YAKUMAN_HAN, yakuman: true });
+  if (context.isChiihou) yaku.push({ key: "chiihou", han: YAKUMAN_HAN, yakuman: true });
+  if (allTiles.every(isSimple)) yaku.push({ key: "tanyao", han: 1 });
+
+  const suits = new Set(allTiles.filter(isSuit).map(tileSuit));
+  const hasHonor = allTiles.some(isHonor);
+  if (suits.size === 1) {
+    if (hasHonor) yaku.push({ key: "honitsu", han: isOpen ? 2 : 3 });
+    else yaku.push({ key: "chinitsu", han: isOpen ? 5 : 6 });
+  }
+
+  if (allTiles.every(isHonor)) yaku.push({ key: "tsuuiisou", han: YAKUMAN_HAN, yakuman: true });
+  if (allTiles.every(isTerminal)) yaku.push({ key: "chinroutou", han: YAKUMAN_HAN, yakuman: true });
+  if (allTiles.every(t => GREEN_TILES.includes(t))) yaku.push({ key: "ryuuiisou", han: YAKUMAN_HAN, yakuman: true });
+
+  if (meldGroups.filter(g => g.kan).length === 4) yaku.push({ key: "suukantsu", han: YAKUMAN_HAN, yakuman: true });
+
+  if (!isOpen && suits.size === 1 && !hasHonor) {
+    const suit = [...suits][0];
+    const required = { 1: 3, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 3 };
+    const counts = countTiles(allTiles);
+    const meetsMinimum = Object.keys(required).every(n => (counts[`${n}${suit}`] ?? 0) >= required[n]);
+    if (meetsMinimum) {
+      const preCounts = countTiles(removeOne(allTiles, context.winTile));
+      const isPure = Object.keys(required).every(n => (preCounts[`${n}${suit}`] ?? 0) === required[n]);
+      yaku.push({ key: isPure ? "chuurenPoutouPure" : "chuurenPoutou", han: isPure ? YAKUMAN_HAN * 2 : YAKUMAN_HAN, yakuman: true });
+    }
+  }
+
+  return yaku;
+}
+
+function detectGroupYaku(fullGroups, pair, completion, isOpen, context) {
+  const yaku = [];
+  const yakuman = [];
+  const allTriplets = fullGroups.every(g => g.type === "triplet");
+
+  if (isPinfuComposition(fullGroups, pair, completion, isOpen, context)) {
+    yaku.push({ key: "pinfu", han: 1 });
+  }
+
+  for (const group of fullGroups) {
+    if (group.type !== "triplet") continue;
+    const t = group.tiles[0];
+    if (DRAGONS.includes(t)) yaku.push({ key: `yakuhai_${t}`, labelTile: t, han: 1 });
+    if (t === context.seatWindTile) yaku.push({ key: "yakuhaiSeat", labelTile: t, han: 1 });
+    if (t === context.roundWindTile) yaku.push({ key: "yakuhaiRound", labelTile: t, han: 1 });
+  }
+
+  if (!isOpen) {
+    const seqKeys = fullGroups.filter(g => g.type === "sequence").map(g => g.tiles.join(","));
+    const seen = new Set();
+    for (const key of seqKeys) {
+      if (seen.has(key)) { yaku.push({ key: "iipeiko", han: 1 }); break; }
+      seen.add(key);
+    }
+  }
+
+  const seqNumsBySuit = { m: new Set(), p: new Set(), s: new Set() };
+  const tripNumsBySuit = { m: new Set(), p: new Set(), s: new Set() };
+  for (const g of fullGroups) {
+    if (!isSuit(g.tiles[0])) continue;
+    const suit = g.tiles[0][1];
+    if (g.type === "sequence") seqNumsBySuit[suit].add(g.tiles.map(t => t[0]).join(""));
+    else tripNumsBySuit[suit].add(g.tiles[0][0]);
+  }
+  if ([...seqNumsBySuit.m].some(n => seqNumsBySuit.p.has(n) && seqNumsBySuit.s.has(n))) {
+    yaku.push({ key: "sanshokuDoujun", han: isOpen ? 1 : 2 });
+  }
+  if ([...tripNumsBySuit.m].some(n => tripNumsBySuit.p.has(n) && tripNumsBySuit.s.has(n))) {
+    yaku.push({ key: "sanshokuDoukou", han: 2 });
+  }
+  for (const suit of SUITS) {
+    const nums = seqNumsBySuit[suit];
+    if (nums.has("123") && nums.has("456") && nums.has("789")) {
+      yaku.push({ key: "ittsuu", han: isOpen ? 1 : 2 });
+      break;
+    }
+  }
+
+  const groupsHaveTerminalOrHonor = fullGroups.every(g => g.tiles.some(isTerminalOrHonor));
+  const pairHasTerminalOrHonor = isTerminalOrHonor(pair);
+  if (groupsHaveTerminalOrHonor && pairHasTerminalOrHonor) {
+    const anyHonorUsed = fullGroups.some(g => g.tiles.some(isHonor)) || isHonor(pair);
+    const hasSequence = fullGroups.some(g => g.type === "sequence");
+    if (!anyHonorUsed) yaku.push({ key: "junchan", han: isOpen ? 2 : 3 });
+    else if (hasSequence) yaku.push({ key: "chanta", han: isOpen ? 1 : 2 });
+  }
+
+  if (allTriplets) yaku.push({ key: "toitoi", han: 2 });
+
+  const concealedTripletCount = fullGroups.filter(g => {
+    if (g.type !== "triplet") return false;
+    if (g.meld) return !!g.concealed;
+    return !(completion.kind === "triplet" && completion.group === g && !context.isTsumo);
+  }).length;
+  if (concealedTripletCount >= 3) yaku.push({ key: "sanankou", han: 2 });
+
+  const dragonTripletCount = fullGroups.filter(g => g.type === "triplet" && DRAGONS.includes(g.tiles[0])).length;
+  const dragonPair = DRAGONS.includes(pair);
+  if (dragonTripletCount === 3) {
+    yakuman.push({ key: "daisangen", han: YAKUMAN_HAN, yakuman: true });
+  } else if (dragonTripletCount === 2 && dragonPair) {
+    yaku.push({ key: "shousangen", han: 2 });
+  }
+
+  const windTripletCount = fullGroups.filter(g => g.type === "triplet" && WIND_TILES.includes(g.tiles[0])).length;
+  const windPair = WIND_TILES.includes(pair);
+  if (windTripletCount === 4) {
+    yakuman.push({ key: "daisuushii", han: YAKUMAN_HAN, yakuman: true });
+  } else if (windTripletCount === 3 && windPair) {
+    yakuman.push({ key: "shousuushii", han: YAKUMAN_HAN, yakuman: true });
+  }
+
+  if (concealedTripletCount === 4) {
+    yakuman.push({ key: "suuankou", han: completion.kind === "pair" ? YAKUMAN_HAN * 2 : YAKUMAN_HAN, yakuman: true });
+  }
+
+  return { yaku, yakuman };
+}
+
+function finalizeScore(yakuList, fu, context) {
+  const yakumanEntries = yakuList.filter(y => y.yakuman);
+  if (yakumanEntries.length > 0) {
+    const han = yakumanEntries.reduce((sum, y) => sum + y.han, 0);
+    const score = computeScore(han, fu, context.isDealer, context.isTsumo);
+    return { han, fu, yakuList: yakumanEntries, points: score.total, score, isYakuman: true };
+  }
+  if (yakuList.length === 0) return null;
+  const uraDoraCount = context.isRiichi ? context.uraDoraCount : 0;
+  const han = yakuList.reduce((sum, y) => sum + y.han, 0) + context.doraCount + uraDoraCount;
+  const score = computeScore(han, fu, context.isDealer, context.isTsumo);
+  const fullYakuList = [...yakuList];
+  if (context.doraCount > 0) fullYakuList.push({ key: "dora", han: context.doraCount });
+  if (uraDoraCount > 0) fullYakuList.push({ key: "uraDora", han: uraDoraCount });
+  return { han, fu, yakuList: fullYakuList, points: score.total, score, isYakuman: false };
+}
+
+function evaluateKokushi(concealedHand, context) {
+  if (concealedHand.length !== 14) return null;
+  if (!concealedHand.every(t => KOKUSHI_TILES.includes(t))) return null;
+  if (Object.keys(countTiles(concealedHand)).length !== 13) return null;
+  const preWinHand = removeOne(concealedHand, context.winTile);
+  const isThirteenWait = new Set(preWinHand).size === 13;
+  const han = isThirteenWait ? YAKUMAN_HAN * 2 : YAKUMAN_HAN;
+  return finalizeScore([{ key: isThirteenWait ? "kokushiJuusanmen" : "kokushi", han, yakuman: true }], 25, context);
+}
+
+function evaluateChiitoitsu(concealedHand, context) {
+  const globalYaku = detectGlobalYaku(concealedHand, [], false, context);
+  return finalizeScore([...globalYaku, { key: "chiitoitsu", han: 2 }], 25, context);
+}
+
+function evaluateWin(concealedHand, melds, context) {
+  const isOpen = melds.some(m => m.type !== "ankan");
+  const meldGroups = melds.map(meldToGroup);
+
+  if (melds.length === 0) {
+    const kokushi = evaluateKokushi(concealedHand, context);
+    if (kokushi) return kokushi;
+  }
+
+  let best = null;
+  const consider = result => {
+    if (result && (!best || result.points > best.points)) best = result;
+  };
+
+  if (melds.length === 0 && isSevenPairs(concealedHand)) {
+    consider(evaluateChiitoitsu(concealedHand, context));
+  }
+
+  const allTiles = [...concealedHand, ...melds.flatMap(m => m.tiles)];
+  const globalYaku = detectGlobalYaku(allTiles, meldGroups, isOpen, context);
+  const neededGroups = 4 - melds.length;
+  const decompositions = enumerateHandDecompositions(concealedHand, neededGroups);
+
+  for (const decomposition of decompositions) {
+    const fullGroups = [...meldGroups, ...decomposition.groups];
+    const candidates = findCompletionCandidates(fullGroups, decomposition.pair, context.winTile);
+    for (const completion of candidates) {
+      const { yaku: groupYaku, yakuman: groupYakuman } = detectGroupYaku(fullGroups, decomposition.pair, completion, isOpen, context);
+      const fu = computeFu(fullGroups, decomposition.pair, completion, isOpen, context.isTsumo, context);
+      consider(finalizeScore([...globalYaku, ...groupYaku, ...groupYakuman], fu, context));
+    }
+  }
+
+  return best;
+}
+
+function canActuallyWin(player, winTile, context) {
+  const concealedHand = context.isTsumo ? player.hand : [...player.hand, winTile];
+  return evaluateWin(concealedHand, player.melds, { ...context, winTile }) !== null;
+}
+
+function getWaits(hand, openMeldCount) {
+  const waits = [];
+  for (const tile of TILE_ORDER) {
+    if (canWin([...hand, tile], openMeldCount)) waits.push(tile);
+  }
+  return waits;
+}
+
+function isTenpai(hand, openMeldCount) {
+  return getWaits(hand, openMeldCount).length > 0;
+}
+
+function canDeclareRiichi(hand, openMeldCount) {
+  const uniqueTiles = [...new Set(hand)];
+  return uniqueTiles.some(tile => {
+    const index = hand.indexOf(tile);
+    const remaining = [...hand.slice(0, index), ...hand.slice(index + 1)];
+    return isTenpai(remaining, openMeldCount);
+  });
+}
+
+function sameTileSet(a, b) {
+  if (a.length !== b.length) return false;
+  const sortedA = [...a].sort();
+  const sortedB = [...b].sort();
+  return sortedA.every((tile, index) => tile === sortedB[index]);
+}
+
+function uraDoraTilesForWin() {
+  const count = state.doraTiles.length;
+  const tiles = [];
+  for (let i = 0; i < count; i += 1) {
+    const idx = 13 - i;
+    if (state.deadWall[idx] !== undefined) tiles.push(state.deadWall[idx]);
+  }
+  return tiles;
+}
+
+function isFuriten(player) {
+  const waits = getWaits(player.hand, player.melds.length);
+  if (waits.length === 0) return false;
+  return waits.some(wait => player.discards.includes(wait));
+}
+
+function breakIppatsu() {
+  state.players.forEach(p => { p.ippatsu = false; });
+}
+
+function buildWinContext(winnerSeat, type, winTile, extra = {}) {
+  const player = state.players[winnerSeat];
+  const isTsumo = type === "Tsumo";
+  const isDealer = winnerSeat === state.dealer;
+  const concealedHand = isTsumo ? player.hand : [...player.hand, winTile];
+  const fullTiles = [...concealedHand, ...player.melds.flatMap(m => m.tiles)];
+  const openingTurn = state.players.every(p => p.discards.length === 0) && !state.callHappenedThisHand;
+  return {
+    winTile,
+    isTsumo,
+    isDealer,
+    seatWindTile: seatWindTile(winnerSeat),
+    roundWindTile: roundWindTile(),
+    isRiichi: player.riichi,
+    isDoubleRiichi: !!player.doubleRiichi,
+    isIppatsu: !!player.ippatsu,
+    doraCount: countMatchingTiles(fullTiles, state.doraTiles),
+    uraDoraCount: player.riichi ? countMatchingTiles(fullTiles, uraDoraTilesForWin()) : 0,
+    isHaitei: isTsumo && state.wall.length === 0 && !extra.isRinshan,
+    isHoutei: !isTsumo && state.wall.length === 0,
+    isRinshan: !!extra.isRinshan,
+    isChankan: !!extra.isChankan,
+    isTenhou: isTsumo && isDealer && openingTurn,
+    isChiihou: isTsumo && !isDealer && openingTurn
+  };
+}
+
+function checkWin(seat, type, winTile, extra = {}) {
+  const player = state.players[seat];
+  const context = buildWinContext(seat, type, winTile, extra);
+  const concealedHand = context.isTsumo ? player.hand : [...player.hand, winTile];
+  return evaluateWin(concealedHand, player.melds, context);
+}
+
+function winHand(winner, loser, type, extra = {}) {
+  const player = state.players[winner];
+  const winTile = type === "Ron" ? state.lastDiscard : player.drawnTile;
+  const evaluation = checkWin(winner, type, winTile, extra);
+  if (!evaluation) return;
+
   state.gameOver = true;
   clearActions();
-  const player = state.players[winner];
-  const winTile = type === "Ron" && state.lastDiscardFrom === loser ? state.lastDiscard : null;
   const revealedHand = [...player.hand];
-  if (winTile) revealedHand.push(winTile);
+  if (type === "Ron") revealedHand.push(winTile);
   revealedHand.sort(compareTiles);
   state.win = {
     winner,
     type,
     tile: winTile,
     hand: revealedHand,
-    melds: player.melds.map(meld => [...meld.tiles])
+    melds: player.melds.map(meld => [...meld.tiles]),
+    evaluation
   };
-  const base = type === "Tsumo" ? 1500 : 3900;
-  const bonus = player.riichi ? 1000 : 0;
-  const doraBonus = countTiles(player.hand)[state.dora] ? 1000 : 0;
-  const points = base + bonus + doraBonus;
 
+  const points = evaluation.points;
   if (type === "Tsumo") {
     state.players.forEach((p, i) => {
-      if (i !== winner) p.score -= Math.floor(points / 3);
+      if (i === winner) return;
+      const isDealerPayer = winner !== state.dealer && i === state.dealer;
+      p.score -= isDealerPayer ? evaluation.score.dealerPay : evaluation.score.otherPay;
     });
-    player.score += points;
   } else {
     state.players[loser].score -= points;
-    player.score += points;
   }
+  player.score += points;
 
+  playSound("win");
   setMessage("wins", { winner, type, points });
   finishHand(winner === state.dealer);
   render();
 }
 
 function describeWin(player) {
-  if (isSevenPairs(player.hand)) return t("sevenPairs");
-  const labels = [];
-  if (player.riichi) labels.push(t("riichi"));
-  if (player.melds.length === 0) labels.push(t("menzen"));
-  if ((countTiles(player.hand)[state.dora] ?? 0) > 0) labels.push("Dora");
-  return labels.length ? labels.join(", ") : t("standardHand");
+  if (!state.win?.evaluation) return t("standardHand");
+  const { evaluation } = state.win;
+  const names = evaluation.yakuList.map(yakuDisplayName).join(", ");
+  if (evaluation.isYakuman) return names;
+  return `${names} (${evaluation.han}han ${evaluation.fu}fu)`;
 }
 
 function endDraw() {
   state.gameOver = true;
+  const tenpaiSeats = state.players
+    .map((player, seat) => ({ seat, tenpai: isTenpai(player.hand, player.melds.length) }))
+    .filter(entry => entry.tenpai)
+    .map(entry => entry.seat);
+  applyNotenPayments(tenpaiSeats);
+  state.drawTenpaiSeats = tenpaiSeats;
   setMessage("exhaustiveDraw");
-  finishHand(false);
+  finishHand(tenpaiSeats.includes(state.dealer));
   render();
+}
+
+function applyNotenPayments(tenpaiSeats) {
+  const tenpaiCount = tenpaiSeats.length;
+  if (tenpaiCount === 0 || tenpaiCount === 4) return;
+  const pot = 3000;
+  const gain = pot / tenpaiCount;
+  const notenSeats = [0, 1, 2, 3].filter(seat => !tenpaiSeats.includes(seat));
+  const loss = pot / notenSeats.length;
+  tenpaiSeats.forEach(seat => { state.players[seat].score += gain; });
+  notenSeats.forEach(seat => { state.players[seat].score -= loss; });
 }
 
 function finishHand(dealerRepeats) {
@@ -655,8 +1368,14 @@ function leadingPlayerSeat() {
 function declareRiichi() {
   const human = state.players[0];
   if (state.turn !== 0 || !state.pendingDiscard || human.melds.length > 0 || human.score < 1000) return;
+  if (state.wall.length < 4) return;
+  if (!canDeclareRiichi(human.hand, human.melds.length)) return;
   human.riichi = true;
+  human.riichiDeclaring = true;
+  human.doubleRiichi = human.discards.length === 0 && !state.callHappenedThisHand;
+  human.ippatsu = true;
   human.score -= 1000;
+  playSound("riichi");
   setMessage("declareRiichi");
   render();
 }
@@ -727,7 +1446,35 @@ function windLabel(wind) {
 }
 
 function guideTiles(tiles) {
-  return tiles.map(tile => `<span class="tile small ${tileClass(tile)}">${tileFaceText(tile)}</span>`).join("");
+  return tiles.map(tile => `<span class="tile small ${tileClass(tile)}">${tileImage(tile)}</span>`).join("");
+}
+
+function playSound(key) {
+  if (!soundEnabled) return;
+  const audio = SFX[key];
+  if (!audio) return;
+  try {
+    audio.currentTime = 0;
+  } catch {
+    // some browsers throw if the media isn't ready yet; a fresh play() below still works
+  }
+  try {
+    const result = audio.play();
+    if (result && typeof result.catch === "function") result.catch(() => {});
+  } catch {
+    // autoplay restrictions or unsupported format - fail silently
+  }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  setStoredPreference(SOUND_STORAGE_KEY, soundEnabled ? "1" : "0");
+  updateSoundButton();
+}
+
+function updateSoundButton() {
+  els.soundBtn.textContent = soundEnabled ? "🔊" : "🔇";
+  els.soundBtn.title = t(soundEnabled ? "muteSound" : "unmuteSound");
 }
 
 function toggleLanguage() {
@@ -743,6 +1490,7 @@ function toggleLanguage() {
 function applyLanguage() {
   const copy = I18N[currentLanguage];
   document.documentElement.lang = copy.lang;
+  updateSoundButton();
   els.langBtn.textContent = copy.langButton;
   els.langBtn.title = copy.langTitle;
   els.welcomeLangBtn.textContent = copy.langButton;
@@ -841,7 +1589,7 @@ function setStoredPreference(key, value) {
 function render() {
   els.roundLabel.textContent = roundLabel();
   els.wallCount.textContent = t("wall", { count: state.wall.length });
-  els.doraIndicator.textContent = t("dora", { tile: tileText(state.dora) });
+  els.doraIndicator.textContent = t("dora", { tile: state.doraTiles.map(tileText).join(" ") });
   els.statusText.textContent = state.messageKey ? formatMessage(state.messageKey, state.messageParams) : t("loading");
   els.lastDiscard.innerHTML = state.lastDiscard ? tileHtml(state.lastDiscard) : "--";
   const winReveal = document.querySelector("#winReveal");
@@ -859,7 +1607,7 @@ function render() {
           <div class="name">${playerLabel(seat)} · ${windLabel(player.wind)}</div>
           <div class="score">${player.score.toLocaleString()} ${t("points")}</div>
         </div>
-        <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}</div>
+        <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}${isFuriten(player) ? `<span class="badge">${t("furiten")}</span>` : ""}${state.gameOver && !state.win && state.drawTenpaiSeats.includes(seat) ? `<span class="badge">${t("tenpaiBadge")}</span>` : ""}</div>
       </div>
       ${renderSeatBody(player, seat)}
     `;
@@ -868,10 +1616,19 @@ function render() {
   if (state.turn === 0 && state.pendingDiscard && !state.gameOver) {
     const actions = [];
     const human = state.players[0];
-    if (!human.riichi && human.melds.length === 0 && human.score >= 1000) {
+    if (!human.riichi && human.melds.length === 0 && human.score >= 1000 && state.wall.length >= 4
+      && canDeclareRiichi(human.hand, human.melds.length)) {
       actions.push({ labelKey: "riichi", onClick: declareRiichi });
     }
-    if (canWin(human.hand, human.melds.length)) {
+    for (const tile of legalAnkanOptions(human)) {
+      actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareAnkan(tile) });
+    }
+    if (!human.riichi) {
+      for (const tile of kakanOptions(human)) {
+        actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareKakan(tile) });
+      }
+    }
+    if (canWin(human.hand, human.melds.length) && checkWin(0, "Tsumo", human.drawnTile)) {
       actions.push({ labelKey: "tsumo", cls: "win", onClick: () => winHand(0, 0, "Tsumo") });
     }
     showActions(actions);
@@ -899,7 +1656,11 @@ function roundLabel(round = state.round) {
 function renderSeatBody(player, seat) {
   const hand = renderHand(player, seat);
   const melds = renderMeldTiles(player);
-  const river = player.discards.map(tile => tileHtml(tile, true)).join("");
+  const isLastDiscardSeat = seat === state.lastDiscardFrom && !state.win;
+  const river = player.discards.map((tile, index) => {
+    const isRecent = isLastDiscardSeat && index === player.discards.length - 1;
+    return tileHtml(tile, true, false, isRecent);
+  }).join("");
 
   if (seat === 0) {
     return `
@@ -930,7 +1691,16 @@ function renderMelds(player) {
 }
 
 function renderMeldTiles(player) {
-  return player.melds.map(m => m.tiles.map(tile => tileHtml(tile, true)).join("")).join("");
+  return player.melds.map(meld => renderMeldTileGroup(meld)).join("");
+}
+
+function renderMeldTileGroup(meld) {
+  if (meld.type === "ankan" && !state.gameOver) {
+    return meld.tiles.map((tile, index) => {
+      return index === 1 || index === 2 ? tileBackHtml(true) : tileHtml(tile, true);
+    }).join("");
+  }
+  return meld.tiles.map(tile => tileHtml(tile, true)).join("");
 }
 
 function renderTileLane(label, className, content) {
@@ -949,26 +1719,36 @@ function renderWinReveal() {
     return tileHtml(tile, true, isWinTile);
   }).join("");
   const meldTiles = state.win.melds.flat().map(tile => tileHtml(tile, true)).join("");
+  const evaluation = state.win.evaluation;
+  const yakuLines = evaluation
+    ? evaluation.yakuList.map(y => `<li>${yakuDisplayName(y)}${y.yakuman ? "" : ` · ${y.han}han`}</li>`).join("")
+    : "";
+  const scoreLine = evaluation
+    ? `<div class="win-score">${evaluation.isYakuman ? "" : `${evaluation.han}han ${evaluation.fu}fu · `}${evaluation.points.toLocaleString()} ${t("points")}</div>`
+    : "";
   return `
     <div id="winReveal" class="win-reveal" aria-live="polite">
       <div class="section-label">${t("winningHand")} · ${winner}</div>
       <div class="win-hand">${handTiles}${meldTiles ? `<span class="win-divider"></span>${meldTiles}` : ""}</div>
+      ${yakuLines ? `<ul class="win-yaku-list">${yakuLines}</ul>` : ""}
+      ${scoreLine}
     </div>
   `;
 }
 
 function renderHand(player, seat) {
   if (seat !== 0) {
-    const backs = player.hand.map(() => `<span class="tile small back">?</span>`).join("");
+    const backs = player.hand.map(() => tileBackHtml(true)).join("");
     return `<div class="concealed">${backs}</div>`;
   }
   const drawnIndex = state.turn === 0 && state.pendingDiscard && !state.gameOver && player.drawnTile
     ? player.hand.lastIndexOf(player.drawnTile)
     : -1;
+  const handLocked = player.riichi && !player.riichiDeclaring;
   const handButtons = player.hand
     .map((tile, index) => ({ tile, index }))
     .filter(entry => entry.index !== drawnIndex)
-    .map(entry => tileButton(entry.tile, entry.index))
+    .map(entry => tileButton(entry.tile, entry.index, "", handLocked))
     .join("");
   const drawSlot = drawnIndex >= 0
     ? tileButton(player.hand[drawnIndex], drawnIndex, "drawn")
@@ -982,10 +1762,10 @@ function renderHand(player, seat) {
   `;
 }
 
-function tileButton(tile, index, extraClass = "") {
-    const disabled = state.turn !== 0 || !state.pendingDiscard || state.gameOver ? "disabled" : "";
+function tileButton(tile, index, extraClass = "", forceDisabled = false) {
+    const disabled = forceDisabled || state.turn !== 0 || !state.pendingDiscard || state.gameOver ? "disabled" : "";
     const title = t("discardTitle", { tile: tileName(tile) });
-    return `<button type="button" class="tile ${extraClass} ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="${title}" aria-label="${title}">${tileFaceText(tile)}</button>`;
+    return `<button type="button" class="tile ${extraClass} ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="${title}" aria-label="${title}">${tileImage(tile)}</button>`;
 }
 
 function bindHumanTiles() {
@@ -994,13 +1774,21 @@ function bindHumanTiles() {
   });
 }
 
-function tileHtml(tile, small = false, winning = false) {
-  return `<span class="tile ${small ? "small" : ""} ${winning ? "winning" : ""} ${tileClass(tile)}" title="${tileName(tile)}" aria-label="${tileName(tile)}">${tileFaceText(tile)}</span>`;
+function tileHtml(tile, small = false, winning = false, recent = false) {
+  return `<span class="tile ${small ? "small" : ""} ${winning ? "winning" : ""} ${recent ? "recent" : ""} ${tileClass(tile)}" title="${tileName(tile)}" aria-label="${tileName(tile)}">${tileImage(tile)}</span>`;
 }
 
-function tileFaceText(tile) {
-  if (tile === "Wh") return "";
-  return tileText(tile);
+function tileBackHtml(small = true) {
+  return `<span class="tile ${small ? "small" : ""} back">${tileImage(null)}</span>`;
+}
+
+function tileImage(tile) {
+  return `<img class="tile-face" src="${tileImageSrc(tile)}" alt="" draggable="false">`;
+}
+
+function tileImageSrc(tile) {
+  const key = tile || "back";
+  return `assets/tiles/${key}.svg`;
 }
 
 function tileText(tile) {
@@ -1028,6 +1816,26 @@ function tileClass(tile) {
 
 function isSuit(tile) {
   return SUITS.includes(tile?.[1]);
+}
+
+function isHonor(tile) {
+  return HONORS.includes(tile);
+}
+
+function isTerminal(tile) {
+  return isSuit(tile) && (tile[0] === "1" || tile[0] === "9");
+}
+
+function isTerminalOrHonor(tile) {
+  return isTerminal(tile) || isHonor(tile);
+}
+
+function isSimple(tile) {
+  return !isTerminalOrHonor(tile);
+}
+
+function tileSuit(tile) {
+  return isSuit(tile) ? tile[1] : null;
 }
 
 state.format = normalizeFormat(getStoredPreference(FORMAT_STORAGE_KEY));
