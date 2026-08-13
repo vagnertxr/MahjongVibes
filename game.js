@@ -5,6 +5,8 @@ const NAMES = ["You", "Cartola", "Alcione", "Adoniran"];
 const RIVER_ROW_SIZE = 6;
 const STAGE_W = 1280;
 const STAGE_H = 720;
+const DEAD_WALL_STACKS = 7;
+const REPLACEMENT_STACKS = 2;
 const TILE_ORDER = [
   "1m","2m","3m","4m","5m","6m","7m","8m","9m",
   "1p","2p","3p","4p","5p","6p","7p","8p","9p",
@@ -110,6 +112,13 @@ const I18N = {
     riverOf: "{player}'s river",
     yourRiver: "Your river",
     doraTile: "Dora: {tile}",
+    doraWord: "Dora",
+    indicator: "Indicator",
+    indicatorMeans: "Dora indicator {indicator}, so the dora is {dora}",
+    deadWall: "Dead wall",
+    roundWindOf: "{wind}, the round wind",
+    deadWallTile: "Face-down dead wall tile",
+    deadWallOf: "Dead wall, {count} indicator(s) revealed",
     honba: "{count} honba",
     tableSticks: "{riichi} riichi stick(s) and {honba} honba on the table",
     discardNumber: "Discard {n}",
@@ -153,7 +162,7 @@ const I18N = {
       `<h3>3. How a Hand Is Built</h3><p>The normal winning shape is four groups plus one pair. Groups are sequences, triplets, or sometimes quads. Honors cannot make sequences.</p><div class="rules-example"><strong>Sequence / Shuntsu</strong><div class="guide-tiles">${guideTiles(["2s","3s","4s"])}</div></div><div class="rules-example"><strong>Triplet / Koutsu</strong><div class="guide-tiles">${guideTiles(["E","E","E"])}</div></div><div class="rules-example"><strong>Pair / Toitsu</strong><div class="guide-tiles">${guideTiles(["5p","5p"])}</div></div><div class="rules-example"><strong>Complete example: four groups and one pair</strong><div class="guide-tiles long">${guideTiles(["2m","3m","4m","3p","4p","5p","6s","7s","8s","R","R","R","Wh","Wh"])}</div></div>`,
       `<h3>4. Turn Flow, Calls, and Winning</h3><p>On your turn, you draw one tile and discard one tile. Discards go into each player's river, which is public information. Reading those rivers helps you attack and defend.</p><p><strong>Chi</strong> uses the player-left discard to complete a sequence. <strong>Pon</strong> uses any player's discard to complete a triplet. Calling opens your hand, which is faster but removes some closed-only yaku.</p><p><strong>Tsumo</strong> means you draw your own winning tile. <strong>Ron</strong> means another player discards your winning tile. If a tile seems dangerous because an opponent may be waiting on it, discarding it can deal into Ron.</p><div class="rules-example"><strong>Waiting example: this hand wants 3M or 6M to finish the sequence</strong><div class="guide-tiles">${guideTiles(["4m","5m"])}<span class="tile small muted-tile">?</span></div></div>`,
       `<h3>5. Common Beginner Yaku</h3><p>A yaku is a scoring condition that lets the hand win. Dora are bonuses, not yaku. A hand full of dora still needs a yaku.</p><div class="rules-example"><strong>Riichi:</strong> closed hand, one tile from winning, declare riichi and pay 1,000 points.</div><div class="rules-example"><strong>Tanyao / All Simples:</strong> no terminals, no winds, no dragons.<div class="guide-tiles">${guideTiles(["2m","3m","4m","4p","5p","6p","6s","7s","8s"])}</div></div><div class="rules-example"><strong>Yakuhai / Value honors:</strong> triplet of dragons, seat wind, or round wind.<div class="guide-tiles">${guideTiles(["R","R","R"])}</div></div><div class="rules-example"><strong>Pinfu:</strong> closed hand with only sequences, a non-value pair, and a two-sided wait.</div><div class="rules-example"><strong>Seven Pairs / Chiitoitsu:</strong> seven different pairs instead of four groups and one pair.<div class="guide-tiles long">${guideTiles(["2m","2m","4p","4p","6s","6s","Wh","Wh"])}</div></div>`,
-      `<h3>6. Dora, Defense, and First Tips</h3><p>Dora increase points after you win. In this game the dora display shows the bonus tile directly. In full Riichi rules, the indicator points to the next tile in order.</p><p>Defense matters because Ron punishes the discarder. When another player looks threatening, safer discards are usually tiles they have already discarded or honors that are visibly exhausted.</p><p>Good beginner habits: keep useful sequences, avoid breaking pairs too early, do not call every tile, and remember that a closed hand can declare riichi. If your hand has no obvious yaku, staying closed and aiming for riichi is often the simplest plan.</p>`,
+      `<h3>6. Dora, Defense, and First Tips</h3><p>Dora increase points after you win. The face-up tile in the dead wall is an indicator, not the bonus itself: the dora is the next tile in order, so a 4 of circles points at the 5, a 9 wraps back to the 1, and North wraps back to East. Hover the indicator to see what it points at. Declaring a kan flips another one.</p><p>Defense matters because Ron punishes the discarder. When another player looks threatening, safer discards are usually tiles they have already discarded or honors that are visibly exhausted.</p><p>Good beginner habits: keep useful sequences, avoid breaking pairs too early, do not call every tile, and remember that a closed hand can declare riichi. If your hand has no obvious yaku, staying closed and aiming for riichi is often the simplest plan.</p>`,
       `<h3>7. Match Formats</h3><p><strong>Tonpuusen</strong> is an East-only match: East 1 through East 4. <strong>Hanchan</strong> plays East and South: East 1 through South 4.</p><p>The dealer repeats the same hand after a dealer win. Other wins and exhaustive draws advance the dealer and hand number.</p><p>At the scheduled end, the match finishes when the leader has at least 30,000 points. If nobody has reached that mark, play continues into the next wind until someone leads with 30,000 or more. The match also ends immediately if any player drops below 0 points.</p>`
     ]
   },
@@ -200,6 +209,13 @@ const I18N = {
     riverOf: "Rio de {player}",
     yourRiver: "Seu rio",
     doraTile: "Dora: {tile}",
+    doraWord: "Dora",
+    indicator: "Indicador",
+    indicatorMeans: "Indicador de dora {indicator}, então o dora é {dora}",
+    deadWall: "Muro morto",
+    roundWindOf: "{wind}, o vento da rodada",
+    deadWallTile: "Peça virada do muro morto",
+    deadWallOf: "Muro morto, {count} indicador(es) revelado(s)",
     honba: "{count} honba",
     tableSticks: "{riichi} palito(s) de riichi e {honba} honba na mesa",
     discardNumber: "Descarte {n}",
@@ -243,7 +259,7 @@ const I18N = {
       `<h3>3. Como Montar uma Mão</h3><p>A forma normal de vitória é quatro grupos e um par. Grupos podem ser sequências, trincas ou, em regras completas, quadras. Honras não formam sequências.</p><div class="rules-example"><strong>Sequência / Shuntsu</strong><div class="guide-tiles">${guideTiles(["2s","3s","4s"])}</div></div><div class="rules-example"><strong>Trinca / Koutsu</strong><div class="guide-tiles">${guideTiles(["E","E","E"])}</div></div><div class="rules-example"><strong>Par / Toitsu</strong><div class="guide-tiles">${guideTiles(["5p","5p"])}</div></div><div class="rules-example"><strong>Exemplo completo: quatro grupos e um par</strong><div class="guide-tiles long">${guideTiles(["2m","3m","4m","3p","4p","5p","6s","7s","8s","R","R","R","Wh","Wh"])}</div></div>`,
       `<h3>4. Turno, Chamadas e Vitória</h3><p>No seu turno, você compra uma peça e descarta uma peça. Os descartes ficam no rio de cada jogador, uma informação pública. Ler esses rios ajuda a atacar e defender.</p><p><strong>Chi</strong> usa o descarte do jogador à sua esquerda para completar uma sequência. <strong>Pon</strong> usa o descarte de qualquer jogador para completar uma trinca. Chamar abre a mão: é mais rápido, mas remove alguns yaku de mão fechada.</p><p><strong>Tsumo</strong> é vencer comprando sua própria peça. <strong>Ron</strong> é vencer com o descarte de outra pessoa. Se uma peça parece perigosa porque alguém pode estar esperando nela, descartá-la pode dar Ron ao adversário.</p><div class="rules-example"><strong>Exemplo de espera: esta forma quer 3M ou 6M para completar a sequência</strong><div class="guide-tiles">${guideTiles(["4m","5m"])}<span class="tile small muted-tile">?</span></div></div>`,
       `<h3>5. Yaku Fáceis para Começar</h3><p>Yaku é uma condição de pontuação que permite vencer. Dora é bônus, não yaku. Uma mão cheia de dora ainda precisa de um yaku.</p><div class="rules-example"><strong>Riichi:</strong> mão fechada, a uma peça da vitória; declare riichi e pague 1.000 pontos.</div><div class="rules-example"><strong>Tanyao / Todas Simples:</strong> sem terminais, sem ventos e sem dragões.<div class="guide-tiles">${guideTiles(["2m","3m","4m","4p","5p","6p","6s","7s","8s"])}</div></div><div class="rules-example"><strong>Yakuhai / Honras de valor:</strong> trinca de dragão, vento do assento ou vento da rodada.<div class="guide-tiles">${guideTiles(["R","R","R"])}</div></div><div class="rules-example"><strong>Pinfu:</strong> mão fechada só com sequências, par sem valor e espera dos dois lados.</div><div class="rules-example"><strong>Sete Pares / Chiitoitsu:</strong> sete pares diferentes em vez de quatro grupos e um par.<div class="guide-tiles long">${guideTiles(["2m","2m","4p","4p","6s","6s","Wh","Wh"])}</div></div>`,
-      `<h3>6. Dora, Defesa e Primeiras Dicas</h3><p>Dora aumenta os pontos depois que você vence. Neste jogo, o mostrador exibe diretamente a peça de bônus. Nas regras completas, o indicador aponta para a próxima peça na ordem.</p><p>Defesa importa porque Ron pune quem descartou. Quando alguém parece perigoso, descartes mais seguros costumam ser peças que essa pessoa já descartou ou honras que você já viu esgotadas.</p><p>Bons hábitos iniciais: mantenha sequências úteis, não quebre pares cedo demais, não chame todas as peças e lembre que uma mão fechada pode declarar riichi. Se sua mão não tem yaku claro, ficar fechado e mirar riichi costuma ser o plano mais simples.</p>`
+      `<h3>6. Dora, Defesa e Primeiras Dicas</h3><p>Dora aumenta os pontos depois que você vence. A peça virada para cima no muro morto é um indicador, não o bônus em si: o dora é a próxima peça na ordem, então um 4 de círculos aponta para o 5, o 9 volta para o 1 e o Norte volta para o Leste. Passe o mouse no indicador para ver para onde ele aponta. Declarar um kan vira mais um.</p><p>Defesa importa porque Ron pune quem descartou. Quando alguém parece perigoso, descartes mais seguros costumam ser peças que essa pessoa já descartou ou honras que você já viu esgotadas.</p><p>Bons hábitos iniciais: mantenha sequências úteis, não quebre pares cedo demais, não chame todas as peças e lembre que uma mão fechada pode declarar riichi. Se sua mão não tem yaku claro, ficar fechado e mirar riichi costuma ser o plano mais simples.</p>`
       ,
       `<h3>7. Formatos de Partida</h3><p><strong>Tonpuusen</strong> é uma partida só de Leste: Leste 1 até Leste 4. <strong>Hanchan</strong> joga Leste e Sul: Leste 1 até Sul 4.</p><p>O dealer repete a mesma mão depois de uma vitória do dealer. Outras vitórias e empates exaustivos avançam o dealer e o número da mão.</p><p>No fim programado, a partida termina quando o líder tem pelo menos 30.000 pontos. Se ninguém chegou a essa marca, o jogo continua para o próximo vento até alguém liderar com 30.000 ou mais. A partida também termina imediatamente se qualquer jogador ficar abaixo de 0 ponto.</p>`
     ]
@@ -305,7 +321,7 @@ const state = {
   turn: 0,
   wall: [],
   deadWall: [],
-  doraTiles: [],
+  doraIndicators: [],
   callHappenedThisHand: false,
   discardCount: 0,
   riichiPot: 0,
@@ -326,7 +342,8 @@ const state = {
 const els = {
   roundLabel: document.querySelector("#roundLabel"),
   wallCount: document.querySelector("#wallCount"),
-  doraIndicator: document.querySelector("#doraIndicator"),
+  deadWall: document.querySelector("#deadWall"),
+  deadWallLabel: document.querySelector("#deadWallLabel"),
   sticks: document.querySelector("#cpSticks"),
   honbaLabel: document.querySelector("#honbaLabel"),
   statusText: document.querySelector("#statusText"),
@@ -428,7 +445,7 @@ function startHand() {
   playSound("shuffle");
   state.wall = shuffle(buildWall());
   state.deadWall = state.wall.splice(-14);
-  state.doraTiles = [state.deadWall[4]];
+  state.doraIndicators = [state.deadWall[4]];
   state.turn = state.dealer;
   state.lastDiscard = null;
   state.lastDiscardFrom = null;
@@ -743,8 +760,8 @@ function drawReplacementTile(player, seat) {
 }
 
 function revealKanDora() {
-  const nextIndex = 4 + state.doraTiles.length;
-  if (state.deadWall[nextIndex]) state.doraTiles.push(state.deadWall[nextIndex]);
+  const nextIndex = 4 + state.doraIndicators.length;
+  if (state.deadWall[nextIndex]) state.doraIndicators.push(state.deadWall[nextIndex]);
 }
 
 function nextTurn() {
@@ -772,7 +789,7 @@ function chooseBotDiscard(player) {
 
 function tileValue(tile, player) {
   let value = 0;
-  if (state.doraTiles.includes(tile)) value += 5;
+  if (activeDora().includes(tile)) value += 5;
   if (tile === player.wind[0] || tile === "E" || ["Wh", "G", "R"].includes(tile)) value += 2;
   if (isSuit(tile)) {
     const n = Number(tile[0]);
@@ -1297,14 +1314,37 @@ function sameTileSet(a, b) {
   return sortedA.every((tile, index) => tile === sortedB[index]);
 }
 
-function uraDoraTilesForWin() {
-  const count = state.doraTiles.length;
+// A flipped tile is an indicator, not the bonus itself: the dora is the next
+// tile in its own sequence, wrapping 9 back to 1, North back to East and Red
+// back to White.
+function doraFromIndicator(indicator) {
+  if (!indicator) return null;
+  if (isSuit(indicator)) {
+    const n = Number(indicator[0]);
+    return `${n === 9 ? 1 : n + 1}${indicator[1]}`;
+  }
+  const winds = ["E", "S", "W", "N"];
+  const dragons = ["Wh", "G", "R"];
+  const cycle = winds.includes(indicator) ? winds : dragons;
+  return cycle[(cycle.indexOf(indicator) + 1) % cycle.length];
+}
+
+function activeDora() {
+  return state.doraIndicators.map(doraFromIndicator);
+}
+
+function uraDoraIndicatorsForWin() {
+  const count = state.doraIndicators.length;
   const tiles = [];
   for (let i = 0; i < count; i += 1) {
     const idx = 13 - i;
     if (state.deadWall[idx] !== undefined) tiles.push(state.deadWall[idx]);
   }
   return tiles;
+}
+
+function uraDoraTilesForWin() {
+  return uraDoraIndicatorsForWin().map(doraFromIndicator);
 }
 
 function isFuriten(player) {
@@ -1335,7 +1375,7 @@ function buildWinContext(winnerSeat, type, winTile, extra = {}) {
     isRiichi: player.riichi,
     isDoubleRiichi: !!player.doubleRiichi,
     isIppatsu: !!player.ippatsu,
-    doraCount: countMatchingTiles(fullTiles, state.doraTiles),
+    doraCount: countMatchingTiles(fullTiles, activeDora()),
     uraDoraCount: player.riichi ? countMatchingTiles(fullTiles, uraDoraTilesForWin()) : 0,
     isHaitei: isTsumo && state.wall.length === 0 && !extra.isRinshan,
     isHoutei: !isTsumo && state.wall.length === 0,
@@ -1560,6 +1600,17 @@ function windLabel(wind) {
   return WIND_LABELS[currentLanguage][index] ?? wind;
 }
 
+// A seat wind reads faster as its marker than as a word, and it is what sits in
+// front of each player at a real table. The round wind gets the accent. Drawn
+// from the tile art rather than the kanji so it does not depend on the reader
+// having a CJK font installed.
+function windMarkHtml(wind) {
+  const tile = WIND_TILES[WINDS.indexOf(wind)];
+  const isRound = tile === roundWindTile();
+  const label = isRound ? t("roundWindOf", { wind: windLabel(wind) }) : windLabel(wind);
+  return `<span class="wind-mark${isRound ? " round-wind" : ""}" role="img" aria-label="${label}" title="${label}">${tileImage(tile)}</span>`;
+}
+
 function guideTiles(tiles) {
   return tiles.map(tile => `<span class="tile small ${tileClass(tile)}">${tileImage(tile)}</span>`).join("");
 }
@@ -1615,6 +1666,7 @@ function applyLanguage() {
   els.newGameBtn.textContent = copy.newMatch;
   els.newGameBtn.title = copy.newMatchTitle;
   updateFormatChip();
+  els.deadWallLabel.textContent = copy.deadWall;
   els.formatChoiceTitle.textContent = copy.matchLength;
   els.formatCards.forEach(card => {
     card.querySelector(".fc-name").textContent = t(card.dataset.format);
@@ -1704,7 +1756,8 @@ function setStoredPreference(key, value) {
 function render() {
   els.roundLabel.textContent = roundLabel();
   els.wallCount.textContent = t("wall", { count: state.wall.length });
-  els.doraIndicator.innerHTML = renderCenterDora();
+  els.deadWall.innerHTML = renderDeadWall();
+  els.deadWall.setAttribute("aria-label", t("deadWallOf", { count: state.doraIndicators.length }));
   els.sticks.innerHTML = renderTableSticks();
   els.sticks.setAttribute("aria-label", t("tableSticks", {
     riichi: state.riichiPot / 1000,
@@ -1724,7 +1777,7 @@ function render() {
     seatEl.innerHTML = `
       <div class="seat-header">
         <div>
-          <div class="name">${playerLabel(seat)} · ${windLabel(player.wind)}</div>
+          <div class="name">${windMarkHtml(player.wind)}${playerLabel(seat)}</div>
           <div class="score">${player.score.toLocaleString()} ${t("points")}</div>
         </div>
         <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}${isFuriten(player) ? `<span class="badge">${t("furiten")}</span>` : ""}${state.gameOver && !state.win && state.drawTenpaiSeats.includes(seat) ? `<span class="badge">${t("tenpaiBadge")}</span>` : ""}</div>
@@ -1800,10 +1853,41 @@ function renderSeatBody(player, seat) {
   `;
 }
 
-function renderCenterDora() {
-  return state.doraTiles
-    .map(tile => `<span class="tile small ${tileClass(tile)}" role="img" aria-label="${t("doraTile", { tile: tileName(tile) })}">${tileImage(tile)}</span>`)
-    .join("");
+// The dead wall's 14 tiles split exactly the way a real one does: four
+// replacement tiles, then five dora/ura pairs. This game's indexing lines up --
+// dora n is deadWall[4 + n] and its ura is deadWall[13 - n] underneath it -- so
+// seven stacks show the whole thing, with a stack flipping face up per kan.
+function renderDeadWall() {
+  const stacks = [];
+  for (let i = 0; i < DEAD_WALL_STACKS; i += 1) {
+    const doraIndex = i - REPLACEMENT_STACKS;
+    const revealed = doraIndex >= 0 && doraIndex < state.doraIndicators.length;
+    const tile = revealed ? state.doraIndicators[doraIndex] : null;
+    if (!revealed) {
+      stacks.push(
+        `<span class="dw-stack">`
+        + `<span class="tile small back" role="img" aria-label="${t("deadWallTile")}">${tileImage(null)}</span>`
+        + `</span>`
+      );
+      continue;
+    }
+    const dora = doraFromIndicator(tile);
+    const label = t("indicatorMeans", { indicator: tileName(tile), dora: tileName(dora) });
+    stacks.push(
+      `<span class="dw-stack revealed" tabindex="0" role="img" aria-label="${label}">`
+      + `<span class="tile small ${tileClass(tile)}">${tileImage(tile)}</span>`
+      + `<span class="dw-popup" aria-hidden="true">`
+      + `<span class="dwp-row">`
+      + `<span class="dwp-cell"><span class="dwp-cap">${t("indicator")}</span><span class="tile small ${tileClass(tile)}">${tileImage(tile)}</span></span>`
+      + `<span class="dwp-arrow">→</span>`
+      + `<span class="dwp-cell"><span class="dwp-cap">${t("doraWord")}</span><span class="tile small ${tileClass(dora)}">${tileImage(dora)}</span></span>`
+      + `</span>`
+      + `<span class="dwp-text">${tileName(dora)}</span>`
+      + `</span>`
+      + `</span>`
+    );
+  }
+  return stacks.join("");
 }
 
 // What is physically lying on the table: one 1000-point stick per riichi in the

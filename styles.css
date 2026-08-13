@@ -475,17 +475,123 @@ p {
   font-weight: 850;
 }
 
-.cp-dora {
+/* The dead wall sits on the free felt beside the ring, where it lives on a real
+   table. Seven stacks: two of replacement tiles, then one per possible dora. */
+.dead-wall-area {
+  position: absolute;
+  top: 14px;
+  left: 14px;
   display: flex;
-  gap: 3px;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 100%;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
 }
 
-.cp-dora .tile.small {
-  width: 21px;
-  height: 29px;
+.dead-wall-label {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dead-wall {
+  display: flex;
+  gap: 3px;
+}
+
+/* The offset underlay is the ura tile sitting beneath each stack. */
+.dw-stack {
+  position: relative;
+  display: block;
+  border-radius: 4px;
+}
+
+.dw-stack::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 3px;
+  right: -2px;
+  bottom: -3px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.dw-stack .tile.small {
+  position: relative;
+  width: 24px;
+  height: 33px;
+}
+
+.dw-stack.revealed {
+  cursor: help;
+}
+
+.dw-stack.revealed .tile.small {
+  box-shadow: 0 0 0 2px var(--accent), 0 2px 0 rgba(0, 0, 0, 0.22);
+}
+
+.dw-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(2, 18, 18, 0.96);
+  padding: 8px 10px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.dw-stack.revealed:hover .dw-popup,
+.dw-stack.revealed:focus-visible .dw-popup {
+  display: flex;
+}
+
+.dwp-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.dwp-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.dwp-cap {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dwp-cell .tile.small {
+  width: 26px;
+  height: 36px;
+}
+
+.dwp-arrow {
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 950;
+  padding-bottom: 10px;
+}
+
+.dwp-text {
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 950;
 }
 
 /* Rotation does not affect the layout box, so the block is absolutely centred
@@ -619,6 +725,40 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 950;
+}
+
+/* Each seat carries its wind as the kanji marker, the way the marker sits in
+   front of a player at a real table. The round wind is the one in gold. */
+.wind-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  margin-right: 6px;
+  vertical-align: -3px;
+  border-radius: 4px;
+  border: 1px solid var(--tile-edge);
+  background: linear-gradient(#fffdf4, var(--tile));
+  color: var(--tile-ink);
+  overflow: hidden;
+}
+
+.wind-mark .tile-face {
+  width: 100%;
+  height: 100%;
+  padding: 8%;
+  object-fit: contain;
+}
+
+.wind-mark.round-wind {
+  border-color: var(--accent);
+  background: linear-gradient(#fff3d4, #f0d597);
+  box-shadow: 0 0 0 1px rgba(244, 195, 91, 0.55);
+}
+
+.seat-left .wind-mark,
+.seat-right .wind-mark {
+  margin-right: 5px;
 }
 
 .score {

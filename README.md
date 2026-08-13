@@ -19,7 +19,9 @@ Run locally:
 - A full four-player table with smart local bots, so you can always start a game
 - Standard Riichi flow: draw, discard, pon, chi, ron, tsumo, and riichi declarations
 - Readable discard rivers arranged around the center of the table, six tiles per row and turned to face each player, the way a real table looks. Called tiles leave the river, the riichi declaration tile lies sideways, and drawn-and-discarded tiles are marked, so you can count and read what has been thrown
-- A center piece holding the round, the honba count, the tiles left in the wall, the dora indicators, and the sticks on the table. The sticks are real: declaring riichi puts 1,000 points in the pot for the next winner to sweep, and each honba is worth 300 more on the hand that ends the streak
+- A dead wall on the felt, drawn as its seven stacks. The face-up tile is a real dora indicator now, not the bonus itself: the dora is the next tile in order, wrapping 9 back to 1 and North back to East. Hover an indicator to see what it points at, and each kan flips another stack
+- Seat winds shown as markers in front of each player, with the round wind picked out in gold
+- A center piece holding the round, the honba count, the tiles left in the wall, and the sticks on the table. The sticks are real: declaring riichi puts 1,000 points in the pot for the next winner to sweep, and each honba is worth 300 more on the hand that ends the streak
 - Opponents' concealed hands stand in narrow columns at the edges, the way they look from across a table, which keeps the middle clear for the rivers
 - A setup screen before the deal where you pick the match length, Tonpuusen or Hanchan, the way you pick a table before sitting at it. The choice is remembered, and it can never disturb a hand already in progress
 - Automatic scoring and score movement between players
