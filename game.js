@@ -106,6 +106,8 @@ const I18N = {
     river: "River",
     riverOf: "{player}'s river",
     yourRiver: "Your river",
+    doraTile: "Dora: {tile}",
+    riichiSticks: "{count} riichi stick(s) on the table",
     discardNumber: "Discard {n}",
     tsumogiri: "Drawn and discarded",
     riichiTile: "Riichi declaration tile",
@@ -190,6 +192,8 @@ const I18N = {
     river: "Rio",
     riverOf: "Rio de {player}",
     yourRiver: "Seu rio",
+    doraTile: "Dora: {tile}",
+    riichiSticks: "{count} palito(s) de riichi na mesa",
     discardNumber: "Descarte {n}",
     tsumogiri: "Comprada e descartada",
     riichiTile: "Peça de declaração de riichi",
@@ -296,6 +300,7 @@ const state = {
   doraTiles: [],
   callHappenedThisHand: false,
   discardCount: 0,
+  riichiPot: 0,
   drawTenpaiSeats: [],
   lastDiscard: null,
   lastDiscardFrom: null,
@@ -313,6 +318,7 @@ const els = {
   roundLabel: document.querySelector("#roundLabel"),
   wallCount: document.querySelector("#wallCount"),
   doraIndicator: document.querySelector("#doraIndicator"),
+  sticks: document.querySelector("#cpSticks"),
   statusText: document.querySelector("#statusText"),
   actionBar: document.querySelector("#actionBar"),
   soundBtn: document.querySelector("#soundBtn"),
@@ -372,6 +378,8 @@ function startMatch() {
   state.round = 0;
   state.dealer = 0;
   state.matchOver = false;
+  // The pot rides across hands until somebody wins, so it resets per match.
+  state.riichiPot = 0;
   state.players = [];
   startHand();
 }
@@ -1340,6 +1348,9 @@ function winHand(winner, loser, type, extra = {}) {
     state.players[loser].score -= points;
   }
   player.score += points;
+  // The winner sweeps the riichi sticks on the table.
+  player.score += state.riichiPot;
+  state.riichiPot = 0;
 
   playSound("win");
   setMessage("wins", { winner, type, points });
@@ -1422,6 +1433,7 @@ function declareRiichi() {
   human.doubleRiichi = human.discards.length === 0 && !state.callHappenedThisHand;
   human.ippatsu = true;
   human.score -= 1000;
+  state.riichiPot += 1000;
   playSound("riichi");
   setMessage("declareRiichi");
   render();
@@ -1635,7 +1647,9 @@ function setStoredPreference(key, value) {
 function render() {
   els.roundLabel.textContent = roundLabel();
   els.wallCount.textContent = t("wall", { count: state.wall.length });
-  els.doraIndicator.textContent = t("dora", { tile: state.doraTiles.map(tileText).join(" ") });
+  els.doraIndicator.innerHTML = renderCenterDora();
+  els.sticks.innerHTML = renderRiichiSticks();
+  els.sticks.setAttribute("aria-label", t("riichiSticks", { count: state.riichiPot / 1000 }));
   els.statusText.textContent = state.messageKey ? formatMessage(state.messageKey, state.messageParams) : t("loading");
   const winReveal = document.querySelector("#winReveal");
   if (winReveal) winReveal.remove();
@@ -1723,6 +1737,18 @@ function renderSeatBody(player, seat) {
     ${hand}
     ${melds ? renderTileLane(t("melds"), "melds", melds) : ""}
   `;
+}
+
+function renderCenterDora() {
+  return state.doraTiles
+    .map(tile => `<span class="tile small ${tileClass(tile)}" role="img" aria-label="${t("doraTile", { tile: tileName(tile) })}">${tileImage(tile)}</span>`)
+    .join("");
+}
+
+// One stick per 1000 points sitting on the table. Purely a view of state.riichiPot.
+function renderRiichiSticks() {
+  const count = Math.floor(state.riichiPot / 1000);
+  return Array.from({ length: count }, () => `<span class="riichi-stick" aria-hidden="true"></span>`).join("");
 }
 
 function renderRiver(player, seat) {
@@ -1818,8 +1844,11 @@ function renderWinReveal() {
 
 function renderHand(player, seat) {
   if (seat !== 0) {
+    // Side seats stack their backs into a narrow standing column, the way a real
+    // table looks from across it. That frees the board corners for the plates.
+    const orientation = seat === 1 || seat === 3 ? " standing" : "";
     const backs = player.hand.map(() => tileBackHtml(true)).join("");
-    return `<div class="concealed">${backs}</div>`;
+    return `<div class="concealed${orientation}">${backs}</div>`;
   }
   const drawnIndex = state.turn === 0 && state.pendingDiscard && !state.gameOver && player.drawnTile
     ? player.hand.lastIndexOf(player.drawnTile)

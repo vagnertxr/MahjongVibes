@@ -22,12 +22,9 @@
             <img src="assets/icon.svg" alt="" class="logo" width="56" height="56">
             <div>
               <h1>Mahjong Vibes</h1>
-              <p id="roundLabel">East 1</p>
             </div>
           </div>
           <div class="meters">
-            <span id="wallCount">Wall 0</span>
-            <span id="doraIndicator">Dora --</span>
             <label class="format-picker">
               <span id="formatLabel">Format</span>
               <select id="formatSelect" title="Match format">
@@ -49,7 +46,14 @@
             <div class="river-ring">
               <div class="ring-slot ring-top"><div class="river-block" id="river-2" data-seat="2" role="group"></div></div>
               <div class="ring-slot ring-left"><div class="river-block" id="river-3" data-seat="3" role="group"></div></div>
-              <div class="ring-slot ring-core"></div>
+              <div class="ring-slot ring-core">
+                <div class="centerpiece">
+                  <div class="cp-sticks" id="cpSticks"></div>
+                  <div class="cp-round" id="roundLabel">East 1</div>
+                  <div class="cp-wall" id="wallCount">Wall 0</div>
+                  <div class="cp-dora" id="doraIndicator"></div>
+                </div>
+              </div>
               <div class="ring-slot ring-right"><div class="river-block" id="river-1" data-seat="1" role="group"></div></div>
               <div class="ring-slot ring-bottom"><div class="river-block" id="river-0" data-seat="0" role="group"></div></div>
             </div>

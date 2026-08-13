@@ -84,7 +84,7 @@ button:disabled {
 }
 
 .topbar {
-  height: 46px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -177,7 +177,7 @@ p {
 
 .table-footer {
   flex: 0 0 auto;
-  height: 58px;
+  height: 52px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -209,11 +209,11 @@ p {
   min-height: 0;
   flex: 1 1 auto;
   display: grid;
-  /* Centre column holds the 348px ring; the side columns take what is left.
-     Row 3 is whatever remains after the top plate and the ring, and it has to
-     fit the human's 80px hand row. */
-  grid-template-columns: 1fr 640px 1fr;
-  grid-template-rows: 72px 350px 1fr;
+  /* The ring is height-bound, so the win comes from thin top and bottom rows:
+     plates sit inline with the tiles instead of stacked above them. Side seats
+     stand their tiles in a narrow column, which frees the board corners. */
+  grid-template-columns: 132px 1fr 132px;
+  grid-template-rows: 50px 1fr 90px;
   gap: 6px;
 }
 
@@ -234,6 +234,7 @@ p {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 4px 8px;
   align-self: center;
   justify-self: center;
   background: rgba(5, 22, 24, 0.72);
@@ -242,17 +243,47 @@ p {
 .seat-left,
 .seat-right {
   width: 100%;
-  max-width: 300px;
+  align-self: center;
 }
 
-.seat-top {
-  width: 640px;
+/* Doubled class on purpose: .seat:not(.human) above scores 0-2-0 and would
+   otherwise keep this column-direction. */
+.seat.seat-top {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
 
+.seat-top .seat-header {
+  margin-bottom: 0;
+  flex: 0 0 auto;
+}
+
+.seat-top .concealed {
+  flex: 0 0 auto;
+}
+
+/* The human row reads plate, melds, hand across one line, so the hand keeps the
+   full height of the row instead of being pushed under a stacked header. */
 .seat-bottom {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.seat-bottom .seat-header {
+  flex: 0 0 auto;
+  width: 128px;
+  margin-bottom: 0;
+  display: block;
+}
+
+.seat-bottom .badges {
+  justify-content: flex-start;
+  margin-top: 2px;
 }
 
 .seat-top {
@@ -301,17 +332,16 @@ p {
    seat 3 (left) 90deg. Ring side = 2 * river height + river width, so the
    middle track is exactly one river wide and the ring stays square. */
 .river-ring {
-  /* Everything here is fixed px in stage space. 23 * 15 = 345, so the ring fits
-     the 350px centre row with room to spare. No container queries, no
+  /* Everything here is fixed px in stage space. No container queries, no
      aspect-ratio feedback: the stage transform does all the scaling. */
-  --river-tile-w: 23px;
-  --river-tile-h: 32px;
+  --river-tile-w: 28px;
+  --river-tile-h: 37px;
   --river-gap: 2px;
   --river-w: calc(var(--river-tile-w) * 6 + var(--river-gap) * 5);
   --river-h: calc(var(--river-tile-h) * 3 + var(--river-gap) * 2);
-  /* ring side = river height + river width + river height = 100 + 148 + 100 */
-  width: 348px;
-  height: 348px;
+  /* ring side = river height + river width + river height = 115 + 178 + 115 */
+  width: 408px;
+  height: 408px;
   display: grid;
   grid-template-columns: var(--river-h) minmax(0, 1fr) var(--river-h);
   grid-template-rows: var(--river-h) minmax(0, 1fr) var(--river-h);
@@ -328,6 +358,77 @@ p {
 .ring-core { grid-area: 2 / 2; }
 .ring-right { grid-area: 2 / 3; }
 .ring-bottom { grid-area: 3 / 2; }
+
+/* The core carries what a real table keeps in the middle: the riichi sticks,
+   the round, the tiles left in the wall, and the dora indicators. */
+.centerpiece {
+  position: absolute;
+  inset: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  background: rgba(2, 18, 18, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.cp-sticks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: 0;
+}
+
+.riichi-stick {
+  width: 74px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(#fffdf6, #ddd4bd);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  position: relative;
+}
+
+.riichi-stick::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--danger);
+  transform: translate(-50%, -50%);
+}
+
+.cp-round {
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.cp-wall {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.cp-dora {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.cp-dora .tile.small {
+  width: 21px;
+  height: 29px;
+}
 
 /* Rotation does not affect the layout box, so the block is absolutely centred
    inside a slot whose size already accounts for the rotated footprint. */
@@ -423,10 +524,32 @@ p {
   margin-bottom: 3px;
 }
 
-.seat:not(.human) .seat-header > div:first-child {
+/* Only the top plate is wide enough to put name and score on one line; the side
+   plates are narrow columns, so theirs stack. */
+.seat-top .seat-header > div:first-child {
   display: flex;
   align-items: baseline;
   gap: 8px;
+}
+
+.seat-left .seat-header,
+.seat-right .seat-header {
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.seat-left .name,
+.seat-right .name,
+.seat-left .score,
+.seat-right .score {
+  font-size: 0.74rem;
+}
+
+.seat-left .badges,
+.seat-right .badges {
+  justify-content: center;
 }
 
 .name,
@@ -468,6 +591,29 @@ p {
   gap: 4px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.concealed {
+  flex-wrap: nowrap;
+  gap: 2px;
+  justify-content: center;
+}
+
+/* Side seats: the backs stand in one column, each turned on its side so 13 of
+   them fit the height of the ring in a strip barely wider than one tile. */
+.concealed.standing {
+  flex-direction: column;
+  width: var(--stand-h, 34px);
+  margin-inline: auto;
+}
+
+.concealed.standing .tile.small {
+  width: var(--stand-h, 34px);
+  height: var(--stand-w, 25px);
+}
+
+.concealed.standing .tile.small .tile-face {
+  transform: rotate(90deg) scale(1.36);
 }
 
 .melds {
@@ -533,7 +679,7 @@ p {
 
 .draw-slot {
   width: 44px;
-  min-height: 66px;
+  min-height: 62px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
