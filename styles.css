@@ -404,11 +404,40 @@ p {
   transform: translate(-50%, -50%);
 }
 
+/* Honba markers are the 100-point sticks: shorter, and dotless so they read as
+   a different denomination from the riichi sticks above them. */
+.honba-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: 96px;
+}
+
+.honba-stick {
+  width: 18px;
+  height: 5px;
+  border-radius: 2px;
+  background: linear-gradient(#f6efdc, #cfc4a8);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
 .cp-round {
   color: var(--ink);
   font-size: 1.05rem;
   font-weight: 950;
   line-height: 1;
+}
+
+.cp-honba {
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.cp-honba:empty {
+  display: none;
 }
 
 .cp-wall {

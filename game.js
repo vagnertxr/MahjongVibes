@@ -107,7 +107,8 @@ const I18N = {
     riverOf: "{player}'s river",
     yourRiver: "Your river",
     doraTile: "Dora: {tile}",
-    riichiSticks: "{count} riichi stick(s) on the table",
+    honba: "{count} honba",
+    tableSticks: "{riichi} riichi stick(s) and {honba} honba on the table",
     discardNumber: "Discard {n}",
     tsumogiri: "Drawn and discarded",
     riichiTile: "Riichi declaration tile",
@@ -193,7 +194,8 @@ const I18N = {
     riverOf: "Rio de {player}",
     yourRiver: "Seu rio",
     doraTile: "Dora: {tile}",
-    riichiSticks: "{count} palito(s) de riichi na mesa",
+    honba: "{count} honba",
+    tableSticks: "{riichi} palito(s) de riichi e {honba} honba na mesa",
     discardNumber: "Descarte {n}",
     tsumogiri: "Comprada e descartada",
     riichiTile: "Peça de declaração de riichi",
@@ -301,6 +303,7 @@ const state = {
   callHappenedThisHand: false,
   discardCount: 0,
   riichiPot: 0,
+  honba: 0,
   drawTenpaiSeats: [],
   lastDiscard: null,
   lastDiscardFrom: null,
@@ -319,6 +322,7 @@ const els = {
   wallCount: document.querySelector("#wallCount"),
   doraIndicator: document.querySelector("#doraIndicator"),
   sticks: document.querySelector("#cpSticks"),
+  honbaLabel: document.querySelector("#honbaLabel"),
   statusText: document.querySelector("#statusText"),
   actionBar: document.querySelector("#actionBar"),
   soundBtn: document.querySelector("#soundBtn"),
@@ -378,8 +382,9 @@ function startMatch() {
   state.round = 0;
   state.dealer = 0;
   state.matchOver = false;
-  // The pot rides across hands until somebody wins, so it resets per match.
+  // The pot and the honba count both ride across hands, so they reset per match.
   state.riichiPot = 0;
+  state.honba = 0;
   state.players = [];
   startHand();
 }
@@ -1348,6 +1353,21 @@ function winHand(winner, loser, type, extra = {}) {
     state.players[loser].score -= points;
   }
   player.score += points;
+
+  // Honba is worth 300 a count on top of the hand: the discarder covers all of
+  // it on a ron, the three payers split it 100 each on a tsumo. Read before
+  // finishHand, which is what resets the counter.
+  const honbaBonus = state.honba * 300;
+  if (honbaBonus > 0) {
+    if (type === "Tsumo") {
+      const each = state.honba * 100;
+      state.players.forEach((p, i) => { if (i !== winner) p.score -= each; });
+    } else {
+      state.players[loser].score -= honbaBonus;
+    }
+    player.score += honbaBonus;
+  }
+
   // The winner sweeps the riichi sticks on the table.
   player.score += state.riichiPot;
   state.riichiPot = 0;
@@ -1375,7 +1395,7 @@ function endDraw() {
   applyNotenPayments(tenpaiSeats);
   state.drawTenpaiSeats = tenpaiSeats;
   setMessage("exhaustiveDraw");
-  finishHand(tenpaiSeats.includes(state.dealer));
+  finishHand(tenpaiSeats.includes(state.dealer), true);
   render();
 }
 
@@ -1390,7 +1410,12 @@ function applyNotenPayments(tenpaiSeats) {
   notenSeats.forEach(seat => { state.players[seat].score -= loss; });
 }
 
-function finishHand(dealerRepeats) {
+// A honba is counted when the dealer repeats and after any exhaustive draw,
+// including one where the dealer was noten and the seat still passes. Only a
+// non-dealer win clears it.
+function finishHand(dealerRepeats, isDraw = false) {
+  if (dealerRepeats || isDraw) state.honba += 1;
+  else state.honba = 0;
   const completedRound = state.round;
   if (!dealerRepeats) {
     state.round += 1;
@@ -1648,8 +1673,12 @@ function render() {
   els.roundLabel.textContent = roundLabel();
   els.wallCount.textContent = t("wall", { count: state.wall.length });
   els.doraIndicator.innerHTML = renderCenterDora();
-  els.sticks.innerHTML = renderRiichiSticks();
-  els.sticks.setAttribute("aria-label", t("riichiSticks", { count: state.riichiPot / 1000 }));
+  els.sticks.innerHTML = renderTableSticks();
+  els.sticks.setAttribute("aria-label", t("tableSticks", {
+    riichi: state.riichiPot / 1000,
+    honba: state.honba
+  }));
+  els.honbaLabel.textContent = state.honba > 0 ? t("honba", { count: state.honba }) : "";
   els.statusText.textContent = state.messageKey ? formatMessage(state.messageKey, state.messageParams) : t("loading");
   const winReveal = document.querySelector("#winReveal");
   if (winReveal) winReveal.remove();
@@ -1745,10 +1774,15 @@ function renderCenterDora() {
     .join("");
 }
 
-// One stick per 1000 points sitting on the table. Purely a view of state.riichiPot.
-function renderRiichiSticks() {
-  const count = Math.floor(state.riichiPot / 1000);
-  return Array.from({ length: count }, () => `<span class="riichi-stick" aria-hidden="true"></span>`).join("");
+// What is physically lying on the table: one 1000-point stick per riichi in the
+// pot, and one short 100-point marker per honba. Purely a view of state.
+function renderTableSticks() {
+  const riichi = Math.floor(state.riichiPot / 1000);
+  const sticks = Array.from({ length: riichi }, () => `<span class="riichi-stick" aria-hidden="true"></span>`);
+  // Honba markers stack in rows so a long dealer streak stays inside the core.
+  const honba = Array.from({ length: state.honba }, () => `<span class="honba-stick" aria-hidden="true"></span>`);
+  if (honba.length) sticks.push(`<span class="honba-row">${honba.join("")}</span>`);
+  return sticks.join("");
 }
 
 function renderRiver(player, seat) {
