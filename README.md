@@ -18,10 +18,11 @@ Run locally:
 
 - A full four-player table with smart local bots, so you can always start a game
 - Standard Riichi flow: draw, discard, pon, chi, ron, tsumo, and riichi declarations
+- Readable discard rivers arranged around the center of the table, six tiles per row and turned to face each player, the way a real table looks. Called tiles leave the river, the riichi declaration tile lies sideways, drawn-and-discarded tiles are marked, and every discard is numbered, so you can count and read what has been thrown
 - Selectable Tonpuusen and Hanchan match lengths with end-of-match handling
 - Live dora indicator display
 - Automatic scoring and score movement between players
-- A responsive layout that works on phones, tablets, and desktops
+- A responsive layout that works on phones, tablets, and desktops; a phone held upright turns the table sideways so the rivers keep their room
 
 ## Desktop App
 

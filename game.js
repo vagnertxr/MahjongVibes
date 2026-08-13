@@ -2,6 +2,7 @@ const SUITS = ["m", "p", "s"];
 const WINDS = ["East", "South", "West", "North"];
 const HONORS = ["E", "S", "W", "N", "Wh", "G", "R"];
 const NAMES = ["You", "Cartola", "Alcione", "Adoniran"];
+const RIVER_ROW_SIZE = 6;
 const TILE_ORDER = [
   "1m","2m","3m","4m","5m","6m","7m","8m","9m",
   "1p","2p","3p","4p","5p","6p","7p","8p","9p",
@@ -101,6 +102,11 @@ const I18N = {
     loading: "Loading table...",
     dealer: "Dealer",
     river: "River",
+    riverOf: "{player}'s river",
+    yourRiver: "Your river",
+    discardNumber: "Discard {n}",
+    tsumogiri: "Drawn and discarded",
+    riichiTile: "Riichi declaration tile",
     melds: "Melds",
     riichi: "Riichi",
     furiten: "Furiten",
@@ -180,6 +186,11 @@ const I18N = {
     loading: "Carregando mesa...",
     dealer: "Oya",
     river: "Rio",
+    riverOf: "Rio de {player}",
+    yourRiver: "Seu rio",
+    discardNumber: "Descarte {n}",
+    tsumogiri: "Comprada e descartada",
+    riichiTile: "Peça de declaração de riichi",
     melds: "Chamadas",
     riichi: "Riichi",
     furiten: "Furiten",
@@ -282,6 +293,7 @@ const state = {
   deadWall: [],
   doraTiles: [],
   callHappenedThisHand: false,
+  discardCount: 0,
   drawTenpaiSeats: [],
   lastDiscard: null,
   lastDiscardFrom: null,
@@ -299,7 +311,6 @@ const els = {
   roundLabel: document.querySelector("#roundLabel"),
   wallCount: document.querySelector("#wallCount"),
   doraIndicator: document.querySelector("#doraIndicator"),
-  lastDiscard: document.querySelector("#lastDiscard"),
   statusText: document.querySelector("#statusText"),
   actionBar: document.querySelector("#actionBar"),
   soundBtn: document.querySelector("#soundBtn"),
@@ -324,7 +335,7 @@ const els = {
   hideWelcomeCheck: document.querySelector("#hideWelcomeCheck"),
   rememberChoice: document.querySelector(".remember-choice"),
   credits: document.querySelector(".credits"),
-  riverTitle: document.querySelector(".river-title"),
+  riverBlocks: Array.from({ length: 4 }, (_, i) => document.querySelector(`#river-${i}`)),
   seats: Array.from({ length: 4 }, (_, i) => document.querySelector(`#seat-${i}`))
 };
 let currentRulesPage = 0;
@@ -378,6 +389,7 @@ function startHand() {
   state.gameOver = false;
   state.win = null;
   state.callHappenedThisHand = false;
+  state.discardCount = 0;
   state.drawTenpaiSeats = [];
   state.players = Array.from({ length: 4 }, (_, i) => ({
     name: NAMES[i],
@@ -457,10 +469,20 @@ function discardTile(seat, tileIndex) {
   const drawnIndex = player.drawnTile !== null ? player.hand.lastIndexOf(player.drawnTile) : -1;
   if (player.riichi && !player.riichiDeclaring && tileIndex !== drawnIndex) return;
   if (player.riichi && !player.riichiDeclaring) player.ippatsu = false;
+  const isTsumogiri = tileIndex === drawnIndex;
+  const isRiichiTile = player.riichiDeclaring;
   const [tile] = player.hand.splice(tileIndex, 1);
   player.drawnTile = null;
   player.riichiDeclaring = false;
-  player.discards.push(tile);
+  state.discardCount += 1;
+  player.discards.push({
+    tile,
+    seq: state.discardCount,
+    tsumogiri: isTsumogiri,
+    riichi: isRiichiTile,
+    calledBy: null,
+    callType: null
+  });
   state.lastDiscard = tile;
   state.lastDiscardFrom = seat;
   state.pendingDiscard = false;
@@ -527,6 +549,8 @@ function callPon(tile, fromSeat) {
   const human = state.players[0];
   removeTiles(human.hand, [tile, tile]);
   human.melds.push({ type: "pon", tiles: [tile, tile, tile], from: fromSeat });
+  // The caller is always the human today; pass the caller seat once bots learn to call.
+  markDiscardCalled(fromSeat, 0, "pon", tile);
   state.turn = 0;
   state.pendingDiscard = true;
   state.callHappenedThisHand = true;
@@ -541,6 +565,7 @@ function callChi(tile, option, fromSeat) {
   const human = state.players[0];
   removeTiles(human.hand, option);
   human.melds.push({ type: "chi", tiles: [...option, tile].sort(compareTiles), from: fromSeat });
+  markDiscardCalled(fromSeat, 0, "chi", tile);
   state.turn = 0;
   state.pendingDiscard = true;
   state.callHappenedThisHand = true;
@@ -643,6 +668,7 @@ function callMinkan(tile, fromSeat) {
   const human = state.players[0];
   removeTiles(human.hand, [tile, tile, tile]);
   human.melds.push({ type: "minkan", tiles: [tile, tile, tile, tile], from: fromSeat });
+  markDiscardCalled(fromSeat, 0, "minkan", tile);
   state.turn = 0;
   state.callHappenedThisHand = true;
   breakIppatsu();
@@ -708,6 +734,22 @@ function tileValue(tile, player) {
     if (player.hand.includes(`${n - 1}${suit}`) || player.hand.includes(`${n + 1}${suit}`)) value += 2;
   }
   return value;
+}
+
+function discardTiles(player) {
+  return player.discards.map(entry => entry.tile);
+}
+
+function lastRiverEntry(seat) {
+  const river = state.players[seat]?.discards;
+  return river && river.length ? river[river.length - 1] : null;
+}
+
+function markDiscardCalled(fromSeat, bySeat, callType, tile) {
+  const entry = lastRiverEntry(fromSeat);
+  if (!entry || entry.calledBy !== null || entry.tile !== tile) return;
+  entry.calledBy = bySeat;
+  entry.callType = callType;
 }
 
 function countTiles(hand) {
@@ -1221,7 +1263,9 @@ function uraDoraTilesForWin() {
 function isFuriten(player) {
   const waits = getWaits(player.hand, player.melds.length);
   if (waits.length === 0) return false;
-  return waits.some(wait => player.discards.includes(wait));
+  // A tile called away by someone else still furitens the player who discarded it,
+  // so this deliberately ignores entry.calledBy.
+  return waits.some(wait => player.discards.some(entry => entry.tile === wait));
 }
 
 function breakIppatsu() {
@@ -1512,7 +1556,6 @@ function applyLanguage() {
   els.startPlayingBtn.textContent = copy.startPlaying;
   els.prevRulesBtn.textContent = copy.previous;
   els.nextRulesBtn.textContent = copy.next;
-  els.riverTitle.textContent = copy.lastDiscard;
   els.rememberChoice.lastChild.textContent = ` ${copy.hideWelcome}`;
   els.credits.innerHTML = `${copy.creditsPrefix}<a href="https://github.com/vagnertxr" target="_blank" rel="noopener noreferrer">vagnertxr</a>`;
   renderRulePages();
@@ -1591,7 +1634,6 @@ function render() {
   els.wallCount.textContent = t("wall", { count: state.wall.length });
   els.doraIndicator.textContent = t("dora", { tile: state.doraTiles.map(tileText).join(" ") });
   els.statusText.textContent = state.messageKey ? formatMessage(state.messageKey, state.messageParams) : t("loading");
-  els.lastDiscard.innerHTML = state.lastDiscard ? tileHtml(state.lastDiscard) : "--";
   const winReveal = document.querySelector("#winReveal");
   if (winReveal) winReveal.remove();
   if (state.win) {
@@ -1611,6 +1653,12 @@ function render() {
       </div>
       ${renderSeatBody(player, seat)}
     `;
+
+    const riverEl = els.riverBlocks[seat];
+    if (riverEl) {
+      riverEl.setAttribute("aria-label", seat === 0 ? t("yourRiver") : t("riverOf", { player: NAMES[seat] }));
+      riverEl.innerHTML = renderRiver(player, seat);
+    }
   });
 
   if (state.turn === 0 && state.pendingDiscard && !state.gameOver) {
@@ -1656,11 +1704,6 @@ function roundLabel(round = state.round) {
 function renderSeatBody(player, seat) {
   const hand = renderHand(player, seat);
   const melds = renderMeldTiles(player);
-  const isLastDiscardSeat = seat === state.lastDiscardFrom && !state.win;
-  const river = player.discards.map((tile, index) => {
-    const isRecent = isLastDiscardSeat && index === player.discards.length - 1;
-    return tileHtml(tile, true, false, isRecent);
-  }).join("");
 
   if (seat === 0) {
     return `
@@ -1668,7 +1711,6 @@ function renderSeatBody(player, seat) {
         ${hand}
         <div class="human-public">
           ${renderTileLane(t("melds"), "melds", melds)}
-          ${renderTileLane(t("river"), "river", river)}
         </div>
       </div>
     `;
@@ -1677,8 +1719,41 @@ function renderSeatBody(player, seat) {
   return `
     ${hand}
     ${melds ? renderTileLane(t("melds"), "melds", melds) : ""}
-    ${renderTileLane(t("river"), "river", river)}
   `;
+}
+
+function renderRiver(player, seat) {
+  const visible = player.discards.filter(entry => entry.calledBy === null);
+  const lastIndex = visible.length - 1;
+  const isLastDiscardSeat = seat === state.lastDiscardFrom && !state.win;
+  const rows = [];
+  for (let start = 0; start < visible.length; start += RIVER_ROW_SIZE) {
+    const cells = visible
+      .slice(start, start + RIVER_ROW_SIZE)
+      .map((entry, offset) => riverSlotHtml(entry, isLastDiscardSeat && start + offset === lastIndex))
+      .join("");
+    rows.push(`<div class="river-row">${cells}</div>`);
+  }
+  return `<div class="river-rows">${rows.join("")}</div>`;
+}
+
+function riverSlotHtml(entry, recent) {
+  const classes = ["river-slot"];
+  if (entry.riichi) classes.push("sideways");
+  if (entry.tsumogiri) classes.push("tsumogiri");
+  if (recent) classes.push("recent-slot");
+  const label = riverTileLabel(entry);
+  return `<span class="${classes.join(" ")}">`
+    + `<span class="tile small ${tileClass(entry.tile)}" role="img" aria-label="${label}" title="${label}">${tileImage(entry.tile)}</span>`
+    + `<span class="river-seq" aria-hidden="true">${entry.seq}</span>`
+    + `</span>`;
+}
+
+function riverTileLabel(entry) {
+  const parts = [tileName(entry.tile), t("discardNumber", { n: entry.seq })];
+  if (entry.tsumogiri) parts.push(t("tsumogiri"));
+  if (entry.riichi) parts.push(t("riichiTile"));
+  return parts.join(" · ");
 }
 
 function renderMelds(player) {
