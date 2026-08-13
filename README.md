@@ -22,7 +22,7 @@ Run locally:
 - Selectable Tonpuusen and Hanchan match lengths with end-of-match handling
 - Live dora indicator display
 - Automatic scoring and score movement between players
-- A responsive layout that works on phones, tablets, and desktops; a phone held upright turns the table sideways so the rivers keep their room
+- A fixed 1280x720 table scaled by a single transform, so the board looks the same on a desktop, a phone, and at any browser zoom level. A phone held upright turns the table sideways rather than squeezing it into a column
 
 ## Desktop App
 

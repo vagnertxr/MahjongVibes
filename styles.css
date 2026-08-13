@@ -63,17 +63,15 @@ button:disabled {
 }
 
 .app {
-  height: 100vh;
-  height: 100dvh;
-  padding: 14px;
+  padding: 6px;
 }
 
 .table {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  border: 10px solid var(--rail);
+  gap: 8px;
+  border: 8px solid var(--rail);
   border-radius: 8px;
   background:
     linear-gradient(45deg, rgba(255,255,255,0.035) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.035) 75%),
@@ -81,11 +79,12 @@ button:disabled {
     var(--felt);
   background-size: 22px 22px, 100% 100%, auto;
   box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.24), 0 18px 54px rgba(0, 0, 0, 0.32);
-  padding: 14px;
+  padding: 10px;
   overflow: hidden;
 }
 
 .topbar {
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -101,25 +100,26 @@ button:disabled {
 }
 
 .logo {
-  width: 56px;
-  height: 56px;
+  width: 36px;
+  height: 36px;
   flex: 0 0 auto;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
-  padding: 5px;
+  padding: 4px;
   box-shadow: 0 7px 18px rgba(0, 0, 0, 0.28);
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(1.45rem, 3vw, 2.35rem);
+  font-size: 1.32rem;
   line-height: 1;
   letter-spacing: 0;
 }
 
 p {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   color: var(--muted);
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
@@ -160,7 +160,8 @@ p {
 .status {
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.28);
-  padding: 8px 10px;
+  padding: 6px 9px;
+  font-size: 0.82rem;
   font-weight: 850;
 }
 
@@ -168,49 +169,56 @@ p {
   max-width: min(38rem, 100%);
 }
 
+.topbar button,
+.format-picker {
+  min-height: 32px;
+  font-size: 0.82rem;
+}
+
 .table-footer {
   flex: 0 0 auto;
+  height: 58px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
 }
 
-/* The manifest asks for landscape, but that only binds an installed PWA. In a
-   plain mobile browser tab, force the table sideways ourselves: rotate the whole
-   page and swap the viewport axes so the square river ring gets the long side.
-   Rotating <body> (not .app) keeps the welcome overlay, which is a sibling of
-   .app, in the same frame. */
-@media (max-width: 820px) and (orientation: portrait) {
-  body {
-    position: fixed;
-    top: 0;
-    left: 0;
-    /* Static vh/vw on purpose: dvh/dvw shift with the browser chrome and would
-       break the rotated frame mid-scroll. */
-    width: 100vh;
-    height: 100vw;
-    transform-origin: top left;
-    transform: rotate(90deg) translateY(-100%);
-  }
+/* Fixed stage: the board is authored at exactly 1280x720 and the whole thing is
+   scaled by one transform to fit whatever viewport it lands in. Nothing inside
+   reflows, so the table looks identical on a desktop, a phone, and at any
+   browser zoom level. fitStage() in game.js sets the transform. */
+.stage-viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
 
-  /* .app sizes itself off 100vh/100dvh, which still means the unrotated
-     viewport. Inside the rotated frame it has to follow <body> instead. */
-  .app {
-    width: 100%;
-    height: 100%;
-  }
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: 720px;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .players-grid {
   min-height: 0;
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: minmax(120px, 0.62fr) minmax(320px, 2.1fr) minmax(120px, 0.62fr);
-  grid-template-rows: minmax(84px, 0.46fr) minmax(300px, 2fr) minmax(150px, 0.86fr);
-  gap: 10px;
+  /* Centre column holds the 348px ring; the side columns take what is left.
+     Row 3 is whatever remains after the top plate and the ring, and it has to
+     fit the human's 80px hand row. */
+  grid-template-columns: 1fr 640px 1fr;
+  grid-template-rows: 72px 350px 1fr;
+  gap: 6px;
 }
 
+/* Opponent seats are compact plates hugging the edge, not panels that eat the
+   table. Only the human seat keeps a real surface. */
 .seat {
   min-width: 0;
   min-height: 0;
@@ -218,13 +226,33 @@ p {
   border-radius: 8px;
   background: var(--panel);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 9px;
+  padding: 6px 8px;
   box-shadow: inset 0 1px rgba(255,255,255,0.08), 0 8px 18px rgba(0,0,0,0.14);
+}
+
+.seat:not(.human) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-self: center;
+  justify-self: center;
+  background: rgba(5, 22, 24, 0.72);
+}
+
+.seat-left,
+.seat-right {
+  width: 100%;
+  max-width: 300px;
+}
+
+.seat-top {
+  width: 640px;
 }
 
 .seat-bottom {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .seat-top {
@@ -266,7 +294,6 @@ p {
   border: 1px solid rgba(255, 255, 255, 0.16);
   padding: 6px;
   text-align: center;
-  container-type: size;
 }
 
 /* The four rivers form a ring around an empty core, each rotated to face the
@@ -274,15 +301,17 @@ p {
    seat 3 (left) 90deg. Ring side = 2 * river height + river width, so the
    middle track is exactly one river wide and the ring stays square. */
 .river-ring {
-  --river-tile-w: 22px; /* static fallback; must stay before the cq line */
-  --river-tile-w: clamp(9px, calc(100cqmin / 15.5), 26px);
-  --river-tile-h: calc(var(--river-tile-w) * 1.37);
-  --river-gap: calc(var(--river-tile-w) / 12);
+  /* Everything here is fixed px in stage space. 23 * 15 = 345, so the ring fits
+     the 350px centre row with room to spare. No container queries, no
+     aspect-ratio feedback: the stage transform does all the scaling. */
+  --river-tile-w: 23px;
+  --river-tile-h: 32px;
+  --river-gap: 2px;
   --river-w: calc(var(--river-tile-w) * 6 + var(--river-gap) * 5);
   --river-h: calc(var(--river-tile-h) * 3 + var(--river-gap) * 2);
-  width: min(100%, 360px); /* static fallback; must stay before the cq line */
-  width: min(100cqw, 100cqh);
-  aspect-ratio: 1;
+  /* ring side = river height + river width + river height = 100 + 148 + 100 */
+  width: 348px;
+  height: 348px;
   display: grid;
   grid-template-columns: var(--river-h) minmax(0, 1fr) var(--river-h);
   grid-template-rows: var(--river-h) minmax(0, 1fr) var(--river-h);
@@ -360,22 +389,8 @@ p {
   transform: translateY(calc((var(--river-tile-w) - var(--river-tile-h)) / 2)) rotate(-90deg);
 }
 
-/* The sequence number is a pure UI affordance, so it is counter-rotated to stay
-   readable. The tsumogiri dot rotates with the block because its corner
-   position carries the meaning. */
-.river-seq {
-  position: absolute;
-  left: 50%;
-  bottom: calc(var(--river-tile-h) * -0.05);
-  transform: translateX(-50%) rotate(calc(-1 * var(--river-rot)));
-  font-size: max(7px, calc(var(--river-tile-w) * 0.38));
-  font-weight: 950;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.72);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
-}
-
+/* The tsumogiri dot rotates with the block on purpose: it is symmetric, and its
+   corner position is what carries the meaning in the owner's frame. */
 .river-slot.tsumogiri::after {
   content: "";
   position: absolute;
@@ -395,9 +410,23 @@ p {
 .seat-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 7px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  line-height: 1.15;
+}
+
+/* Opponent plates put name, score and badges on one line so the plate stays
+   thin and the tiles get the space. */
+.seat:not(.human) .seat-header {
+  margin-bottom: 3px;
+}
+
+.seat:not(.human) .seat-header > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .name,
@@ -427,8 +456,8 @@ p {
   border-radius: 999px;
   background: rgba(244, 195, 91, 0.2);
   color: #ffeab0;
-  padding: 3px 8px;
-  font-size: 0.75rem;
+  padding: 2px 7px;
+  font-size: 0.68rem;
   font-weight: 950;
 }
 
@@ -453,19 +482,23 @@ p {
   min-width: 0;
 }
 
+/* The human's row is hand-first: the hand takes the height it needs and the
+   melds sit beside it rather than stacking above and pushing it off the table. */
 .human-table {
   min-height: 0;
   display: flex;
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: 7px;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 8px;
 }
 
 .human-public {
   min-height: 0;
+  width: 232px;
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
 }
 
 .human-public .section-label {
@@ -473,25 +506,26 @@ p {
 }
 
 .human-public .melds {
-  min-height: 44px;
-  max-height: 74px;
+  min-height: 40px;
+  max-height: 62px;
   overflow: auto;
   align-content: flex-start;
 }
 
 .hand-row {
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   min-width: 0;
-  padding: 7px;
+  padding: 5px 7px;
   border-radius: 6px;
   background: rgba(255,255,255,0.09);
 }
 
 .hand {
-  min-height: 66px;
+  min-height: 62px;
   justify-content: center;
   flex-wrap: nowrap;
   overflow: visible;
@@ -885,194 +919,10 @@ h3 {
   text-underline-offset: 3px;
 }
 
+/* The board no longer needs layout breakpoints: it is a fixed 1280x720 stage
+   scaled by one transform. Only the welcome dialog, which lives outside the
+   stage, still reflows. */
 @media (max-width: 820px) {
-  .app {
-    padding: 6px;
-  }
-
-  .table {
-    gap: 7px;
-    border-width: 6px;
-    padding: 7px;
-    box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.24), 0 12px 32px rgba(0, 0, 0, 0.26);
-  }
-
-  .topbar {
-    gap: 8px;
-  }
-
-  .brand {
-    gap: 8px;
-  }
-
-  .logo {
-    width: 42px;
-    height: 42px;
-    padding: 4px;
-  }
-
-  h1 {
-    font-size: 1.25rem;
-  }
-
-  p {
-    font-size: 0.78rem;
-  }
-
-  .meters {
-    gap: 5px;
-  }
-
-  .meters > span,
-  .status {
-    padding: 5px 7px;
-    font-size: 0.74rem;
-  }
-
-  #newGameBtn {
-    min-height: 32px;
-    padding: 0 9px;
-    font-size: 0.74rem;
-  }
-
-  #rulesBtn {
-    min-height: 32px;
-    padding: 0 9px;
-    font-size: 0.74rem;
-  }
-
-  .format-picker {
-    min-height: 32px;
-    padding: 4px 5px 4px 7px;
-    font-size: 0.74rem;
-  }
-
-  .format-picker select {
-    min-height: 24px;
-  }
-
-  .players-grid {
-    grid-template-columns: minmax(58px, 0.4fr) minmax(240px, 2.3fr) minmax(58px, 0.4fr);
-    grid-template-rows: minmax(56px, 0.36fr) minmax(220px, 1.9fr) minmax(104px, 0.74fr);
-    gap: 6px;
-  }
-
-  .seat {
-    padding: 6px;
-  }
-
-  .center-panel {
-    padding: 4px;
-  }
-
-  .seat-header {
-    gap: 4px;
-    margin-bottom: 4px;
-  }
-
-  .seat:not(.human) .seat-header {
-    display: block;
-  }
-
-  .seat-left .name,
-  .seat-right .name {
-    white-space: normal;
-    line-height: 1.05;
-  }
-
-  .name,
-  .score {
-    font-size: 0.68rem;
-  }
-
-  .badge {
-    font-size: 0.58rem;
-    padding: 1px 5px;
-  }
-
-  .section-label {
-    font-size: 0.58rem;
-    margin-top: 4px;
-  }
-
-  /* Melds stay visible now that the rivers no longer crowd the seat panels. */
-  .seat:not(.human) .section-label {
-    display: none;
-  }
-
-  .concealed {
-    gap: 2px;
-  }
-
-  .human-table {
-    gap: 5px;
-  }
-
-  .human-public {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 5px;
-  }
-
-  .human-public .melds {
-    min-height: 28px;
-    max-height: 42px;
-    padding: 3px;
-  }
-
-  .hand-row {
-    min-height: 54px;
-    padding: 5px;
-    gap: 6px;
-  }
-
-  .hand {
-    min-height: 54px;
-    gap: 3px;
-  }
-
-  .draw-slot {
-    width: 35px;
-    min-height: 54px;
-    padding-left: 5px;
-  }
-
-  .draw-placeholder {
-    width: 30px;
-    height: 42px;
-    border-radius: 5px;
-  }
-
-  .tile {
-    width: 30px;
-    height: 42px;
-    font-size: 0.84rem;
-    border-radius: 5px;
-    border-bottom-width: 3px;
-  }
-
-  button.tile {
-    min-height: 42px;
-  }
-
-  .tile.small {
-    width: 17px;
-    height: 24px;
-    font-size: 0.52rem;
-    border-radius: 4px;
-    border-bottom-width: 2px;
-  }
-
-  .action-bar {
-    gap: 5px;
-    min-height: 32px;
-  }
-
-  .action-bar button {
-    min-height: 31px;
-    padding: 0 8px;
-    font-size: 0.72rem;
-  }
-
   .welcome-overlay {
     padding: 8px;
   }
@@ -1095,183 +945,6 @@ h3 {
   .rules-example,
   .remember-choice {
     font-size: 0.82rem;
-  }
-}
-
-@media (max-width: 430px) {
-  .app {
-    padding: 3px;
-  }
-
-  .table {
-    gap: 5px;
-    border-width: 4px;
-    padding: 5px;
-  }
-
-  .logo {
-    width: 34px;
-    height: 34px;
-  }
-
-  h1 {
-    font-size: 1rem;
-  }
-
-  p,
-  .meters > span,
-  .status,
-  #newGameBtn {
-    font-size: 0.64rem;
-  }
-
-  .meters > span,
-  .status {
-    padding: 4px 5px;
-  }
-
-  #newGameBtn {
-    min-height: 28px;
-    padding: 0 7px;
-  }
-
-  #rulesBtn {
-    min-height: 28px;
-    padding: 0 7px;
-  }
-
-  .format-picker {
-    min-height: 28px;
-    gap: 4px;
-    padding: 3px 4px;
-    font-size: 0.64rem;
-  }
-
-  .format-picker select {
-    min-height: 22px;
-    max-width: 78px;
-  }
-
-  .players-grid {
-    grid-template-columns: minmax(40px, 0.3fr) minmax(180px, 2.6fr) minmax(40px, 0.3fr);
-    grid-template-rows: minmax(44px, 0.32fr) minmax(190px, 1.6fr) minmax(92px, 0.66fr);
-    gap: 4px;
-  }
-
-  .seat {
-    padding: 4px;
-  }
-
-  .center-panel {
-    padding: 2px;
-  }
-
-  .river-ring {
-    --river-tile-w: clamp(7px, calc(100cqmin / 15.5), 14px);
-  }
-
-  .name,
-  .score {
-    font-size: 0.58rem;
-  }
-
-  .badges {
-    gap: 3px;
-  }
-
-  .badge {
-    font-size: 0.5rem;
-    padding: 1px 4px;
-  }
-
-  .tile {
-    width: 20px;
-    height: 30px;
-    font-size: 0.62rem;
-    border-radius: 4px;
-    border-bottom-width: 2px;
-  }
-
-  button.tile {
-    min-height: 30px;
-  }
-
-  .tile.small {
-    width: 13px;
-    height: 19px;
-    font-size: 0.42rem;
-  }
-
-  .hand-row {
-    min-height: 42px;
-    gap: 4px;
-    padding: 4px;
-  }
-
-  .human-table {
-    gap: 4px;
-  }
-
-  .human-public {
-    gap: 4px;
-  }
-
-  .human-public .melds {
-    min-height: 22px;
-    max-height: 32px;
-    padding: 2px;
-  }
-
-  .hand {
-    min-height: 42px;
-    gap: 2px;
-  }
-
-  .draw-slot {
-    width: 25px;
-    min-height: 42px;
-    padding-left: 3px;
-  }
-
-  .draw-placeholder {
-    width: 20px;
-    height: 30px;
-    border-radius: 4px;
-  }
-
-  .action-bar button {
-    min-height: 28px;
-    padding: 0 7px;
-    font-size: 0.64rem;
-  }
-}
-
-@media (max-height: 560px) {
-  .logo {
-    width: 32px;
-    height: 32px;
-  }
-
-  h1 {
-    font-size: 0.95rem;
-  }
-
-  p {
-    margin-top: 1px;
-  }
-
-  .players-grid {
-    grid-template-rows: minmax(44px, 0.36fr) minmax(190px, 1.9fr) minmax(84px, 0.6fr);
-  }
-
-  /* The rivers used to be hidden here. They are the point of the table now, so
-     they shrink with the ring instead; this cap is belt and braces. */
-  .river-ring {
-    --river-tile-w: clamp(7px, calc(100cqmin / 15.5), 15px);
-  }
-
-  .table-footer {
-    gap: 4px;
   }
 }
 

@@ -3,6 +3,8 @@ const WINDS = ["East", "South", "West", "North"];
 const HONORS = ["E", "S", "W", "N", "Wh", "G", "R"];
 const NAMES = ["You", "Cartola", "Alcione", "Adoniran"];
 const RIVER_ROW_SIZE = 6;
+const STAGE_W = 1280;
+const STAGE_H = 720;
 const TILE_ORDER = [
   "1m","2m","3m","4m","5m","6m","7m","8m","9m",
   "1p","2p","3p","4p","5p","6p","7p","8p","9p",
@@ -335,6 +337,7 @@ const els = {
   hideWelcomeCheck: document.querySelector("#hideWelcomeCheck"),
   rememberChoice: document.querySelector(".remember-choice"),
   credits: document.querySelector(".credits"),
+  stage: document.querySelector("#stage"),
   riverBlocks: Array.from({ length: 4 }, (_, i) => document.querySelector(`#river-${i}`)),
   seats: Array.from({ length: 4 }, (_, i) => document.querySelector(`#seat-${i}`))
 };
@@ -1742,10 +1745,12 @@ function riverSlotHtml(entry, recent) {
   if (entry.riichi) classes.push("sideways");
   if (entry.tsumogiri) classes.push("tsumogiri");
   if (recent) classes.push("recent-slot");
+  // entry.seq is deliberately not drawn: the wall counter already tells you how
+  // far into the hand you are, and a number on every tile buried the tiles.
+  // It stays in the accessible label, where it costs no visual noise.
   const label = riverTileLabel(entry);
   return `<span class="${classes.join(" ")}">`
     + `<span class="tile small ${tileClass(entry.tile)}" role="img" aria-label="${label}" title="${label}">${tileImage(entry.tile)}</span>`
-    + `<span class="river-seq" aria-hidden="true">${entry.seq}</span>`
     + `</span>`;
 }
 
@@ -1913,9 +1918,40 @@ function tileSuit(tile) {
   return isSuit(tile) ? tile[1] : null;
 }
 
+// The board is authored at STAGE_W x STAGE_H and scaled by a single transform,
+// so nothing inside ever reflows and browser zoom cannot break the layout. On an
+// upright phone the same transform turns the table sideways instead of squeezing
+// it into a narrow column.
+function fitStage() {
+  if (!els.stage) return;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const rotate = vh > vw;
+  const availW = rotate ? vh : vw;
+  const availH = rotate ? vw : vh;
+  const scale = Math.min(availW / STAGE_W, availH / STAGE_H);
+  const w = STAGE_W * scale;
+  const h = STAGE_H * scale;
+  // With transform-origin 0 0, rotate(90deg) maps the box to x in [-h, 0] and
+  // y in [0, w], so the offsets below re-centre it in the viewport.
+  els.stage.style.transform = rotate
+    ? `translate(${(vw + h) / 2}px, ${(vh - w) / 2}px) rotate(90deg) scale(${scale})`
+    : `translate(${(vw - w) / 2}px, ${(vh - h) / 2}px) scale(${scale})`;
+}
+
+window.addEventListener("resize", fitStage);
+window.addEventListener("orientationchange", fitStage);
+// A ResizeObserver on the root catches what plain resize events miss: browser
+// zoom steps and a mobile URL bar sliding in and out.
+if (typeof ResizeObserver === "function") {
+  new ResizeObserver(fitStage).observe(document.documentElement);
+}
+window.visualViewport?.addEventListener("resize", fitStage);
+
 state.format = normalizeFormat(getStoredPreference(FORMAT_STORAGE_KEY));
 els.formatSelect.value = state.format;
 applyLanguage();
+fitStage();
 startMatch();
 if (shouldShowWelcome()) {
   openWelcome(false);
