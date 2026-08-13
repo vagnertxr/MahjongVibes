@@ -81,6 +81,7 @@ button:disabled {
   box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.24), 0 18px 54px rgba(0, 0, 0, 0.32);
   padding: 10px;
   overflow: hidden;
+  position: relative;
 }
 
 .topbar {
@@ -204,14 +205,42 @@ p {
   color: #ffeab0;
 }
 
-.table-footer {
-  flex: 0 0 auto;
-  height: 52px;
+/* Riichi City / Mahjong Soul shape: the hand sits on the bottom edge and the
+   calls float just above it, on the side the hand is reached from. The dock is
+   out of flow so the hand can stay as low as the table allows. */
+.action-dock {
+  position: absolute;
+  /* Stops short of the right-hand plate: the free felt between the ring and
+     that plate is the only strip wide enough that nothing collides. */
+  right: 150px;
+  bottom: 108px;
+  z-index: 3;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  align-items: flex-end;
+  gap: 8px;
+  width: 300px;
+  pointer-events: none;
+}
+
+.action-dock > * {
+  pointer-events: auto;
+}
+
+.action-dock .status {
+  text-align: right;
+}
+
+.action-dock .action-bar:empty {
+  display: none;
+}
+
+/* Backdrop only when there is something to click, so an idle table stays clean. */
+.action-dock .action-bar:not(:empty) {
+  border-radius: 14px;
+  background: rgba(2, 18, 18, 0.55);
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* Fixed stage: the board is authored at exactly 1280x720 and the whole thing is
@@ -242,7 +271,7 @@ p {
      plates sit inline with the tiles instead of stacked above them. Side seats
      stand their tiles in a narrow column, which frees the board corners. */
   grid-template-columns: 132px 1fr 132px;
-  grid-template-rows: 50px 1fr 90px;
+  grid-template-rows: 50px 1fr 96px;
   gap: 6px;
 }
 
@@ -299,8 +328,11 @@ p {
 .seat-bottom {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  /* Bottom-aligned so the hand rides the table edge rather than floating in the
+     middle of its row. */
+  align-items: flex-end;
   gap: 12px;
+  padding: 6px 8px 4px;
 }
 
 .seat-bottom .seat-header {
@@ -907,8 +939,17 @@ p {
 }
 
 .win-reveal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
   width: min(100%, 32rem);
-  margin-inline: auto;
+  max-height: 100%;
+  overflow: auto;
+  background: rgba(2, 18, 18, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.24);
   padding: 8px;
@@ -1045,18 +1086,48 @@ button.tile:focus-visible {
 
 .action-bar {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  min-height: 42px;
 }
 
+/* Call buttons read as chips, largest and reddest for the ones that end a hand,
+   quietest for pass, so the risky click is never the easy one. */
 .action-bar button {
-  background: #8b4f20;
+  min-height: 42px;
+  border-radius: 999px;
+  padding: 0 15px;
+  background: linear-gradient(#a8641f, #8b4f20);
+  font-size: 0.95rem;
+  font-weight: 950;
+  letter-spacing: 0.01em;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.34), 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
-.action-bar .win {
-  background: #9f2e35;
+.action-bar .act-pass {
+  min-height: 36px;
+  padding: 0 13px;
+  background: linear-gradient(#3c5a52, #2c4640);
+  font-size: 0.85rem;
+}
+
+.action-bar .act-riichi {
+  background: linear-gradient(#2f7fb8, #245f8c);
+}
+
+.action-bar .win,
+.action-bar .act-ron,
+.action-bar .act-tsumo {
+  min-height: 48px;
+  padding: 0 22px;
+  background: linear-gradient(#c4404a, #9f2e35);
+  font-size: 1.05rem;
+}
+
+.action-bar button:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.34);
 }
 
 .action-bar .pass {

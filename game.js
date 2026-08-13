@@ -342,6 +342,7 @@ const state = {
 const els = {
   roundLabel: document.querySelector("#roundLabel"),
   wallCount: document.querySelector("#wallCount"),
+  centerPanel: document.querySelector(".center-panel"),
   deadWall: document.querySelector("#deadWall"),
   deadWallLabel: document.querySelector("#deadWallLabel"),
   sticks: document.querySelector("#cpSticks"),
@@ -1535,16 +1536,31 @@ function declareRiichi() {
   render();
 }
 
+// Call sites build their lists in whatever order suits them; the dock always
+// shows them in the same one, weakest on the left and the winning calls out on
+// the right where the hand is. Sort is stable, so several kan or chi options
+// keep the order the caller chose.
+const ACTION_ORDER = ["pass", "chi", "pon", "kan", "riichi", "tsumo", "ron"];
+
+function actionRank(labelKey) {
+  const index = ACTION_ORDER.indexOf(labelKey);
+  return index < 0 ? ACTION_ORDER.length : index;
+}
+
 function showActions(actions) {
   els.actionBar.innerHTML = "";
-  actions.forEach(action => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = action.cls ?? "";
-    button.textContent = action.labelKey ? t(action.labelKey, action.labelParams) : action.label;
-    button.addEventListener("click", action.onClick);
-    els.actionBar.append(button);
-  });
+  [...actions]
+    .sort((a, b) => actionRank(a.labelKey) - actionRank(b.labelKey))
+    .forEach(action => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = [action.cls ?? "", action.labelKey ? `act-${action.labelKey}` : ""]
+        .filter(Boolean)
+        .join(" ");
+      button.textContent = action.labelKey ? t(action.labelKey, action.labelParams) : action.label;
+      button.addEventListener("click", action.onClick);
+      els.actionBar.append(button);
+    });
 }
 
 function clearActions() {
@@ -1768,7 +1784,9 @@ function render() {
   const winReveal = document.querySelector("#winReveal");
   if (winReveal) winReveal.remove();
   if (state.win) {
-    els.actionBar.insertAdjacentHTML("beforebegin", renderWinReveal());
+    // Over the board, not in the action dock: the dock now floats just above the
+    // hand and is too small to host a full hand reveal.
+    els.centerPanel.insertAdjacentHTML("beforeend", renderWinReveal());
   }
 
   state.players.forEach((player, seat) => {
