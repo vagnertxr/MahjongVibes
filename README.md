@@ -21,7 +21,7 @@ Run locally:
 - Readable discard rivers arranged around the center of the table, six tiles per row and turned to face each player, the way a real table looks. Called tiles leave the river, the riichi declaration tile lies sideways, and drawn-and-discarded tiles are marked, so you can count and read what has been thrown
 - A center piece holding the round, the honba count, the tiles left in the wall, the dora indicators, and the sticks on the table. The sticks are real: declaring riichi puts 1,000 points in the pot for the next winner to sweep, and each honba is worth 300 more on the hand that ends the streak
 - Opponents' concealed hands stand in narrow columns at the edges, the way they look from across a table, which keeps the middle clear for the rivers
-- Selectable Tonpuusen and Hanchan match lengths with end-of-match handling
+- A setup screen before the deal where you pick the match length, Tonpuusen or Hanchan, the way you pick a table before sitting at it. The choice is remembered, and it can never disturb a hand already in progress
 - Automatic scoring and score movement between players
 - A fixed 1280x720 table scaled by a single transform, so the board looks the same on a desktop, a phone, and at any browser zoom level. A phone held upright turns the table sideways rather than squeezing it into a column
 

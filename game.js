@@ -85,8 +85,11 @@ const I18N = {
     newMatchTitle: "Start a new match",
     format: "Format",
     formatTitle: "Match format",
+    matchLength: "Match length",
     tonpuusen: "Tonpuusen",
     hanchan: "Hanchan",
+    tonpuusenDesc: "East only, four hands",
+    hanchanDesc: "East and South, eight hands",
     close: "Close",
     closeTitle: "Close welcome",
     welcomeTitle: "Welcome to Mahjong Vibes",
@@ -97,7 +100,7 @@ const I18N = {
     startPlaying: "Start Playing",
     previous: "Previous",
     next: "Next",
-    hideWelcome: "Do not show this welcome next time",
+    hideWelcome: "Skip this setup next time and use my last choice",
     creditsPrefix: "Created by ",
     lastDiscard: "Last discard",
     winningHand: "Winning hand",
@@ -172,8 +175,11 @@ const I18N = {
     newMatchTitle: "Começar uma nova partida",
     format: "Formato",
     formatTitle: "Formato da partida",
+    matchLength: "Duração da partida",
     tonpuusen: "Tonpuusen",
     hanchan: "Hanchan",
+    tonpuusenDesc: "Só Leste, quatro mãos",
+    hanchanDesc: "Leste e Sul, oito mãos",
     close: "Fechar",
     closeTitle: "Fechar boas-vindas",
     welcomeTitle: "Bem-vindo ao Mahjong Vibes",
@@ -184,7 +190,7 @@ const I18N = {
     startPlaying: "Jogar",
     previous: "Anterior",
     next: "Próxima",
-    hideWelcome: "Não mostrar estas boas-vindas novamente",
+    hideWelcome: "Pular esta preparação na próxima vez e usar minha última escolha",
     creditsPrefix: "Criado por ",
     lastDiscard: "Último descarte",
     winningHand: "Mão vencedora",
@@ -330,7 +336,8 @@ const els = {
   rulesBtn: document.querySelector("#rulesBtn"),
   newGameBtn: document.querySelector("#newGameBtn"),
   formatLabel: document.querySelector("#formatLabel"),
-  formatSelect: document.querySelector("#formatSelect"),
+  formatChoiceTitle: document.querySelector("#formatChoiceTitle"),
+  formatCards: Array.from(document.querySelectorAll(".format-card")),
   welcomeOverlay: document.querySelector("#welcomeOverlay"),
   welcomeTitle: document.querySelector("#welcomeTitle"),
   welcomeSubtitle: document.querySelector("#welcomeTitle + p"),
@@ -354,19 +361,20 @@ const els = {
 let currentRulesPage = 0;
 let currentLanguage = getStoredPreference(LANGUAGE_STORAGE_KEY) === "pt" ? "pt" : "en";
 let soundEnabled = getStoredPreference(SOUND_STORAGE_KEY) !== "0";
+let selectedFormat = normalizeFormat(getStoredPreference(FORMAT_STORAGE_KEY));
 
-els.newGameBtn.addEventListener("click", startMatch);
-els.formatSelect.addEventListener("change", () => {
-  state.format = normalizeFormat(els.formatSelect.value);
-  setStoredPreference(FORMAT_STORAGE_KEY, state.format);
-  startMatch();
+// A new match is set up before it is dealt, the way you pick a table before
+// sitting at it. Changing the format used to silently wipe the hand in progress.
+els.newGameBtn.addEventListener("click", () => openWelcome(false));
+els.formatCards.forEach(card => {
+  card.addEventListener("click", () => selectFormat(card.dataset.format));
 });
 els.soundBtn.addEventListener("click", toggleSound);
 els.langBtn.addEventListener("click", toggleLanguage);
 els.welcomeLangBtn.addEventListener("click", toggleLanguage);
 els.rulesBtn.addEventListener("click", () => openWelcome(true));
 els.closeWelcomeBtn.addEventListener("click", closeWelcome);
-els.startPlayingBtn.addEventListener("click", closeWelcome);
+els.startPlayingBtn.addEventListener("click", startSelectedMatch);
 els.showRulesBtn.addEventListener("click", toggleRules);
 els.prevRulesBtn.addEventListener("click", () => setRulesPage(currentRulesPage - 1));
 els.nextRulesBtn.addEventListener("click", () => setRulesPage(currentRulesPage + 1));
@@ -377,8 +385,31 @@ document.addEventListener("keydown", event => {
   if (event.key === "Escape" && !els.welcomeOverlay.hidden) closeWelcome();
 });
 
+// The chosen format only commits when the match is dealt, so browsing the cards
+// never disturbs a hand already in progress.
+function selectFormat(format) {
+  selectedFormat = normalizeFormat(format);
+  els.formatCards.forEach(card => {
+    const active = card.dataset.format === selectedFormat;
+    card.classList.toggle("active", active);
+    card.setAttribute("aria-checked", active ? "true" : "false");
+  });
+}
+
+function startSelectedMatch() {
+  setStoredPreference(FORMAT_STORAGE_KEY, selectedFormat);
+  closeWelcome();
+  startMatch();
+}
+
+function updateFormatChip() {
+  els.formatLabel.textContent = t(state.format);
+  els.formatLabel.title = t("formatTitle");
+}
+
 function startMatch() {
-  state.format = normalizeFormat(els.formatSelect.value);
+  state.format = selectedFormat;
+  updateFormatChip();
   state.round = 0;
   state.dealer = 0;
   state.matchOver = false;
@@ -1583,10 +1614,11 @@ function applyLanguage() {
   els.rulesBtn.title = copy.rulesTitle;
   els.newGameBtn.textContent = copy.newMatch;
   els.newGameBtn.title = copy.newMatchTitle;
-  els.formatLabel.textContent = copy.format;
-  els.formatSelect.title = copy.formatTitle;
-  Array.from(els.formatSelect.options).forEach(option => {
-    option.textContent = t(option.value);
+  updateFormatChip();
+  els.formatChoiceTitle.textContent = copy.matchLength;
+  els.formatCards.forEach(card => {
+    card.querySelector(".fc-name").textContent = t(card.dataset.format);
+    card.querySelector(".fc-desc").textContent = t(`${card.dataset.format}Desc`);
   });
   els.closeWelcomeBtn.textContent = copy.close;
   els.closeWelcomeBtn.title = copy.closeTitle;
@@ -2011,10 +2043,11 @@ if (typeof ResizeObserver === "function") {
 }
 window.visualViewport?.addEventListener("resize", fitStage);
 
-state.format = normalizeFormat(getStoredPreference(FORMAT_STORAGE_KEY));
-els.formatSelect.value = state.format;
+selectFormat(selectedFormat);
 applyLanguage();
 fitStage();
+// Deal immediately so the setup screen opens over a live table rather than an
+// empty one. Confirming the setup deals again with whatever format was picked.
 startMatch();
 if (shouldShowWelcome()) {
   openWelcome(false);

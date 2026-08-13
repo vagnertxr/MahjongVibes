@@ -25,13 +25,7 @@
             </div>
           </div>
           <div class="meters">
-            <label class="format-picker">
-              <span id="formatLabel">Format</span>
-              <select id="formatSelect" title="Match format">
-                <option value="tonpuusen">Tonpuusen</option>
-                <option value="hanchan">Hanchan</option>
-              </select>
-            </label>
+            <span id="formatLabel" title="Match format">Tonpuusen</span>
             <button id="soundBtn" type="button" title="Mute sound">🔊</button>
             <button id="langBtn" type="button" title="Mudar para Português">🇧🇷</button>
             <button id="rulesBtn" type="button" title="Open beginner rules">Rules</button>
@@ -86,6 +80,20 @@
 
         <div class="welcome-body">
           <p class="intro-copy">Make four groups and one pair. Draw a tile, discard a tile, and watch for chances to call, declare riichi, or win.</p>
+
+          <div class="format-choice" role="radiogroup" aria-labelledby="formatChoiceTitle">
+            <p id="formatChoiceTitle" class="setup-label">Match length</p>
+            <div class="format-cards">
+              <button type="button" class="format-card" data-format="tonpuusen" role="radio" aria-checked="true">
+                <span class="fc-name">Tonpuusen</span>
+                <span class="fc-desc">East only, four hands</span>
+              </button>
+              <button type="button" class="format-card" data-format="hanchan" role="radio" aria-checked="false">
+                <span class="fc-name">Hanchan</span>
+                <span class="fc-desc">East and South, eight hands</span>
+              </button>
+            </div>
+          </div>
 
           <div class="welcome-actions">
             <button id="welcomeLangBtn" type="button">🇧🇷</button>
@@ -216,7 +224,7 @@
 
           <label class="remember-choice">
             <input id="hideWelcomeCheck" type="checkbox">
-            Do not show this welcome next time
+            Skip this setup next time and use my last choice
           </label>
           <p class="credits">Created by <a href="https://github.com/vagnertxr" target="_blank" rel="noopener noreferrer">vagnertxr</a></p>
         </div>
