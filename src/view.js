@@ -103,6 +103,13 @@ function localizeMessageParams(key, params) {
   return localized;
 }
 
+// Where a seat is drawn on this device's screen. The seat you are playing is
+// always slot 0, the bottom of the board, and everyone else falls into place
+// around it in turn order.
+function screenSlot(seat) {
+  return (seat - localSeat + 4) % 4;
+}
+
 function playerLabel(seat) {
   return seat === localSeat ? t("you") : seatName(seat);
 }
@@ -287,7 +294,12 @@ function render() {
   }
 
   state.players.forEach((player, seat) => {
-    const seatEl = els.seats[seat];
+    // #seat-N and #river-N are screen positions, not seats: slot 0 is the bottom
+    // of the board, 1 the right, 2 the top, 3 the left. Mapping seat to slot is
+    // the whole of the rotation -- the CSS already binds every orientation to
+    // the slot, so a client at seat 2 sees itself at the bottom for free.
+    const slot = screenSlot(seat);
+    const seatEl = els.seats[slot];
     seatEl.classList.toggle("turn", state.turn === seat && !state.gameOver);
     seatEl.innerHTML = `
       <div class="seat-header">
@@ -300,7 +312,7 @@ function render() {
       ${renderSeatBody(player, seat)}
     `;
 
-    const riverEl = els.riverBlocks[seat];
+    const riverEl = els.riverBlocks[slot];
     if (riverEl) {
       riverEl.setAttribute("aria-label", seat === localSeat ? t("yourRiver") : t("riverOf", { player: seatName(seat) }));
       riverEl.innerHTML = renderRiver(player, seat);
@@ -309,7 +321,7 @@ function render() {
 
   if (state.turn === localSeat && state.pendingDiscard && !state.gameOver) {
     const actions = [];
-    const human = state.players[0];
+    const human = state.players[localSeat];
     if (!human.riichi && human.melds.length === 0 && human.score >= 1000 && state.wall.length >= 4
       && canDeclareRiichi(human.hand, human.melds.length)) {
       actions.push({ labelKey: "riichi", onClick: () => declareRiichi(localSeat) });
