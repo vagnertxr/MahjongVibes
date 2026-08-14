@@ -322,7 +322,7 @@ function render() {
           <div class="name">${windMarkHtml(player.wind)}${playerLabel(seat)}</div>
           <div class="score">${player.score.toLocaleString()} ${t("points")}</div>
         </div>
-        <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}${isFuriten(player) ? `<span class="badge">${t("furiten")}</span>` : ""}${state.gameOver && !state.win && state.drawTenpaiSeats.includes(seat) ? `<span class="badge">${t("tenpaiBadge")}</span>` : ""}</div>
+        <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}${(player.furiten ?? isFuriten(player)) ? `<span class="badge">${t("furiten")}</span>` : ""}${state.gameOver && !state.win && state.drawTenpaiSeats.includes(seat) ? `<span class="badge">${t("tenpaiBadge")}</span>` : ""}</div>
       </div>
       ${renderSeatBody(player, seat)}
     `;
@@ -339,23 +339,24 @@ function render() {
     const human = state.players[localSeat];
     if (!human.riichi && human.melds.length === 0 && human.score >= 1000 && state.wall.length >= 4
       && canDeclareRiichi(human.hand, human.melds.length)) {
-      actions.push({ labelKey: "riichi", onClick: () => declareRiichi(localSeat) });
+      actions.push({ labelKey: "riichi", onClick: () => submitPlayerAction({ type: "riichi" }) });
     }
     for (const tile of legalAnkanOptions(human)) {
-      actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareAnkan(localSeat, tile) });
+      actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => submitPlayerAction({ type: "ankan", tile }) });
     }
     if (!human.riichi) {
       for (const tile of kakanOptions(human)) {
-        actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareKakan(localSeat, tile) });
+        actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => submitPlayerAction({ type: "kakan", tile }) });
       }
     }
     if (canWin(human.hand, human.melds.length) && checkWin(localSeat, "Tsumo", human.drawnTile)) {
-      actions.push({ labelKey: "tsumo", cls: "win", onClick: () => winHand(localSeat, localSeat, "Tsumo") });
+      actions.push({ labelKey: "tsumo", cls: "win", onClick: () => submitPlayerAction({ type: "tsumo" }) });
     }
     showActions(actions);
   }
 
   updateClaimTimer();
+  hostBroadcast();
 
   if (state.gameOver) {
     showActions([state.matchOver
@@ -611,7 +612,14 @@ function tileButton(tile, index, extraClass = "", forceDisabled = false) {
 
 function bindHumanTiles() {
   document.querySelectorAll("[data-tile-index]").forEach(button => {
-    button.addEventListener("click", () => discardTile(localSeat, Number(button.dataset.tileIndex)), { once: true });
+    button.addEventListener("click", () => {
+      // Sent as a tile, not an index: the two sides sort independently, so an
+      // index that shifted would discard the wrong tile.
+      const player = state.players[localSeat];
+      const index = Number(button.dataset.tileIndex);
+      const drawnIndex = player.drawnTile !== null ? player.hand.lastIndexOf(player.drawnTile) : -1;
+      submitPlayerAction({ type: "discard", tile: player.hand[index], fromDrawn: index === drawnIndex });
+    }, { once: true });
   });
 }
 

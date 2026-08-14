@@ -564,6 +564,14 @@ function leadingPlayerSeat() {
     .sort((a, b) => b.score - a.score || a.seat - b.seat)[0].seat;
 }
 
+function declareTsumo(seat) {
+  const player = state.players[seat];
+  if (state.turn !== seat || !state.pendingDiscard || state.gameOver) return;
+  if (!canWin(player.hand, player.melds.length)) return;
+  if (!checkWin(seat, "Tsumo", player.drawnTile)) return;
+  winHand(seat, seat, "Tsumo");
+}
+
 function declareRiichi(seat) {
   const player = state.players[seat];
   if (state.turn !== seat || !state.pendingDiscard || player.melds.length > 0 || player.score < 1000) return;

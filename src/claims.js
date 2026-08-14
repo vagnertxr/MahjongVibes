@@ -118,25 +118,31 @@ function openClaimWindow(tile, fromSeat) {
   render();
 }
 
+// A claim answer goes through the same door as every other player action, so a
+// client sends it and a host applies it without the caller knowing which it is.
+function sendClaim(choice) {
+  submitPlayerAction({ type: "claim", claimId: state.claim && state.claim.id, choice });
+}
+
 function showClaimActions(seat) {
   const claim = state.claim;
   const actions = claim.options[seat].map(option => {
     if (option.type === "ron") {
-      return { labelKey: "ron", cls: "win", onClick: () => submitClaim(seat, option) };
+      return { labelKey: "ron", cls: "win", onClick: () => sendClaim(option) };
     }
     if (option.type === "minkan") {
-      return { labelKey: "kan", labelParams: { tile: tileText(option.tile) }, onClick: () => submitClaim(seat, option) };
+      return { labelKey: "kan", labelParams: { tile: tileText(option.tile) }, onClick: () => sendClaim(option) };
     }
     if (option.type === "pon") {
-      return { labelKey: "pon", onClick: () => submitClaim(seat, option) };
+      return { labelKey: "pon", onClick: () => sendClaim(option) };
     }
     return {
       labelKey: "chi",
       labelParams: { tiles: option.option.map(tileText).join("") },
-      onClick: () => submitClaim(seat, option)
+      onClick: () => sendClaim(option)
     };
   });
-  actions.push({ labelKey: "pass", cls: "pass", onClick: () => submitClaim(seat, null) });
+  actions.push({ labelKey: "pass", cls: "pass", onClick: () => sendClaim(null) });
   showActions(actions);
 }
 
