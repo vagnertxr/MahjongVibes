@@ -234,7 +234,16 @@
       </section>
     </div>
 
-    <script src="game.js"></script>
+    <!-- Classic scripts, not modules: the desktop launcher opens this file over
+         file://, where modules are blocked by CORS. Load order matters -- main.js
+         runs at load time and needs everything else already evaluated. -->
+    <script src="src/constants.js"></script>
+    <script src="src/rules.js"></script>
+    <script src="src/i18n-data.js"></script>
+    <script src="src/state.js"></script>
+    <script src="src/match.js"></script>
+    <script src="src/view.js"></script>
+    <script src="src/main.js"></script>
     <script>
       if ("serviceWorker" in navigator && location.protocol !== "file:") {
         window.addEventListener("load", () => {

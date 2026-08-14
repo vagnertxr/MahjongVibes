@@ -17,9 +17,12 @@ ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-/tmp/zig-cache}" "$ZIG" cc \
   -lshell32 \
   -o "dist/windows/Mahjong Vibes.exe"
 
-cp index.html styles.css game.js manifest.webmanifest sw.js "dist/windows/"
+cp index.html styles.css manifest.webmanifest sw.js "dist/windows/"
+cp -r src "dist/windows/"
+# Copy the whole asset tree: shipping only icon.svg left the packaged builds with
+# no tile art and no sound.
 mkdir -p "dist/windows/assets"
-cp assets/icon.svg "dist/windows/assets/"
+cp -r assets/icon.svg assets/tiles assets/sfx "dist/windows/assets/"
 
 echo "Windows app folder built at: dist/windows"
 echo "Run on Windows by opening: dist/windows/Mahjong Vibes.exe"

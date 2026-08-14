@@ -9,10 +9,14 @@ a = Analysis(
     datas=[
         ("index.html", "."),
         ("styles.css", "."),
-        ("game.js", "."),
+        ("src", "src"),
         ("manifest.webmanifest", "."),
         ("sw.js", "."),
+        # Whole directories: shipping only icon.svg left the packaged builds with
+        # no tile art and no sound.
         ("assets/icon.svg", "assets"),
+        ("assets/tiles", "assets/tiles"),
+        ("assets/sfx", "assets/sfx"),
     ],
     hiddenimports=[],
     hookspath=[],

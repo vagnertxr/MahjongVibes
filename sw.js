@@ -1,9 +1,15 @@
-const CACHE_NAME = "mahjong-vibes-v18";
+const CACHE_NAME = "mahjong-vibes-v19";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
-  "./game.js",
+  "./src/constants.js",
+  "./src/rules.js",
+  "./src/i18n-data.js",
+  "./src/state.js",
+  "./src/match.js",
+  "./src/view.js",
+  "./src/main.js",
   "./manifest.webmanifest",
   "./assets/icon.svg"
 ];
