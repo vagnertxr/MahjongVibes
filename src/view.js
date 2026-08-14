@@ -104,12 +104,12 @@ function localizeMessageParams(key, params) {
 }
 
 function playerLabel(seat) {
-  return seat === 0 ? t("you") : NAMES[seat];
+  return seat === localSeat ? t("you") : seatName(seat);
 }
 
 function winVerb(seat) {
   if (currentLanguage === "pt") return "vence";
-  return seat === 0 ? "win" : "wins";
+  return seat === localSeat ? "win" : "wins";
 }
 
 function windLabel(wind) {
@@ -302,28 +302,28 @@ function render() {
 
     const riverEl = els.riverBlocks[seat];
     if (riverEl) {
-      riverEl.setAttribute("aria-label", seat === 0 ? t("yourRiver") : t("riverOf", { player: NAMES[seat] }));
+      riverEl.setAttribute("aria-label", seat === localSeat ? t("yourRiver") : t("riverOf", { player: seatName(seat) }));
       riverEl.innerHTML = renderRiver(player, seat);
     }
   });
 
-  if (state.turn === 0 && state.pendingDiscard && !state.gameOver) {
+  if (state.turn === localSeat && state.pendingDiscard && !state.gameOver) {
     const actions = [];
     const human = state.players[0];
     if (!human.riichi && human.melds.length === 0 && human.score >= 1000 && state.wall.length >= 4
       && canDeclareRiichi(human.hand, human.melds.length)) {
-      actions.push({ labelKey: "riichi", onClick: declareRiichi });
+      actions.push({ labelKey: "riichi", onClick: () => declareRiichi(localSeat) });
     }
     for (const tile of legalAnkanOptions(human)) {
-      actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareAnkan(tile) });
+      actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareAnkan(localSeat, tile) });
     }
     if (!human.riichi) {
       for (const tile of kakanOptions(human)) {
-        actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareKakan(tile) });
+        actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareKakan(localSeat, tile) });
       }
     }
-    if (canWin(human.hand, human.melds.length) && checkWin(0, "Tsumo", human.drawnTile)) {
-      actions.push({ labelKey: "tsumo", cls: "win", onClick: () => winHand(0, 0, "Tsumo") });
+    if (canWin(human.hand, human.melds.length) && checkWin(localSeat, "Tsumo", human.drawnTile)) {
+      actions.push({ labelKey: "tsumo", cls: "win", onClick: () => winHand(localSeat, localSeat, "Tsumo") });
     }
     showActions(actions);
   }
@@ -351,7 +351,7 @@ function renderSeatBody(player, seat) {
   const hand = renderHand(player, seat);
   const melds = renderMeldTiles(player);
 
-  if (seat === 0) {
+  if (seat === localSeat) {
     return `
       <div class="human-table">
         ${hand}
@@ -546,14 +546,14 @@ function renderWinReveal() {
 }
 
 function renderHand(player, seat) {
-  if (seat !== 0) {
+  if (seat !== localSeat) {
     // Side seats stack their backs into a narrow standing column, the way a real
     // table looks from across it. That frees the board corners for the plates.
     const orientation = seat === 1 || seat === 3 ? " standing" : "";
     const backs = player.hand.map(() => tileBackHtml(true)).join("");
     return `<div class="concealed${orientation}">${backs}</div>`;
   }
-  const drawnIndex = state.turn === 0 && state.pendingDiscard && !state.gameOver && player.drawnTile
+  const drawnIndex = state.turn === localSeat && state.pendingDiscard && !state.gameOver && player.drawnTile
     ? player.hand.lastIndexOf(player.drawnTile)
     : -1;
   const handLocked = player.riichi && !player.riichiDeclaring;
@@ -575,14 +575,14 @@ function renderHand(player, seat) {
 }
 
 function tileButton(tile, index, extraClass = "", forceDisabled = false) {
-    const disabled = forceDisabled || state.turn !== 0 || !state.pendingDiscard || state.gameOver ? "disabled" : "";
+    const disabled = forceDisabled || state.turn !== localSeat || !state.pendingDiscard || state.gameOver ? "disabled" : "";
     const title = t("discardTitle", { tile: tileName(tile) });
     return `<button type="button" class="tile ${extraClass} ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="${title}" aria-label="${title}">${tileImage(tile)}</button>`;
 }
 
 function bindHumanTiles() {
   document.querySelectorAll("[data-tile-index]").forEach(button => {
-    button.addEventListener("click", () => discardTile(0, Number(button.dataset.tileIndex)), { once: true });
+    button.addEventListener("click", () => discardTile(localSeat, Number(button.dataset.tileIndex)), { once: true });
   });
 }
 

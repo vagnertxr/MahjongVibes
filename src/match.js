@@ -54,7 +54,7 @@ function startHand() {
   state.discardCount = 0;
   state.drawTenpaiSeats = [];
   state.players = Array.from({ length: 4 }, (_, i) => ({
-    name: NAMES[i],
+    name: seatName(i),
     wind: WINDS[(i - state.dealer + 4) % 4],
     score: state.players[i]?.score ?? 25000,
     hand: [],
@@ -99,7 +99,7 @@ function drawForTurn() {
     return;
   }
 
-  if (state.turn !== 0) {
+  if (isBotSeat(state.turn)) {
     setTimeout(botDiscard, 550);
   }
 }
@@ -131,11 +131,14 @@ function discardTile(seat, tileIndex) {
   setMessage("playerDiscards", { playerSeat: seat, tile: tileText(tile) });
   render();
 
+  // Only the seat this device is playing gets a prompt; every other seat is
+  // resolved without one. Once seats can be remote humans this branch becomes
+  // the claim window instead.
   const ronSeat = findRon(tile, seat);
   if (ronSeat !== null) {
-    if (ronSeat === 0) {
+    if (ronSeat === localSeat) {
       showActions([
-        { labelKey: "ron", cls: "win", onClick: () => winHand(0, seat, "Ron") },
+        { labelKey: "ron", cls: "win", onClick: () => winHand(localSeat, seat, "Ron") },
         { labelKey: "pass", cls: "pass", onClick: nextTurn }
       ]);
       return;
@@ -144,8 +147,8 @@ function discardTile(seat, tileIndex) {
     return;
   }
 
-  if (seat !== 0 && canHumanCall(tile, seat)) {
-    showCallActions(tile, seat);
+  if (seat !== localSeat && canCall(localSeat, tile, seat)) {
+    showCallActions(localSeat, tile, seat);
     return;
   }
 
@@ -163,36 +166,44 @@ function findRon(tile, fromSeat, extra = {}) {
   return null;
 }
 
-function canHumanCall(tile, fromSeat) {
-  const human = state.players[0];
-  if (human.riichi) return false;
-  const same = human.hand.filter(t => t === tile).length;
-  return same >= 2 || (fromSeat === 3 && chiOptions(human.hand, tile).length > 0);
+// Chi may only take the discard of the player to your left. That is seat 3 when
+// you are seat 0, which is what this used to hardcode; stated generally it is
+// the seat three places clockwise.
+function seatToMyLeft(seat) {
+  return (seat + 3) % 4;
 }
 
-function showCallActions(tile, fromSeat) {
-  const human = state.players[0];
+function canCall(seat, tile, fromSeat) {
+  const player = state.players[seat];
+  if (player.riichi) return false;
+  const same = player.hand.filter(t => t === tile).length;
+  return same >= 2 || (fromSeat === seatToMyLeft(seat) && chiOptions(player.hand, tile).length > 0);
+}
+
+function showCallActions(seat, tile, fromSeat) {
+  const player = state.players[seat];
   const actions = [];
-  if (human.hand.filter(t => t === tile).length >= 3) {
-    actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => callMinkan(tile, fromSeat) });
+  if (player.hand.filter(t => t === tile).length >= 3) {
+    actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => callMinkan(seat, tile, fromSeat) });
   }
-  if (human.hand.filter(t => t === tile).length >= 2) {
-    actions.push({ labelKey: "pon", onClick: () => callPon(tile, fromSeat) });
+  if (player.hand.filter(t => t === tile).length >= 2) {
+    actions.push({ labelKey: "pon", onClick: () => callPon(seat, tile, fromSeat) });
   }
-  for (const option of chiOptions(human.hand, tile)) {
-    actions.push({ labelKey: "chi", labelParams: { tiles: option.map(tileText).join("") }, onClick: () => callChi(tile, option, fromSeat) });
+  if (fromSeat === seatToMyLeft(seat)) {
+    for (const option of chiOptions(player.hand, tile)) {
+      actions.push({ labelKey: "chi", labelParams: { tiles: option.map(tileText).join("") }, onClick: () => callChi(seat, tile, option, fromSeat) });
+    }
   }
   actions.push({ labelKey: "pass", cls: "pass", onClick: nextTurn });
   showActions(actions);
 }
 
-function callPon(tile, fromSeat) {
-  const human = state.players[0];
-  removeTiles(human.hand, [tile, tile]);
-  human.melds.push({ type: "pon", tiles: [tile, tile, tile], from: fromSeat });
-  // The caller is always the human today; pass the caller seat once bots learn to call.
-  markDiscardCalled(fromSeat, 0, "pon", tile);
-  state.turn = 0;
+function callPon(seat, tile, fromSeat) {
+  const player = state.players[seat];
+  removeTiles(player.hand, [tile, tile]);
+  player.melds.push({ type: "pon", tiles: [tile, tile, tile], from: fromSeat });
+  markDiscardCalled(fromSeat, seat, "pon", tile);
+  state.turn = seat;
   state.pendingDiscard = true;
   state.callHappenedThisHand = true;
   breakIppatsu();
@@ -202,12 +213,12 @@ function callPon(tile, fromSeat) {
   render();
 }
 
-function callChi(tile, option, fromSeat) {
-  const human = state.players[0];
-  removeTiles(human.hand, option);
-  human.melds.push({ type: "chi", tiles: [...option, tile].sort(compareTiles), from: fromSeat });
-  markDiscardCalled(fromSeat, 0, "chi", tile);
-  state.turn = 0;
+function callChi(seat, tile, option, fromSeat) {
+  const player = state.players[seat];
+  removeTiles(player.hand, option);
+  player.melds.push({ type: "chi", tiles: [...option, tile].sort(compareTiles), from: fromSeat });
+  markDiscardCalled(fromSeat, seat, "chi", tile);
+  state.turn = seat;
   state.pendingDiscard = true;
   state.callHappenedThisHand = true;
   breakIppatsu();
@@ -217,33 +228,33 @@ function callChi(tile, option, fromSeat) {
   render();
 }
 
-function declareAnkan(tile) {
-  const human = state.players[0];
-  if (state.turn !== 0 || !state.pendingDiscard || !legalAnkanOptions(human).includes(tile)) return;
-  removeTiles(human.hand, [tile, tile, tile, tile]);
-  human.melds.push({ type: "ankan", tiles: [tile, tile, tile, tile], from: null });
+function declareAnkan(seat, tile) {
+  const player = state.players[seat];
+  if (state.turn !== seat || !state.pendingDiscard || !legalAnkanOptions(player).includes(tile)) return;
+  removeTiles(player.hand, [tile, tile, tile, tile]);
+  player.melds.push({ type: "ankan", tiles: [tile, tile, tile, tile], from: null });
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
   setMessage("declareKan", { tile: tileText(tile) });
   revealKanDora();
   clearActions();
-  if (!drawReplacementTile(human, 0)) render();
+  if (!drawReplacementTile(player, seat)) render();
 }
 
-function declareKakan(tile) {
-  const human = state.players[0];
-  if (state.turn !== 0 || !state.pendingDiscard || !kakanOptions(human).includes(tile)) return;
-  const chankanSeat = findRon(tile, 0, { isChankan: true });
+function declareKakan(seat, tile) {
+  const player = state.players[seat];
+  if (state.turn !== seat || !state.pendingDiscard || !kakanOptions(player).includes(tile)) return;
+  const chankanSeat = findRon(tile, seat, { isChankan: true });
   if (chankanSeat !== null) {
-    removeTiles(human.hand, [tile]);
+    removeTiles(player.hand, [tile]);
     state.lastDiscard = tile;
-    state.lastDiscardFrom = 0;
-    setTimeout(() => winHand(chankanSeat, 0, "Ron", { isChankan: true }), 400);
+    state.lastDiscardFrom = seat;
+    setTimeout(() => winHand(chankanSeat, seat, "Ron", { isChankan: true }), 400);
     return;
   }
-  const meld = human.melds.find(m => m.type === "pon" && m.tiles[0] === tile);
-  removeTiles(human.hand, [tile]);
+  const meld = player.melds.find(m => m.type === "pon" && m.tiles[0] === tile);
+  removeTiles(player.hand, [tile]);
   meld.type = "kakan";
   meld.tiles.push(tile);
   state.callHappenedThisHand = true;
@@ -252,22 +263,22 @@ function declareKakan(tile) {
   setMessage("declareKan", { tile: tileText(tile) });
   revealKanDora();
   clearActions();
-  if (!drawReplacementTile(human, 0)) render();
+  if (!drawReplacementTile(player, seat)) render();
 }
 
-function callMinkan(tile, fromSeat) {
-  const human = state.players[0];
-  removeTiles(human.hand, [tile, tile, tile]);
-  human.melds.push({ type: "minkan", tiles: [tile, tile, tile, tile], from: fromSeat });
-  markDiscardCalled(fromSeat, 0, "minkan", tile);
-  state.turn = 0;
+function callMinkan(seat, tile, fromSeat) {
+  const player = state.players[seat];
+  removeTiles(player.hand, [tile, tile, tile]);
+  player.melds.push({ type: "minkan", tiles: [tile, tile, tile, tile], from: fromSeat });
+  markDiscardCalled(fromSeat, seat, "minkan", tile);
+  state.turn = seat;
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
   setMessage("callKan", { tile: tileText(tile) });
   revealKanDora();
   clearActions();
-  if (!drawReplacementTile(human, 0)) render();
+  if (!drawReplacementTile(player, seat)) render();
 }
 
 function drawReplacementTile(player, seat) {
@@ -299,7 +310,7 @@ function nextTurn() {
 }
 
 function botDiscard() {
-  if (state.gameOver || state.turn === 0) return;
+  if (state.gameOver || !isBotSeat(state.turn)) return;
   const player = state.players[state.turn];
   const tile = chooseBotDiscard(player);
   const index = player.hand.indexOf(tile);
@@ -533,16 +544,16 @@ function leadingPlayerSeat() {
     .sort((a, b) => b.score - a.score || a.seat - b.seat)[0].seat;
 }
 
-function declareRiichi() {
-  const human = state.players[0];
-  if (state.turn !== 0 || !state.pendingDiscard || human.melds.length > 0 || human.score < 1000) return;
+function declareRiichi(seat) {
+  const player = state.players[seat];
+  if (state.turn !== seat || !state.pendingDiscard || player.melds.length > 0 || player.score < 1000) return;
   if (state.wall.length < 4) return;
-  if (!canDeclareRiichi(human.hand, human.melds.length)) return;
-  human.riichi = true;
-  human.riichiDeclaring = true;
-  human.doubleRiichi = human.discards.length === 0 && !state.callHappenedThisHand;
-  human.ippatsu = true;
-  human.score -= 1000;
+  if (!canDeclareRiichi(player.hand, player.melds.length)) return;
+  player.riichi = true;
+  player.riichiDeclaring = true;
+  player.doubleRiichi = player.discards.length === 0 && !state.callHappenedThisHand;
+  player.ippatsu = true;
+  player.score -= 1000;
   state.riichiPot += 1000;
   playSound("riichi");
   setMessage("declareRiichi");
