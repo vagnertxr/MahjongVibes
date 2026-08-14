@@ -1418,3 +1418,54 @@ h3 {
     font-size: 0.58rem;
   }
 }
+
+/* Countdown for an open claim window. Shown only while this device owes an
+   answer, and driven from the host's deadline rather than a local counter. */
+.claim-timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 2px;
+}
+
+.claim-timer[hidden] {
+  display: none;
+}
+
+.claim-bar {
+  flex: 1 1 auto;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.claim-bar::after {
+  content: "";
+  display: block;
+  height: 100%;
+  width: var(--claim-left, 100%);
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 200ms linear;
+}
+
+.claim-secs {
+  min-width: 2ch;
+  text-align: right;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+
+.claim-timer.urgent .claim-bar::after,
+.claim-timer.urgent .claim-secs {
+  background: var(--danger);
+  color: var(--danger);
+}
+
+.claim-timer.urgent .claim-secs {
+  background: none;
+}

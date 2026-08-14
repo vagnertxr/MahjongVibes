@@ -64,7 +64,9 @@ function startHand() {
     riichiDeclaring: false,
     doubleRiichi: false,
     ippatsu: false,
-    drawnTile: null
+    drawnTile: null,
+    // Bonus decision time, topped up per turn and capped so it cannot build up.
+    timeBank: 0
   }));
 
   for (let draw = 0; draw < 13; draw += 1) {
@@ -131,28 +133,9 @@ function discardTile(seat, tileIndex) {
   setMessage("playerDiscards", { playerSeat: seat, tile: tileText(tile) });
   render();
 
-  // Only the seat this device is playing gets a prompt; every other seat is
-  // resolved without one. Once seats can be remote humans this branch becomes
-  // the claim window instead.
-  const ronSeat = findRon(tile, seat);
-  if (ronSeat !== null) {
-    if (ronSeat === localSeat) {
-      showActions([
-        { labelKey: "ron", cls: "win", onClick: () => winHand(localSeat, seat, "Ron") },
-        { labelKey: "pass", cls: "pass", onClick: nextTurn }
-      ]);
-      return;
-    }
-    setTimeout(() => winHand(ronSeat, seat, "Ron"), 650);
-    return;
-  }
-
-  if (seat !== localSeat && canCall(localSeat, tile, seat)) {
-    showCallActions(localSeat, tile, seat);
-    return;
-  }
-
-  setTimeout(nextTurn, 450);
+  // Every seat that could claim this tile is asked at once and the host resolves
+  // them together; nothing advances until that window closes.
+  openClaimWindow(tile, seat);
 }
 
 function findRon(tile, fromSeat, extra = {}) {
@@ -208,7 +191,7 @@ function callPon(seat, tile, fromSeat) {
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("callPon", { tile: tileText(tile) });
+  setMessage("callPon", { playerSeat: seat, tile: tileText(tile) });
   clearActions();
   render();
 }
@@ -223,7 +206,7 @@ function callChi(seat, tile, option, fromSeat) {
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("callChi");
+  setMessage("callChi", { playerSeat: seat });
   clearActions();
   render();
 }
@@ -236,7 +219,7 @@ function declareAnkan(seat, tile) {
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("declareKan", { tile: tileText(tile) });
+  setMessage("declareKan", { playerSeat: seat, tile: tileText(tile) });
   revealKanDora();
   clearActions();
   if (!drawReplacementTile(player, seat)) render();
@@ -260,7 +243,7 @@ function declareKakan(seat, tile) {
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("declareKan", { tile: tileText(tile) });
+  setMessage("declareKan", { playerSeat: seat, tile: tileText(tile) });
   revealKanDora();
   clearActions();
   if (!drawReplacementTile(player, seat)) render();
@@ -275,7 +258,7 @@ function callMinkan(seat, tile, fromSeat) {
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("callKan", { tile: tileText(tile) });
+  setMessage("callKan", { playerSeat: seat, tile: tileText(tile) });
   revealKanDora();
   clearActions();
   if (!drawReplacementTile(player, seat)) render();
@@ -304,6 +287,7 @@ function revealKanDora() {
 
 function nextTurn() {
   clearActions();
+  cancelClaimWindow();
   if (state.gameOver) return;
   state.turn = (state.lastDiscardFrom + 1) % 4;
   drawForTurn();
@@ -315,6 +299,40 @@ function botDiscard() {
   const tile = chooseBotDiscard(player);
   const index = player.hand.indexOf(tile);
   discardTile(state.turn, index);
+}
+
+// A bot's answer to a claim window. Deterministic and deliberately cautious:
+// the point is an opponent that behaves plausibly, not one that plays well.
+// Returns the option it wants, or null to pass.
+function botChooseClaim(seat, options) {
+  const player = state.players[seat];
+
+  // Never decline a win. claimOptionsFor only offers ron when the hand actually
+  // scores, so there is nothing to weigh up.
+  const ron = options.find(option => option.type === "ron");
+  if (ron) return ron;
+
+  // Open the hand only for a triplet that is worth a yaku by itself, otherwise
+  // the bot trades its closed-hand value for nothing.
+  const isValuable = tile => tile === "Wh" || tile === "G" || tile === "R"
+    || tile === seatWindTile(seat) || tile === roundWindTile();
+
+  const kan = options.find(option => option.type === "minkan");
+  if (kan && isValuable(kan.tile)) return kan;
+
+  const pon = options.find(option => option.type === "pon");
+  if (pon && isValuable(pon.tile)) return pon;
+
+  // Chi is the weakest call, so take it only when the hand is already open and
+  // the sequence keeps it all-simples, which is the one yaku a chi can preserve.
+  const alreadyOpen = player.melds.some(meld => meld.type !== "ankan");
+  if (alreadyOpen) {
+    const chi = options.find(option => option.type === "chi"
+      && [option.tile, ...option.option].every(isSimple));
+    if (chi) return chi;
+  }
+
+  return null;
 }
 
 function chooseBotDiscard(player) {
@@ -419,6 +437,7 @@ function checkWin(seat, type, winTile, extra = {}) {
 }
 
 function winHand(winner, loser, type, extra = {}) {
+  cancelClaimWindow();
   const player = state.players[winner];
   const winTile = type === "Ron" ? state.lastDiscard : player.drawnTile;
   const evaluation = checkWin(winner, type, winTile, extra);
@@ -483,6 +502,7 @@ function describeWin(player) {
 }
 
 function endDraw() {
+  cancelClaimWindow();
   state.gameOver = true;
   const tenpaiSeats = state.players
     .map((player, seat) => ({ seat, tenpai: isTenpai(player.hand, player.melds.length) }))
@@ -556,6 +576,6 @@ function declareRiichi(seat) {
   player.score -= 1000;
   state.riichiPot += 1000;
   playSound("riichi");
-  setMessage("declareRiichi");
+  setMessage("declareRiichi", { playerSeat: seat });
   render();
 }

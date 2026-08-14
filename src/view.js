@@ -10,6 +10,7 @@ const els = {
   honbaLabel: document.querySelector("#honbaLabel"),
   statusText: document.querySelector("#statusText"),
   actionBar: document.querySelector("#actionBar"),
+  claimTimer: document.querySelector("#claimTimer"),
   soundBtn: document.querySelector("#soundBtn"),
   langBtn: document.querySelector("#langBtn"),
   rulesBtn: document.querySelector("#rulesBtn"),
@@ -88,6 +89,8 @@ function localizeMessageParams(key, params) {
   const localized = { ...params };
   if (Number.isInteger(params.playerSeat)) {
     localized.player = playerLabel(params.playerSeat);
+    localized.callVerb = callVerb(params.playerSeat);
+    localized.declareVerb = declareVerb(params.playerSeat);
   }
   if (key === "wins") {
     localized.player = playerLabel(params.winner);
@@ -114,9 +117,21 @@ function playerLabel(seat) {
   return seat === localSeat ? t("you") : seatName(seat);
 }
 
+// English needs "you call" but "Bruno calls"; Portuguese uses one form for both.
+// Every message that names an actor goes through one of these.
 function winVerb(seat) {
   if (currentLanguage === "pt") return "vence";
   return seat === localSeat ? "win" : "wins";
+}
+
+function callVerb(seat) {
+  if (currentLanguage === "pt") return "chama";
+  return seat === localSeat ? "call" : "calls";
+}
+
+function declareVerb(seat) {
+  if (currentLanguage === "pt") return "declara";
+  return seat === localSeat ? "declare" : "declares";
 }
 
 function windLabel(wind) {
@@ -339,6 +354,8 @@ function render() {
     }
     showActions(actions);
   }
+
+  updateClaimTimer();
 
   if (state.gameOver) {
     showActions([state.matchOver

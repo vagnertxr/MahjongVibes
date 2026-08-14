@@ -44,5 +44,7 @@ const state = {
   messageKey: "",
   messageParams: {},
   win: null,
+  // The open claim window, or null. Only the host ever writes this.
+  claim: null,
   players: []
 };
