@@ -87,6 +87,27 @@ const I18N = {
     yakuListTitle: "Open yaku list",
     closeYakuTitle: "Close yaku list",
     confirmAbandonMatch: "This ends the match in progress and deals a new one. Continue?",
+    lan: "Network",
+    lanTitle: "Play over the local network",
+    lanHeading: "Local Network",
+    lanIntro: "Connection test. Create a room and read out the address, or type the address of a phone that already has one. No hands are shared yet.",
+    lanIntroGuestOnly: "Connection test. Only the installed app can hold a room; from a browser you can join one. No hands are shared yet.",
+    lanCreateRoom: "Create Room",
+    lanJoinRoom: "Join Room",
+    lanPing: "Send Test Message",
+    lanLeave: "Disconnect",
+    lanOpening: "Opening the room...",
+    lanJoining: "Reaching the table...",
+    lanHosting: "Room open at {address}:{port}. Others type that in.",
+    lanJoined: "Connected to {address}.",
+    lanFailed: "{reason}",
+    lanDisconnected: "The connection dropped.",
+    lanClosed: "Disconnected.",
+    lanPeerJoined: "Player {id} joined.",
+    lanPeerLeft: "Player {id} left.",
+    lanFrom: "From {id}: {text}",
+    lanFromHost: "From the host: {text}",
+    lanSent: "Sent: {text}",
     yakuIntro: "Every yaku this table scores. A winning shape still needs at least one of them. Han values are for a closed hand; where a hand opens for less, the open value is in brackets.",
     yakuLuck: "How the hand was won",
     yakuShape: "What the hand is made of",
@@ -239,6 +260,27 @@ const I18N = {
     yakuListTitle: "Abrir lista de yaku",
     closeYakuTitle: "Fechar lista de yaku",
     confirmAbandonMatch: "Isto encerra a partida em andamento e distribui uma nova. Continuar?",
+    lan: "Rede",
+    lanTitle: "Jogar pela rede local",
+    lanHeading: "Rede Local",
+    lanIntro: "Teste de conexão. Crie uma sala e diga o endereço em voz alta, ou digite o endereço de um celular que já criou uma. Ainda não há mãos compartilhadas.",
+    lanIntroGuestOnly: "Teste de conexão. Só o app instalado consegue manter uma sala; pelo navegador dá para entrar em uma. Ainda não há mãos compartilhadas.",
+    lanCreateRoom: "Criar Sala",
+    lanJoinRoom: "Entrar na Sala",
+    lanPing: "Enviar Mensagem de Teste",
+    lanLeave: "Desconectar",
+    lanOpening: "Abrindo a sala...",
+    lanJoining: "Procurando a mesa...",
+    lanHosting: "Sala aberta em {address}:{port}. É isso que os outros digitam.",
+    lanJoined: "Conectado a {address}.",
+    lanFailed: "{reason}",
+    lanDisconnected: "A conexão caiu.",
+    lanClosed: "Desconectado.",
+    lanPeerJoined: "Jogador {id} entrou.",
+    lanPeerLeft: "Jogador {id} saiu.",
+    lanFrom: "De {id}: {text}",
+    lanFromHost: "Do anfitrião: {text}",
+    lanSent: "Enviado: {text}",
     yakuIntro: "Todos os yaku que esta mesa pontua. Uma mão completa ainda precisa de pelo menos um deles. Os han valem para mão fechada; quando abrir a mão reduz o valor, o valor aberto vem entre colchetes.",
     yakuLuck: "Como a mão foi vencida",
     yakuShape: "Do que a mão é feita",
@@ -551,6 +593,18 @@ const els = {
   hideWelcomeCheck: document.querySelector("#hideWelcomeCheck"),
   rememberChoice: document.querySelector(".remember-choice"),
   credits: document.querySelector(".credits"),
+  lanBtn: document.querySelector("#lanBtn"),
+  lanOverlay: document.querySelector("#lanOverlay"),
+  lanTitle: document.querySelector("#lanTitle"),
+  lanIntro: document.querySelector("#lanIntro"),
+  lanHostBtn: document.querySelector("#lanHostBtn"),
+  lanAddress: document.querySelector("#lanAddress"),
+  lanJoinBtn: document.querySelector("#lanJoinBtn"),
+  lanStatus: document.querySelector("#lanStatus"),
+  lanLog: document.querySelector("#lanLog"),
+  lanPingBtn: document.querySelector("#lanPingBtn"),
+  lanLeaveBtn: document.querySelector("#lanLeaveBtn"),
+  closeLanBtn: document.querySelector("#closeLanBtn"),
   yakuOverlay: document.querySelector("#yakuOverlay"),
   yakuOverlayTitle: document.querySelector("#yakuOverlayTitle"),
   yakuOverlayContent: document.querySelector("#yakuOverlayContent"),
@@ -576,6 +630,15 @@ els.welcomeLangBtn.addEventListener("click", toggleLanguage);
 els.rulesBtn.addEventListener("click", () => openWelcome(true));
 els.yakuListBtn.addEventListener("click", openYakuList);
 els.closeYakuBtn.addEventListener("click", closeYakuList);
+els.lanBtn.addEventListener("click", openLanPanel);
+els.closeLanBtn.addEventListener("click", closeLanPanel);
+els.lanHostBtn.addEventListener("click", hostLanRoom);
+els.lanJoinBtn.addEventListener("click", joinLanRoom);
+els.lanPingBtn.addEventListener("click", sendLanPing);
+els.lanLeaveBtn.addEventListener("click", leaveLanRoom);
+els.lanOverlay.addEventListener("click", event => {
+  if (event.target === els.lanOverlay) closeLanPanel();
+});
 els.closeWelcomeBtn.addEventListener("click", closeWelcome);
 els.startPlayingBtn.addEventListener("click", startSelectedMatch);
 els.showRulesBtn.addEventListener("click", toggleRules);
@@ -590,6 +653,7 @@ els.yakuOverlay.addEventListener("click", event => {
 document.addEventListener("keydown", event => {
   if (event.key === "Escape" && !els.welcomeOverlay.hidden) closeWelcome();
   if (event.key === "Escape" && !els.yakuOverlay.hidden) closeYakuList();
+  if (event.key === "Escape" && !els.lanOverlay.hidden) closeLanPanel();
 });
 
 // The chosen format only commits when the match is dealt, so browsing the cards
@@ -1902,6 +1966,15 @@ function applyLanguage() {
   els.rulesBtn.title = copy.rulesTitle;
   els.yakuListBtn.textContent = copy.yakuList;
   els.yakuListBtn.title = copy.yakuListTitle;
+  els.lanBtn.textContent = copy.lan;
+  els.lanBtn.title = copy.lanTitle;
+  els.lanTitle.textContent = copy.lanHeading;
+  els.closeLanBtn.textContent = copy.close;
+  els.lanHostBtn.textContent = copy.lanCreateRoom;
+  els.lanJoinBtn.textContent = copy.lanJoinRoom;
+  els.lanPingBtn.textContent = copy.lanPing;
+  els.lanLeaveBtn.textContent = copy.lanLeave;
+  updateLanPanel();
   els.yakuOverlayTitle.textContent = copy.yakuList;
   els.closeYakuBtn.textContent = copy.close;
   els.closeYakuBtn.title = copy.closeYakuTitle;
@@ -1956,6 +2029,110 @@ function closeWelcome() {
     setStoredPreference(WELCOME_STORAGE_KEY, "1");
   }
   els.welcomeOverlay.hidden = true;
+}
+
+// Phase 2 of the LAN work: this panel proves two devices can reach each other
+// and exchange a message. It carries no game state yet — the lobby with seats
+// and the shared table come later.
+let lanConnection = null;
+
+function openLanPanel() {
+  els.lanOverlay.hidden = false;
+  els.lanHostBtn.hidden = !LanNet.canHost();
+  updateLanPanel();
+  els.closeLanBtn.focus();
+}
+
+function closeLanPanel() {
+  els.lanOverlay.hidden = true;
+}
+
+function updateLanPanel() {
+  const connected = lanConnection !== null;
+  els.lanHostBtn.disabled = connected;
+  els.lanJoinBtn.disabled = connected;
+  els.lanAddress.disabled = connected;
+  els.lanPingBtn.disabled = !connected;
+  els.lanLeaveBtn.disabled = !connected;
+  els.lanIntro.textContent = LanNet.canHost() ? t("lanIntro") : t("lanIntroGuestOnly");
+}
+
+function setLanStatus(key, params = {}) {
+  els.lanStatus.textContent = t(key, params);
+}
+
+function lanLog(text) {
+  const entry = document.createElement("li");
+  entry.textContent = text;
+  els.lanLog.prepend(entry);
+  while (els.lanLog.children.length > 8) els.lanLog.lastChild.remove();
+}
+
+async function hostLanRoom() {
+  try {
+    setLanStatus("lanOpening");
+    const room = await LanNet.openRoom({
+      onPeerJoined: id => { lanLog(t("lanPeerJoined", { id })); },
+      onPeerLeft: id => { lanLog(t("lanPeerLeft", { id })); },
+      onMessage: (id, message) => {
+        lanLog(t("lanFrom", { id, text: JSON.stringify(message) }));
+        // Answer so the guest's round trip completes without game logic.
+        room.send(id, { type: "pong", at: Date.now() });
+      },
+      onError: error => lanLog(error.message)
+    });
+    lanConnection = { kind: "host", room };
+    setLanStatus("lanHosting", { address: room.address ?? "?", port: room.port });
+    updateLanPanel();
+  } catch (error) {
+    setLanStatus("lanFailed", { reason: error.message });
+  }
+}
+
+async function joinLanRoom() {
+  try {
+    setLanStatus("lanJoining");
+    const guest = await LanNet.joinRoom({
+      address: els.lanAddress.value,
+      onMessage: message => lanLog(t("lanFromHost", { text: JSON.stringify(message) })),
+      onClose: () => {
+        // Hanging up on purpose clears lanConnection first, so reaching here
+        // with it still set is the host going away rather than us leaving.
+        if (!lanConnection) return;
+        lanConnection = null;
+        setLanStatus("lanDisconnected");
+        updateLanPanel();
+      },
+      onError: error => lanLog(error.message)
+    });
+    lanConnection = { kind: "guest", guest };
+    setLanStatus("lanJoined", { address: els.lanAddress.value.trim() });
+    updateLanPanel();
+  } catch (error) {
+    setLanStatus("lanFailed", { reason: error.message });
+  }
+}
+
+function sendLanPing() {
+  if (!lanConnection) return;
+  const message = { type: "ping", at: Date.now() };
+  if (lanConnection.kind === "host") lanConnection.room.broadcast(message);
+  else lanConnection.guest.send(message);
+  lanLog(t("lanSent", { text: JSON.stringify(message) }));
+}
+
+async function leaveLanRoom() {
+  if (!lanConnection) return;
+  const connection = lanConnection;
+  lanConnection = null;
+  try {
+    if (connection.kind === "host") await connection.room.close();
+    else connection.guest.close();
+  } catch {
+    // Closing a connection that is already gone is not worth reporting.
+  }
+  setLanStatus("lanClosed");
+  updateLanPanel();
 }
 
 function openYakuList() {

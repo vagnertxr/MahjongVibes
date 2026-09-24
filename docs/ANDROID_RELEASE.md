@@ -4,8 +4,9 @@ This is the plan for shipping Mahjong Vibes as an installable Android `.apk`
 playable over a local network: one player creates the table, up to three others
 join from their own phones.
 
-**Phase 1 and Phase 5 have landed** — the app packages and builds today, against
-bots, on one device. Phases 2 through 4, which are the networking, are still
+**Phases 1, 2 and 5 have landed.** The app packages and builds, and two devices
+can find each other and exchange messages. What they cannot do yet is share a
+table: the seat-ownership refactor (Phase 3) and the lobby (Phase 4) are still
 ahead.
 
 The companion document [RELEASE.md](RELEASE.md) covers the shipping web, PWA and
@@ -86,31 +87,46 @@ Building locally, if you have Android Studio:
 npm install && npm run sync && cd android && ./gradlew assembleDebug
 ```
 
-## Phase 2 — A Local Server on the Host Device
+## Phase 2 — A Local Server on the Host Device — **done**
 
-The networking primitive, proven on its own before any game logic depends on it.
+Joining was the easy half: `new WebSocket('ws://<host>:<port>')` works from
+ordinary JavaScript inside the WebView, with no plugin and no permission beyond
+the `INTERNET` Capacitor already declares.
 
-Joining is the easy half: `new WebSocket('ws://<host-ip>:<port>')` works from
-ordinary JavaScript inside the WebView. No plugin, no permission beyond the
-`INTERNET` that Capacitor already declares.
+Hosting needed native code, because a WebView can open a socket but never listen
+on one. `LanServerPlugin` is that server. It exposes `start`, `stop`, `send`,
+`broadcast` and `getAddress` to JavaScript, and emits `peerJoined`, `peerLeft`,
+`peerMessage` and `serverError`. It moves text and nothing else: seats, hands and
+turns stay in JavaScript, on the host.
 
-Hosting is the half that needs native code. A WebView cannot listen for incoming
-connections, so the host needs a small Capacitor plugin in Kotlin wrapping an
-embedded WebSocket server. **NanoHTTPD's NanoWSD** is the right size for this:
-one small dependency that accepts a handful of LAN connections and relays text
-frames, with none of the service-discovery or TLS weight of a full server
-framework.
+`net.js` wraps both halves behind one shape — `openRoom` for the host,
+`joinRoom` for guests — so the game will not care which side it is on.
 
-The plugin exposes to JavaScript:
+Three decisions came out differently from the plan above:
 
-- `startServer(port)`, `stopServer()`
-- `send(clientId, message)`, `broadcast(message)`
-- events: `clientConnected`, `clientDisconnected`, `message`
+- **Java, not Kotlin.** The Capacitor template is Java throughout and the project
+  has no Kotlin toolchain. Adding the Kotlin Gradle plugin, its version
+  alignment and its stdlib to carry one file was not worth it.
+- **Java-WebSocket, not NanoWSD.** NanoWSD's last release was 2017 and it is an
+  HTTP server with WebSocket bolted on. Java-WebSocket is maintained, is built
+  for exactly this, and its server is four methods to override. With no device
+  to test the host on, the smaller and better-maintained library was the safer
+  bet.
+- **No `ACCESS_WIFI_STATE`.** Reading the address off `NetworkInterface` instead
+  of `WifiManager` needs no permission at all, and also works over a hotspot or
+  ethernet.
 
-It also needs `ACCESS_WIFI_STATE` so the host can display its own LAN address.
+**One thing that would have cost a debugging session on-device:** from
+targetSdk 28 on, Android blocks cleartext traffic, so `ws://` fails inside the
+WebView with nothing useful said about why. `network_security_config.xml` now
+permits it. There is no certificate to validate on a living-room network and no
+authority to issue one; nothing else in the app touches the network.
 
-**Done when:** one phone taps "Create Room" and shows its IP, a second phone
-connects to it, and a test message makes the round trip. No game logic yet.
+**What is verified, and what is not.** The guest half is tested: it connects to
+a real WebSocket server, sends and receives, distinguishes hanging up from
+being dropped, and fails fast on a bad address instead of hanging. The host half
+has only been compiled. It needs two devices on one network to be called
+working, which is the first thing to do with the next build.
 
 ## Phase 3 — Give Every Seat an Owner
 

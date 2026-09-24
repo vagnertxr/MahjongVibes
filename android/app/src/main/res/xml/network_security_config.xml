@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Guests reach the host at ws://<phone's LAN address>, and Android blocks
+  cleartext by default from targetSdk 28 on, so without this the connection
+  fails inside the WebView with nothing useful said about why.
+
+  There is no certificate to validate on a living-room network and no authority
+  to issue one, so plain ws:// is what a LAN game has. Nothing else in the app
+  talks to the network: the game's own files are served locally from the APK.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

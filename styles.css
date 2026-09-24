@@ -1250,6 +1250,50 @@ h3 {
   padding: 10px;
 }
 
+.lan-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lan-row input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+  font: inherit;
+}
+
+.lan-status {
+  margin: 10px 0 0;
+  min-height: 1.2em;
+  color: var(--accent, #f4c35b);
+  font-weight: 750;
+}
+
+.lan-log {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 8px;
+  max-height: 9.5rem;
+  overflow: auto;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.lan-log:empty {
+  display: none;
+}
+
 .yaku-reference {
   max-height: min(62vh, 520px);
   overflow: auto;

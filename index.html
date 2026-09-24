@@ -30,6 +30,7 @@
             <button id="langBtn" type="button" title="Mudar para Português">🇧🇷</button>
             <button id="rulesBtn" type="button" title="Open beginner rules">Rules</button>
             <button id="yakuListBtn" type="button" title="Open yaku list">Yaku List</button>
+            <button id="lanBtn" type="button" title="Play over the local network">Network</button>
             <button id="newGameBtn" type="button" title="Start a new match">New Match</button>
           </div>
         </div>
@@ -250,6 +251,35 @@
       </section>
     </div>
 
+    <div class="welcome-overlay" id="lanOverlay" role="dialog" aria-modal="true" aria-labelledby="lanTitle" hidden>
+      <section class="welcome-dialog">
+        <div class="welcome-head">
+          <div class="brand compact">
+            <img src="assets/icon.svg" alt="" class="logo" width="44" height="44">
+            <h2 id="lanTitle">Local Network</h2>
+          </div>
+          <button id="closeLanBtn" type="button" class="ghost-btn" title="Close">Close</button>
+        </div>
+        <div class="welcome-body">
+          <p class="intro-copy" id="lanIntro"></p>
+          <div class="lan-row">
+            <button id="lanHostBtn" type="button">Create Room</button>
+          </div>
+          <div class="lan-row">
+            <input id="lanAddress" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="192.168.0.10">
+            <button id="lanJoinBtn" type="button">Join Room</button>
+          </div>
+          <p class="lan-status" id="lanStatus" role="status" aria-live="polite"></p>
+          <ul class="lan-log" id="lanLog"></ul>
+          <div class="lan-row">
+            <button id="lanPingBtn" type="button">Send Test Message</button>
+            <button id="lanLeaveBtn" type="button" class="pass">Disconnect</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="net.js"></script>
     <script src="game.js"></script>
     <script>
       if ("serviceWorker" in navigator && location.protocol !== "file:") {

@@ -11,7 +11,7 @@ const OUT = join(ROOT, "www");
 // sw.js is deliberately absent: the app already carries these files on disk, so
 // caching them a second time buys nothing and risks pinning a stale copy across
 // an app update.
-const FILES = ["index.html", "game.js", "styles.css", "manifest.webmanifest"];
+const FILES = ["index.html", "game.js", "net.js", "styles.css", "manifest.webmanifest"];
 const DIRS = ["assets"];
 
 const SW_REGISTRATION = /\n *<script>\s*if \("serviceWorker" in navigator[\s\S]*?<\/script>/;
