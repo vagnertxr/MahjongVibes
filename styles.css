@@ -951,7 +951,6 @@ p {
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.24);
   padding: 8px;
 }
 
@@ -1158,6 +1157,13 @@ button.tile:focus-visible {
 }
 
 .welcome-overlay[hidden] {
+  display: none;
+}
+
+/* Opened mid-match via the "Rules" button: reference-only, no path to reset the match. */
+.welcome-overlay.rules-only .format-choice,
+.welcome-overlay.rules-only #startPlayingBtn,
+.welcome-overlay.rules-only .remember-choice {
   display: none;
 }
 

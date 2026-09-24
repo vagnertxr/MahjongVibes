@@ -29,6 +29,7 @@
             <button id="soundBtn" type="button" title="Mute sound">🔊</button>
             <button id="langBtn" type="button" title="Mudar para Português">🇧🇷</button>
             <button id="rulesBtn" type="button" title="Open beginner rules">Rules</button>
+            <button id="yakuListBtn" type="button" title="Open yaku list">Yaku List</button>
             <button id="newGameBtn" type="button" title="Start a new match">New Match</button>
           </div>
         </div>
@@ -230,6 +231,23 @@
             Skip this setup next time and use my last choice
           </label>
           <p class="credits">Created by <a href="https://github.com/vagnertxr" target="_blank" rel="noopener noreferrer">vagnertxr</a></p>
+        </div>
+      </section>
+    </div>
+
+    <div class="welcome-overlay" id="yakuOverlay" role="dialog" aria-modal="true" aria-labelledby="yakuOverlayTitle" hidden>
+      <section class="welcome-dialog">
+        <div class="welcome-head">
+          <div class="brand compact">
+            <img src="assets/icon.svg" alt="" class="logo" width="44" height="44">
+            <h2 id="yakuOverlayTitle">Yaku List</h2>
+          </div>
+          <button id="closeYakuBtn" type="button" class="ghost-btn" title="Close yaku list">Close</button>
+        </div>
+        <div class="welcome-body">
+          <div class="rules-pager">
+            <article class="rules-page active" id="yakuOverlayContent"></article>
+          </div>
         </div>
       </section>
     </div>

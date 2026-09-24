@@ -53,6 +53,8 @@ const WELCOME_STORAGE_KEY = "mahjong-vibes-hide-welcome";
 const LANGUAGE_STORAGE_KEY = "mahjong-vibes-language";
 const FORMAT_STORAGE_KEY = "mahjong-vibes-format";
 const SOUND_STORAGE_KEY = "mahjong-vibes-sound";
+const SAVE_STORAGE_KEY = "mahjong-vibes-save";
+const SAVE_SCHEMA_VERSION = 1;
 const SFX = {
   discard: new Audio("assets/sfx/discard.ogg"),
   call: new Audio("assets/sfx/call.ogg"),
@@ -81,6 +83,10 @@ const I18N = {
     dora: "Dora {tile}",
     rules: "Rules",
     rulesTitle: "Open beginner rules",
+    yakuList: "Yaku List",
+    yakuListTitle: "Open yaku list",
+    closeYakuTitle: "Close yaku list",
+    confirmAbandonMatch: "This ends the match in progress and deals a new one. Continue?",
     newHand: "Next Hand",
     newHandTitle: "Start the next hand",
     newMatch: "New Match",
@@ -178,6 +184,10 @@ const I18N = {
     dora: "Dora {tile}",
     rules: "Regras",
     rulesTitle: "Abrir regras para iniciantes",
+    yakuList: "Lista de Yaku",
+    yakuListTitle: "Abrir lista de yaku",
+    closeYakuTitle: "Fechar lista de yaku",
+    confirmAbandonMatch: "Isto encerra a partida em andamento e distribui uma nova. Continuar?",
     newHand: "Próxima Mão",
     newHandTitle: "Começar a próxima mão",
     newMatch: "Nova Partida",
@@ -336,6 +346,7 @@ const state = {
   messageKey: "",
   messageParams: {},
   win: null,
+  pendingAction: null,
   players: []
 };
 
@@ -352,6 +363,7 @@ const els = {
   soundBtn: document.querySelector("#soundBtn"),
   langBtn: document.querySelector("#langBtn"),
   rulesBtn: document.querySelector("#rulesBtn"),
+  yakuListBtn: document.querySelector("#yakuListBtn"),
   newGameBtn: document.querySelector("#newGameBtn"),
   formatLabel: document.querySelector("#formatLabel"),
   formatChoiceTitle: document.querySelector("#formatChoiceTitle"),
@@ -372,6 +384,10 @@ const els = {
   hideWelcomeCheck: document.querySelector("#hideWelcomeCheck"),
   rememberChoice: document.querySelector(".remember-choice"),
   credits: document.querySelector(".credits"),
+  yakuOverlay: document.querySelector("#yakuOverlay"),
+  yakuOverlayTitle: document.querySelector("#yakuOverlayTitle"),
+  yakuOverlayContent: document.querySelector("#yakuOverlayContent"),
+  closeYakuBtn: document.querySelector("#closeYakuBtn"),
   stage: document.querySelector("#stage"),
   riverBlocks: Array.from({ length: 4 }, (_, i) => document.querySelector(`#river-${i}`)),
   seats: Array.from({ length: 4 }, (_, i) => document.querySelector(`#seat-${i}`))
@@ -391,6 +407,8 @@ els.soundBtn.addEventListener("click", toggleSound);
 els.langBtn.addEventListener("click", toggleLanguage);
 els.welcomeLangBtn.addEventListener("click", toggleLanguage);
 els.rulesBtn.addEventListener("click", () => openWelcome(true));
+els.yakuListBtn.addEventListener("click", openYakuList);
+els.closeYakuBtn.addEventListener("click", closeYakuList);
 els.closeWelcomeBtn.addEventListener("click", closeWelcome);
 els.startPlayingBtn.addEventListener("click", startSelectedMatch);
 els.showRulesBtn.addEventListener("click", toggleRules);
@@ -399,8 +417,12 @@ els.nextRulesBtn.addEventListener("click", () => setRulesPage(currentRulesPage +
 els.welcomeOverlay.addEventListener("click", event => {
   if (event.target === els.welcomeOverlay) closeWelcome();
 });
+els.yakuOverlay.addEventListener("click", event => {
+  if (event.target === els.yakuOverlay) closeYakuList();
+});
 document.addEventListener("keydown", event => {
   if (event.key === "Escape" && !els.welcomeOverlay.hidden) closeWelcome();
+  if (event.key === "Escape" && !els.yakuOverlay.hidden) closeYakuList();
 });
 
 // The chosen format only commits when the match is dealt, so browsing the cards
@@ -415,9 +437,17 @@ function selectFormat(format) {
 }
 
 function startSelectedMatch() {
+  // Dealing again throws away a match that is already underway, so ask first
+  // once there is real progress to lose. An untouched opening table has none.
+  if (matchHasProgress() && !window.confirm(t("confirmAbandonMatch"))) return;
   setStoredPreference(FORMAT_STORAGE_KEY, selectedFormat);
   closeWelcome();
   startMatch();
+}
+
+function matchHasProgress() {
+  if (state.matchOver || state.players.length === 0) return false;
+  return state.round > 0 || state.honba > 0 || state.discardCount > 0;
 }
 
 function updateFormatChip() {
@@ -426,6 +456,7 @@ function updateFormatChip() {
 }
 
 function startMatch() {
+  clearSavedGame();
   state.format = selectedFormat;
   updateFormatChip();
   state.round = 0;
@@ -524,6 +555,8 @@ function drawForTurn() {
   }
 
   if (state.turn !== 0) {
+    state.pendingAction = { type: "awaitingBotTurn", seat: state.turn };
+    saveGame();
     setTimeout(botDiscard, 550);
   }
 }
@@ -558,22 +591,34 @@ function discardTile(seat, tileIndex) {
   const ronSeat = findRon(tile, seat);
   if (ronSeat !== null) {
     if (ronSeat === 0) {
-      showActions([
-        { labelKey: "ron", cls: "win", onClick: () => winHand(0, seat, "Ron") },
-        { labelKey: "pass", cls: "pass", onClick: nextTurn }
-      ]);
+      offerHumanRon(0, seat);
       return;
     }
+    state.pendingAction = { type: "awaitingBotRon", winner: ronSeat, loser: seat };
+    saveGame();
     setTimeout(() => winHand(ronSeat, seat, "Ron"), 650);
     return;
   }
 
   if (seat !== 0 && canHumanCall(tile, seat)) {
+    state.pendingAction = { type: "awaitingHumanCall", tile, fromSeat: seat };
+    saveGame();
     showCallActions(tile, seat);
     return;
   }
 
+  state.pendingAction = { type: "awaitingNextTurn" };
+  saveGame();
   setTimeout(nextTurn, 450);
+}
+
+function offerHumanRon(winner, loser) {
+  state.pendingAction = { type: "awaitingHumanRon", winner, loser };
+  saveGame();
+  showActions([
+    { labelKey: "ron", cls: "win", onClick: () => winHand(winner, loser, "Ron") },
+    { labelKey: "pass", cls: "pass", onClick: nextTurn }
+  ]);
 }
 
 function findRon(tile, fromSeat, extra = {}) {
@@ -611,6 +656,7 @@ function showCallActions(tile, fromSeat) {
 }
 
 function callPon(tile, fromSeat) {
+  state.pendingAction = null;
   const human = state.players[0];
   removeTiles(human.hand, [tile, tile]);
   human.melds.push({ type: "pon", tiles: [tile, tile, tile], from: fromSeat });
@@ -627,6 +673,7 @@ function callPon(tile, fromSeat) {
 }
 
 function callChi(tile, option, fromSeat) {
+  state.pendingAction = null;
   const human = state.players[0];
   removeTiles(human.hand, option);
   human.melds.push({ type: "chi", tiles: [...option, tile].sort(compareTiles), from: fromSeat });
@@ -713,6 +760,8 @@ function declareKakan(tile) {
     removeTiles(human.hand, [tile]);
     state.lastDiscard = tile;
     state.lastDiscardFrom = 0;
+    state.pendingAction = { type: "awaitingChankan", winner: chankanSeat };
+    saveGame();
     setTimeout(() => winHand(chankanSeat, 0, "Ron", { isChankan: true }), 400);
     return;
   }
@@ -730,6 +779,7 @@ function declareKakan(tile) {
 }
 
 function callMinkan(tile, fromSeat) {
+  state.pendingAction = null;
   const human = state.players[0];
   removeTiles(human.hand, [tile, tile, tile]);
   human.melds.push({ type: "minkan", tiles: [tile, tile, tile, tile], from: fromSeat });
@@ -766,6 +816,7 @@ function revealKanDora() {
 }
 
 function nextTurn() {
+  state.pendingAction = null;
   clearActions();
   if (state.gameOver) return;
   state.turn = (state.lastDiscardFrom + 1) % 4;
@@ -773,6 +824,7 @@ function nextTurn() {
 }
 
 function botDiscard() {
+  state.pendingAction = null;
   if (state.gameOver || state.turn === 0) return;
   const player = state.players[state.turn];
   const tile = chooseBotDiscard(player);
@@ -1395,6 +1447,7 @@ function checkWin(seat, type, winTile, extra = {}) {
 }
 
 function winHand(winner, loser, type, extra = {}) {
+  state.pendingAction = null;
   const player = state.players[winner];
   const winTile = type === "Ron" ? state.lastDiscard : player.drawnTile;
   const evaluation = checkWin(winner, type, winTile, extra);
@@ -1495,6 +1548,7 @@ function finishHand(dealerRepeats, isDraw = false) {
   }
   if (isMatchComplete(dealerRepeats)) {
     state.matchOver = true;
+    clearSavedGame();
     const leader = leadingPlayerSeat();
     setMessage("matchComplete", {
       winner: leader,
@@ -1679,6 +1733,11 @@ function applyLanguage() {
   els.welcomeLangBtn.title = copy.langTitle;
   els.rulesBtn.textContent = copy.rules;
   els.rulesBtn.title = copy.rulesTitle;
+  els.yakuListBtn.textContent = copy.yakuList;
+  els.yakuListBtn.title = copy.yakuListTitle;
+  els.yakuOverlayTitle.textContent = copy.yakuList;
+  els.closeYakuBtn.textContent = copy.close;
+  els.closeYakuBtn.title = copy.closeYakuTitle;
   els.newGameBtn.textContent = copy.newMatch;
   els.newGameBtn.title = copy.newMatchTitle;
   updateFormatChip();
@@ -1699,6 +1758,7 @@ function applyLanguage() {
   els.rememberChoice.lastChild.textContent = ` ${copy.hideWelcome}`;
   els.credits.innerHTML = `${copy.creditsPrefix}<a href="https://github.com/vagnertxr" target="_blank" rel="noopener noreferrer">vagnertxr</a>`;
   renderRulePages();
+  renderYakuOverlay();
   updateRulesToggleLabel();
   setRulesPage(currentRulesPage);
 }
@@ -1714,6 +1774,9 @@ function updateRulesToggleLabel() {
 }
 
 function openWelcome(showRules = false) {
+  // Opened via the "Rules" toolbar button, this dialog is reference-only:
+  // hide the match setup controls so it can never wipe a hand in progress.
+  els.welcomeOverlay.classList.toggle("rules-only", showRules);
   els.welcomeOverlay.hidden = false;
   els.rulesPanel.hidden = !showRules;
   updateRulesToggleLabel();
@@ -1726,6 +1789,19 @@ function closeWelcome() {
     setStoredPreference(WELCOME_STORAGE_KEY, "1");
   }
   els.welcomeOverlay.hidden = true;
+}
+
+function openYakuList() {
+  els.yakuOverlay.hidden = false;
+  els.closeYakuBtn.focus();
+}
+
+function closeYakuList() {
+  els.yakuOverlay.hidden = true;
+}
+
+function renderYakuOverlay() {
+  els.yakuOverlayContent.innerHTML = I18N[currentLanguage].rulesPages[4];
 }
 
 function toggleRules() {
@@ -1766,6 +1842,79 @@ function setStoredPreference(key, value) {
     window.localStorage.setItem(key, value);
   } catch {
     // Browsers can block storage in private contexts; the game still works.
+  }
+}
+
+function saveGame() {
+  // A finished match is not worth resuming, and render() runs after finishHand
+  // clears the save, so bail out here rather than writing it straight back.
+  if (state.matchOver) return;
+  try {
+    const payload = { version: SAVE_SCHEMA_VERSION, savedAt: Date.now(), state };
+    window.localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // Browsers can block storage in private contexts; the game still works.
+  }
+}
+
+function clearSavedGame() {
+  try {
+    window.localStorage.removeItem(SAVE_STORAGE_KEY);
+  } catch {
+    // Browsers can block storage in private contexts; the game still works.
+  }
+}
+
+function tryResumeSavedGame() {
+  let payload;
+  try {
+    const raw = window.localStorage.getItem(SAVE_STORAGE_KEY);
+    if (!raw) return false;
+    payload = JSON.parse(raw);
+  } catch {
+    clearSavedGame();
+    return false;
+  }
+  const saved = payload?.state;
+  const isValid = payload?.version === SAVE_SCHEMA_VERSION
+    && saved
+    && Array.isArray(saved.players)
+    && saved.players.length === 4
+    && !saved.matchOver;
+  if (!isValid) {
+    clearSavedGame();
+    return false;
+  }
+  Object.assign(state, saved);
+  render();
+  resumePendingAction();
+  return true;
+}
+
+// The setTimeout that would normally fire this is lost across a reload, so a
+// resumed pendingAction is re-armed here instead of waiting on real wall-clock time.
+function resumePendingAction() {
+  const pending = state.pendingAction;
+  if (!pending) return;
+  switch (pending.type) {
+    case "awaitingBotTurn":
+      setTimeout(botDiscard, 300);
+      break;
+    case "awaitingBotRon":
+      setTimeout(() => winHand(pending.winner, pending.loser, "Ron"), 300);
+      break;
+    case "awaitingNextTurn":
+      setTimeout(nextTurn, 300);
+      break;
+    case "awaitingChankan":
+      setTimeout(() => winHand(pending.winner, 0, "Ron", { isChankan: true }), 300);
+      break;
+    case "awaitingHumanRon":
+      offerHumanRon(pending.winner, pending.loser);
+      break;
+    case "awaitingHumanCall":
+      showCallActions(pending.tile, pending.fromSeat);
+      break;
   }
 }
 
@@ -1837,6 +1986,8 @@ function render() {
       : { labelKey: "nextHand", cls: "win", onClick: startHand }
     ]);
   }
+
+  saveGame();
 }
 
 function normalizeFormat(format) {
@@ -2150,7 +2301,11 @@ applyLanguage();
 fitStage();
 // Deal immediately so the setup screen opens over a live table rather than an
 // empty one. Confirming the setup deals again with whatever format was picked.
-startMatch();
-if (shouldShowWelcome()) {
-  openWelcome(false);
+// A saved in-progress match takes priority over both: resume it silently and
+// skip the setup screen, so returning players land straight back on their hand.
+if (!tryResumeSavedGame()) {
+  startMatch();
+  if (shouldShowWelcome()) {
+    openWelcome(false);
+  }
 }
