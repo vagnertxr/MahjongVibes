@@ -16,7 +16,7 @@ For a GitHub release, upload one or more of:
 - `dist/linux/` from `sh tools/build/build-linux.sh`.
 - `dist/windows/` from `sh tools/build/build-windows-wine.sh`.
 - `dist/windows/Mahjong Vibes.exe` from `tools/build/build-windows.ps1`.
-- An Android `.apk`, once the work in [ANDROID_RELEASE.md](ANDROID_RELEASE.md) lands.
+- An Android `.apk`, built by the `Android` workflow when a `v*` tag is pushed. See [ANDROID_RELEASE.md](ANDROID_RELEASE.md).
 
 Do not upload local virtual environments, `build/`, Python caches, `.agents/`, `.codex/`, or `AGENTS.md`.
 
@@ -29,6 +29,6 @@ Mahjong Vibes is easy to wrap because the playable core is static:
 - Python envelope: run `tools/server.py` for local debug and LAN testing.
 - PyInstaller envelope: package `tools/desktop/launcher.py` with the static assets.
 - Native shell envelope: use a thin platform launcher that opens `index.html` beside the executable.
-- Android envelope: wrap the same static files with Capacitor for an installable `.apk`, with the table shared over a local network. Planned in [ANDROID_RELEASE.md](ANDROID_RELEASE.md).
+- Android envelope: `npm run sync` copies the same static files into the Capacitor project in `android/` for an installable `.apk`. Sharing the table over a local network is still planned; see [ANDROID_RELEASE.md](ANDROID_RELEASE.md).
 
 Keep all wrappers pointed at the same static files so gameplay fixes do not need to be duplicated.

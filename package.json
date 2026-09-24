@@ -1,0 +1,24 @@
+{
+  "name": "mahjong-vibes",
+  "version": "1.0.0",
+  "description": "A lightweight Riichi Mahjong game, packaged for Android.",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vagnertxr/MahjongVibes.git"
+  },
+  "scripts": {
+    "build": "node tools/build/build-web.mjs",
+    "sync": "npm run build && cap sync android",
+    "open:android": "cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

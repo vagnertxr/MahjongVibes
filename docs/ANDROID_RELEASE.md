@@ -2,29 +2,29 @@
 
 This is the plan for shipping Mahjong Vibes as an installable Android `.apk`
 playable over a local network: one player creates the table, up to three others
-join from their own phones. It is a roadmap, not a record of work done — nothing
-in this document is implemented yet.
+join from their own phones.
+
+**Phase 1 and Phase 5 have landed** — the app packages and builds today, against
+bots, on one device. Phases 2 through 4, which are the networking, are still
+ahead.
 
 The companion document [RELEASE.md](RELEASE.md) covers the shipping web, PWA and
 desktop envelopes, all of which stay as they are. The Android app is another
 envelope around the same static files, not a fork of them.
 
-## Where the Project Starts From
+## What the Networking Work Still Faces
 
-Worth stating plainly, because it shapes every phase below:
+Worth stating plainly, because it shapes the phases that are left:
 
 - There is **no networking code of any kind**. No WebSocket, no WebRTC, no
   fetch to another host. `tools/server.py` binds `0.0.0.0` and prints the LAN
   address, but it only serves static files — it is a debug convenience, not a
   backend, and it is not what will carry multiplayer traffic.
-- There is **no Node or Android project**. No `package.json`, no Gradle, no
-  `AndroidManifest.xml`. Android packaging starts from nothing.
 - **Seat 0 is the human, structurally.** `state.players[0]` and `seat === 0`
   are hardcoded in roughly a dozen places. There is no per-seat role flag. Real
   multiplayer cannot happen until that assumption is replaced.
 - The bot AI (`chooseBotDiscard`, `tileValue`) is small and cleanly isolated,
   which makes it easy to keep as the fallback for unclaimed or dropped seats.
-- Only one icon exists, `assets/icon.svg`. Android needs a generated PNG set.
 
 ## Decisions Already Made
 
@@ -36,29 +36,54 @@ Worth stating plainly, because it shapes every phase below:
 
 These are settled and the phases below assume them.
 
-## Phase 1 — Package the Game as an APK
+## Phase 1 — Package the Game as an APK — **done**
 
-Prove the packaging path works while the game is still exactly what it is today:
-single device, three bots, no networking. Nothing here should change gameplay.
+The app is wrapped with Capacitor 8. The playable sources stay in the repo root
+where the web, PWA and desktop envelopes already expect them; `npm run build`
+copies them into a generated `www/`, and Capacitor bundles that.
 
-- Add a `package.json` (the repo's first) with Capacitor: `@capacitor/core`,
-  `@capacitor/cli`, `@capacitor/android`. Capacitor is the right wrapper because
-  it takes an existing static web app as-is. There is no bundler or framework
-  here and none needs to be introduced.
-- Add a small `npm run build` that copies `index.html`, `game.js`, `styles.css`,
-  `manifest.webmanifest`, `sw.js` and `assets/` into a generated `www/`. The
-  source files stay where they are, so the web, PWA and PyInstaller envelopes
-  keep working untouched. `www/` is generated output and belongs in
-  `.gitignore` alongside `/dist/` and `/build/`.
-- `npx cap add android` scaffolds the Gradle project into `android/`. Per
-  Capacitor convention that directory is committed.
-- Generate the Android icon set from `assets/icon.svg`.
-- Confirm the service worker behaves inside the WebView. Registration is already
-  guarded against `file:` in `index.html`, and Capacitor serves over its own
-  scheme, so it should register — but verify that its cache does not fight
-  local iteration.
+- `npm run build` runs `tools/build/build-web.mjs`, which copies `index.html`,
+  `game.js`, `styles.css`, `manifest.webmanifest` and `assets/` into `www/`.
+- **`sw.js` is deliberately left out of the app.** The APK already carries every
+  file on disk, so caching them again buys nothing and risks pinning a stale
+  copy across an update. The build strips the registration block from its copy
+  of `index.html` and fails loudly if that block ever stops matching, so the
+  service worker cannot quietly reappear in a shipped build. The web version
+  keeps its PWA behaviour untouched.
+- `android/` holds the generated Gradle project and is committed, per Capacitor
+  convention. `www/` and the copies Capacitor makes inside `android/` are not.
+- Orientation is deliberately **not** locked. `fitStage()` already rotates the
+  1280x720 table when a phone is held upright, so the game handles both.
+- `tools/build/generate-android-assets.sh` renders the launcher icons (legacy,
+  round and adaptive foreground) and the splash screens from `assets/icon.svg`
+  and `assets/android/*.svg`. Re-run it whenever the art changes.
 
-**Done when:** a debug APK installs on a phone and plays the current bot game.
+One thing the Capacitor template got wrong and this repo fixes: its `AppTheme`
+referenced `@color/colorPrimary`, `colorPrimaryDark` and `colorAccent` without
+defining them anywhere, which fails the resource compile. `values/colors.xml`
+now defines them from the game's own palette.
+
+## Phase 5 — Building and Shipping It — **done**
+
+`.github/workflows/android.yml` builds the APK. It provisions Temurin JDK 17 and
+the Android SDK, runs `npm ci && npm run sync`, then `./gradlew assembleDebug`.
+Pushing a `v*` tag attaches the APK to the GitHub release; pushes to `main` and
+pull requests build it as a workflow artifact, so a broken build is caught
+without waiting for a release.
+
+**Signing.** `android/debug.keystore` is committed on purpose. Gradle otherwise
+generates a throwaway debug key per machine, which would mean every CI run
+signed with a different key and a new APK could not install over the previous
+one — and on this app, uninstalling takes the saved match with it. The password
+is the Android debug default (`android`) and grants no trust. It is fine for
+sideloading among friends and must never be used for a real release; that would
+need a proper keystore in GitHub Actions secrets, never in the repo.
+
+Building locally, if you have Android Studio:
+
+```sh
+npm install && npm run sync && cd android && ./gradlew assembleDebug
+```
 
 ## Phase 2 — A Local Server on the Host Device
 
@@ -130,38 +155,15 @@ waiting on, which is the same question the network protocol has to answer.
   continues. The joining device holds a rejoin token so it can reclaim its seat
   for the rest of the match if it comes back.
 
-## Phase 5 — Building and Shipping It
+## What Is Left
 
-The development machine has Node but no JDK or Android SDK, and provisioning
-that toolchain is heavy enough that it should not be a prerequisite for working
-on the game. So the APK is built in CI.
+Phases 2 and 3 are independent of each other and can be worked in parallel;
+Phase 4 needs both. Phase 3 is the largest and deserves its own plan when it is
+reached.
 
-Add `.github/workflows/android-release.yml` — the repo's first CI workflow —
-triggered on a release tag. It provisions Temurin JDK 17 and the Android SDK,
-runs `npm ci && npm run build && npx cap sync android`, then
-`./gradlew assembleDebug`, and attaches the APK to the GitHub release. This
-mirrors what `tools/build/build-linux.sh` and `build-windows.ps1` already do for
-the desktop artifacts, just hosted rather than local.
-
-Debug signing is sufficient for installing on your own and your friends' phones.
-Commit a fixed debug keystore so CI produces a consistent signature across
-builds — a debug key carries no trust and is safe to version. A real release
-keystore would only be needed for wider distribution, and if that day comes it
-belongs in GitHub Actions secrets, never in the repo.
-
-Keep the local path documented too, for anyone who does have Android Studio:
-`npm install`, `npm run build`, `npx cap sync android`, then build from the IDE
-or `./gradlew assembleDebug`.
-
-Finally, extend [RELEASE.md](RELEASE.md) — both its artifact list and its
-enveloping options — to name the Android build and point here.
-
-## Sequencing
-
-Phase 1 depends on nothing. Phases 2 and 3 are independent of each other and can
-run in parallel; Phase 4 needs both. Phase 5 is worth standing up right after
-Phase 1 rather than last, so every later phase has a real APK to test on a real
-phone instead of accumulating months of unverified work.
+Because the build already runs, every one of those phases can be tested on a
+real phone as it lands, rather than accumulating unverified work behind a
+toolchain that was never proven.
 
 ## Assumptions Worth Revisiting
 

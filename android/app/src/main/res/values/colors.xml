@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The table felt, its shadow, and the gold the game already uses for the
+         round wind and the winning score. -->
+    <color name="colorPrimary">#116149</color>
+    <color name="colorPrimaryDark">#08382F</color>
+    <color name="colorAccent">#F4C35B</color>
+</resources>

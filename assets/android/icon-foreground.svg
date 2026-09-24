@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Mahjong Vibes adaptive icon foreground</title>
+  <desc id="desc">The cream Mahjong tile with the red dragon mark, centred for Android's adaptive icon mask.</desc>
+  <!-- The tile is centred on the canvas and scaled to 0.9 so its corners stay
+       inside the 72dp safe zone that every launcher mask is guaranteed to show. -->
+  <g transform="translate(256 256) scale(0.9) translate(-256 -232)">
+    <rect x="146" y="82" width="220" height="330" rx="34" fill="#fff9e8"/>
+    <path d="M166 96h180a20 20 0 0 1 20 20v262a34 34 0 0 1-34 34H180a34 34 0 0 1-34-34V116a20 20 0 0 1 20-20z" fill="#d8cab0"/>
+    <rect x="146" y="82" width="220" height="300" rx="34" fill="#fff9e8"/>
+    <text x="256" y="256" text-anchor="middle" dominant-baseline="middle" font-family="Noto Sans SC, 'Noto Sans CJK SC', 'SimSun', serif" font-size="140" fill="#c62828" font-weight="700">中</text>
+  </g>
+</svg>

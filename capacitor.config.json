@@ -1,0 +1,9 @@
+{
+  "appId": "com.vagnertxr.mahjongvibes",
+  "appName": "Mahjong Vibes",
+  "webDir": "www",
+  "backgroundColor": "#08382f",
+  "android": {
+    "backgroundColor": "#08382f"
+  }
+}
