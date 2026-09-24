@@ -65,8 +65,9 @@ now defines them from the game's own palette.
 
 ## Phase 5 — Building and Shipping It — **done**
 
-`.github/workflows/android.yml` builds the APK. It provisions Temurin JDK 17 and
-the Android SDK, runs `npm ci && npm run sync`, then `./gradlew assembleDebug`.
+`.github/workflows/android.yml` builds the APK. It provisions Temurin JDK 21
+(Capacitor 8 compiles its Android module against Java 21) and the Android SDK,
+runs `npm ci && npm run sync`, then `./gradlew assembleDebug`.
 Pushing a `v*` tag attaches the APK to the GitHub release; pushes to `main` and
 pull requests build it as a workflow artifact, so a broken build is caught
 without waiting for a release.
