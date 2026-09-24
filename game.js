@@ -87,6 +87,57 @@ const I18N = {
     yakuListTitle: "Open yaku list",
     closeYakuTitle: "Close yaku list",
     confirmAbandonMatch: "This ends the match in progress and deals a new one. Continue?",
+    yakuIntro: "Every yaku this table scores. A winning shape still needs at least one of them. Han values are for a closed hand; where a hand opens for less, the open value is in brackets.",
+    yakuLuck: "How the hand was won",
+    yakuShape: "What the hand is made of",
+    yakuman: "Yakuman",
+    yakuBonus: "Bonus, not yaku",
+    yakuClosed: "closed only",
+    yakuOpenValue: "{han} open",
+    yakuHan: "{han} han",
+    yakuManLabel: "Yakuman",
+    yakuDesc: {
+      riichi: "Closed and one tile from winning. Costs 1,000 points, which the next winner sweeps.",
+      doubleRiichi: "Riichi declared on your very first discard, with no call before it.",
+      ippatsu: "Winning within one go-around of your riichi, before any call interrupts it.",
+      menzenTsumo: "Drawing your own winning tile with a closed hand.",
+      haitei: "Winning on the very last tile drawn from the wall.",
+      houtei: "Winning on the very last discard of the hand.",
+      rinshan: "Winning on the replacement tile drawn after your kan.",
+      chankan: "Robbing the tile another player adds to their pon to make a kan.",
+      tanyao: "No terminals, no winds, no dragons: 2 through 8 only.",
+      yakuhai: "A triplet of dragons, of your seat wind, or of the round wind. Each one counts.",
+      pinfu: "Closed, all sequences, a pair worth no yaku, and a two-sided wait.",
+      iipeiko: "Two identical sequences in the same suit, closed.",
+      sanshokuDoujun: "The same sequence in all three suits.",
+      ittsuu: "1-2-3, 4-5-6 and 7-8-9 in a single suit.",
+      chanta: "Every group and the pair contains a terminal or an honour.",
+      junchan: "Every group and the pair contains a terminal, with no honours at all.",
+      toitoi: "Four triplets and a pair, no sequences.",
+      sanankou: "Three triplets drawn without calling them.",
+      sanshokuDoukou: "The same triplet in all three suits.",
+      shousangen: "Two dragon triplets plus a pair of the third.",
+      chiitoitsu: "Seven different pairs instead of four groups and a pair.",
+      honitsu: "One suit plus honours, nothing else.",
+      chinitsu: "A single suit, with no honours at all.",
+      tenhou: "The dealer's opening hand is already complete.",
+      chiihou: "A non-dealer completes the hand on their first draw.",
+      daisangen: "Triplets of all three dragons.",
+      shousuushii: "Triplets of three winds plus a pair of the fourth.",
+      daisuushii: "Triplets of all four winds.",
+      tsuuiisou: "Nothing but winds and dragons.",
+      chinroutou: "Nothing but 1s and 9s.",
+      ryuuiisou: "Nothing but green: 2, 3, 4, 6, 8 of bamboo and the green dragon.",
+      suukantsu: "Four kan in one hand.",
+      suuankou: "Four triplets, none of them called.",
+      chuurenPoutou: "1112345678999 in one suit, plus any tile of it, closed.",
+      kokushi: "One of each terminal and honour, plus a second of any, closed.",
+      dora: "Bonus han from indicated tiles. Dora alone cannot win a hand.",
+      uraDora: "Extra indicators revealed under the dora, for a winner who declared riichi."
+    },
+    yakumanSuuankou: "Double if the win completes the pair.",
+    yakumanChuuren: "Double if the hand waits on all nine tiles.",
+    yakumanKokushi: "Double if the hand waits on all thirteen.",
     newHand: "Next Hand",
     newHandTitle: "Start the next hand",
     newMatch: "New Match",
@@ -188,6 +239,57 @@ const I18N = {
     yakuListTitle: "Abrir lista de yaku",
     closeYakuTitle: "Fechar lista de yaku",
     confirmAbandonMatch: "Isto encerra a partida em andamento e distribui uma nova. Continuar?",
+    yakuIntro: "Todos os yaku que esta mesa pontua. Uma mão completa ainda precisa de pelo menos um deles. Os han valem para mão fechada; quando abrir a mão reduz o valor, o valor aberto vem entre colchetes.",
+    yakuLuck: "Como a mão foi vencida",
+    yakuShape: "Do que a mão é feita",
+    yakuman: "Yakuman",
+    yakuBonus: "Bônus, não é yaku",
+    yakuClosed: "só fechada",
+    yakuOpenValue: "{han} aberta",
+    yakuHan: "{han} han",
+    yakuManLabel: "Yakuman",
+    yakuDesc: {
+      riichi: "Mão fechada e a uma peça de vencer. Custa 1.000 pontos, que o próximo vencedor recolhe.",
+      doubleRiichi: "Riichi declarado já no seu primeiro descarte, sem nenhuma chamada antes.",
+      ippatsu: "Vencer dentro de uma volta do seu riichi, antes que alguma chamada interrompa.",
+      menzenTsumo: "Comprar a própria peça da vitória com a mão fechada.",
+      haitei: "Vencer na última peça comprada do muro.",
+      houtei: "Vencer no último descarte da mão.",
+      rinshan: "Vencer na peça de reposição comprada depois do seu kan.",
+      chankan: "Roubar a peça que outra pessoa acrescenta ao pon dela para fazer kan.",
+      tanyao: "Sem terminais, sem ventos e sem dragões: só do 2 ao 8.",
+      yakuhai: "Trinca de dragão, do seu vento ou do vento da rodada. Cada uma conta.",
+      pinfu: "Fechada, só sequências, par sem valor e espera dos dois lados.",
+      iipeiko: "Duas sequências idênticas do mesmo naipe, com a mão fechada.",
+      sanshokuDoujun: "A mesma sequência nos três naipes.",
+      ittsuu: "1-2-3, 4-5-6 e 7-8-9 em um único naipe.",
+      chanta: "Todo grupo e o par contêm um terminal ou uma honra.",
+      junchan: "Todo grupo e o par contêm um terminal, sem nenhuma honra.",
+      toitoi: "Quatro trincas e um par, nenhuma sequência.",
+      sanankou: "Três trincas compradas sem chamar.",
+      sanshokuDoukou: "A mesma trinca nos três naipes.",
+      shousangen: "Duas trincas de dragão mais um par do terceiro.",
+      chiitoitsu: "Sete pares diferentes em vez de quatro grupos e um par.",
+      honitsu: "Um único naipe mais honras, nada além disso.",
+      chinitsu: "Um único naipe, sem nenhuma honra.",
+      tenhou: "A mão inicial do dealer já vem completa.",
+      chiihou: "Quem não é dealer completa a mão na primeira compra.",
+      daisangen: "Trincas dos três dragões.",
+      shousuushii: "Trincas de três ventos mais um par do quarto.",
+      daisuushii: "Trincas dos quatro ventos.",
+      tsuuiisou: "Só ventos e dragões.",
+      chinroutou: "Só 1 e 9.",
+      ryuuiisou: "Só verde: 2, 3, 4, 6, 8 de bambu e o dragão verde.",
+      suukantsu: "Quatro kan na mesma mão.",
+      suuankou: "Quatro trincas, nenhuma delas chamada.",
+      chuurenPoutou: "1112345678999 em um naipe, mais qualquer peça dele, com a mão fechada.",
+      kokushi: "Um de cada terminal e honra, mais um segundo de qualquer um, com a mão fechada.",
+      dora: "Han de bônus das peças indicadas. Dora sozinho não vence uma mão.",
+      uraDora: "Indicadores extras revelados sob o dora, para quem venceu tendo declarado riichi."
+    },
+    yakumanSuuankou: "Dobrado se a vitória completa o par.",
+    yakumanChuuren: "Dobrado se a mão espera nas nove peças.",
+    yakumanKokushi: "Dobrado se a mão espera nas treze.",
     newHand: "Próxima Mão",
     newHandTitle: "Começar a próxima mão",
     newMatch: "Nova Partida",
@@ -323,6 +425,71 @@ function yakuDisplayName(entry) {
   }
   return YAKU_NAMES[entry.key]?.[currentLanguage] ?? entry.key;
 }
+
+// Every yaku this game actually scores, in the order the reference screen shows
+// them. `han` is what scoreHand awards; `openHan` is the reduced value for an
+// open hand, and `closed` marks the ones an open hand cannot have at all.
+// Keep this in step with scoreHand: it is a description of that function, and a
+// yaku listed here that the code never awards is a lie to the player.
+const YAKU_REFERENCE = [
+  {
+    section: "yakuLuck",
+    items: [
+      { key: "riichi", han: 1, closed: true },
+      { key: "doubleRiichi", han: 2, closed: true },
+      { key: "ippatsu", han: 1, closed: true },
+      { key: "menzenTsumo", han: 1, closed: true },
+      { key: "haitei", han: 1 },
+      { key: "houtei", han: 1 },
+      { key: "rinshan", han: 1 },
+      { key: "chankan", han: 1 }
+    ]
+  },
+  {
+    section: "yakuShape",
+    items: [
+      { key: "tanyao", han: 1 },
+      { key: "yakuhai", han: 1 },
+      { key: "pinfu", han: 1, closed: true },
+      { key: "iipeiko", han: 1, closed: true },
+      { key: "sanshokuDoujun", han: 2, openHan: 1 },
+      { key: "ittsuu", han: 2, openHan: 1 },
+      { key: "chanta", han: 2, openHan: 1 },
+      { key: "junchan", han: 3, openHan: 2 },
+      { key: "toitoi", han: 2 },
+      { key: "sanankou", han: 2 },
+      { key: "sanshokuDoukou", han: 2 },
+      { key: "shousangen", han: 2 },
+      { key: "chiitoitsu", han: 2, closed: true },
+      { key: "honitsu", han: 3, openHan: 2 },
+      { key: "chinitsu", han: 6, openHan: 5 }
+    ]
+  },
+  {
+    section: "yakuman",
+    items: [
+      { key: "tenhou" },
+      { key: "chiihou" },
+      { key: "daisangen" },
+      { key: "shousuushii" },
+      { key: "daisuushii" },
+      { key: "tsuuiisou" },
+      { key: "chinroutou" },
+      { key: "ryuuiisou" },
+      { key: "suukantsu" },
+      { key: "suuankou", double: "yakumanSuuankou" },
+      { key: "chuurenPoutou", closed: true, double: "yakumanChuuren" },
+      { key: "kokushi", closed: true, double: "yakumanKokushi" }
+    ]
+  },
+  {
+    section: "yakuBonus",
+    items: [
+      { key: "dora" },
+      { key: "uraDora" }
+    ]
+  }
+];
 
 const state = {
   round: 0,
@@ -1801,7 +1968,28 @@ function closeYakuList() {
 }
 
 function renderYakuOverlay() {
-  els.yakuOverlayContent.innerHTML = I18N[currentLanguage].rulesPages[4];
+  const copy = I18N[currentLanguage];
+  const sections = YAKU_REFERENCE.map(section => {
+    const rows = section.items.map(item => {
+      const tags = [];
+      if (section.section === "yakuman") {
+        tags.push(`<span class="yaku-han">${copy.yakuManLabel}</span>`);
+      } else if (item.han) {
+        tags.push(`<span class="yaku-han">${t("yakuHan", { han: item.han })}</span>`);
+        if (item.openHan) {
+          tags.push(`<span class="yaku-tag">[${t("yakuOpenValue", { han: item.openHan })}]</span>`);
+        }
+      }
+      if (item.closed) tags.push(`<span class="yaku-tag closed">${copy.yakuClosed}</span>`);
+      const note = item.double ? ` <em>${copy[item.double]}</em>` : "";
+      return `<li>
+        <div class="yaku-head"><span class="yaku-name">${YAKU_NAMES[item.key][currentLanguage]}</span>${tags.join("")}</div>
+        <p>${copy.yakuDesc[item.key]}${note}</p>
+      </li>`;
+    }).join("");
+    return `<section><h3>${copy[section.section]}</h3><ul class="yaku-rows">${rows}</ul></section>`;
+  }).join("");
+  els.yakuOverlayContent.innerHTML = `<p class="intro-copy">${copy.yakuIntro}</p>${sections}`;
 }
 
 function toggleRules() {
@@ -1947,7 +2135,7 @@ function render() {
           <div class="name">${windMarkHtml(player.wind)}${playerLabel(seat)}</div>
           <div class="score">${player.score.toLocaleString()} ${t("points")}</div>
         </div>
-        <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}${isFuriten(player) ? `<span class="badge">${t("furiten")}</span>` : ""}${state.gameOver && !state.win && state.drawTenpaiSeats.includes(seat) ? `<span class="badge">${t("tenpaiBadge")}</span>` : ""}</div>
+        <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}${seat === 0 && isFuriten(player) ? `<span class="badge">${t("furiten")}</span>` : ""}${state.gameOver && !state.win && state.drawTenpaiSeats.includes(seat) ? `<span class="badge">${t("tenpaiBadge")}</span>` : ""}</div>
       </div>
       ${renderSeatBody(player, seat)}
     `;
