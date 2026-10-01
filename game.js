@@ -794,6 +794,9 @@ function drawForTurn() {
 
 function discardTile(seat, tileIndex) {
   if (state.gameOver || !state.pendingDiscard || seat !== state.turn) return;
+  // The hand is about to change shape, so a remembered index would point at a
+  // different tile than the one the player raised.
+  if (seat === 0) selectedTileIndex = null;
   const player = state.players[seat];
   const drawnIndex = player.drawnTile !== null ? player.hand.lastIndexOf(player.drawnTile) : -1;
   if (player.riichi && !player.riichiDeclaring && tileIndex !== drawnIndex) return;
@@ -2561,10 +2564,129 @@ function tileButton(tile, index, extraClass = "", forceDisabled = false) {
     return `<button type="button" class="tile ${extraClass} ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="${title}" aria-label="${title}">${tileImage(tile)}</button>`;
 }
 
+// Discarding is a deliberate act: pull the tile out of your hand and let go, or
+// tap to raise it and tap again. A single stray tap can no longer throw a tile,
+// which is what made small screens punishing.
+const DRAG_THRESHOLD = 8;
+let selectedTileIndex = null;
+let tileDrag = null;
+
 function bindHumanTiles() {
   document.querySelectorAll("[data-tile-index]").forEach(button => {
-    button.addEventListener("click", () => discardTile(0, Number(button.dataset.tileIndex)), { once: true });
+    if (Number(button.dataset.tileIndex) === selectedTileIndex) button.classList.add("selected");
+    button.addEventListener("pointerdown", onTilePointerDown);
   });
+}
+
+function onTilePointerDown(event) {
+  const button = event.currentTarget;
+  if (button.disabled || event.button > 0) return;
+  tileDrag = {
+    index: Number(button.dataset.tileIndex),
+    button,
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    moved: false,
+    ghost: null
+  };
+  // Listening on the document rather than the tile keeps the drag alive once the
+  // finger leaves the tile, with or without pointer capture. Capture is only an
+  // optimisation, and it throws if the pointer is already gone.
+  document.addEventListener("pointermove", onTilePointerMove, { passive: false });
+  document.addEventListener("pointerup", onTilePointerUp);
+  document.addEventListener("pointercancel", cancelTileDrag);
+  try {
+    button.setPointerCapture?.(event.pointerId);
+  } catch {
+    // Dragging still works through the document listeners above.
+  }
+}
+
+function onTilePointerMove(event) {
+  if (!tileDrag || event.pointerId !== tileDrag.pointerId) return;
+  const dx = event.clientX - tileDrag.startX;
+  const dy = event.clientY - tileDrag.startY;
+  if (!tileDrag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+  if (!tileDrag.moved) {
+    tileDrag.moved = true;
+    tileDrag.ghost = buildDragGhost(tileDrag.button);
+    document.body.append(tileDrag.ghost);
+    tileDrag.button.classList.add("dragging");
+  }
+  event.preventDefault();
+  moveDragGhost(event.clientX, event.clientY);
+}
+
+function onTilePointerUp(event) {
+  if (!tileDrag || event.pointerId !== tileDrag.pointerId) return;
+  const drag = tileDrag;
+  const releasedOutsideHand = !pointIsInHand(event.clientX, event.clientY);
+  const wasDrag = drag.moved;
+  const index = drag.index;
+  const wasSelected = selectedTileIndex === index;
+  cancelTileDrag();
+
+  if (wasDrag) {
+    // Dropped back over your own hand: you thought better of it.
+    if (releasedOutsideHand) discard(index);
+    return;
+  }
+  if (wasSelected) discard(index);
+  else selectTile(index);
+}
+
+function discard(index) {
+  selectedTileIndex = null;
+  discardTile(0, index);
+}
+
+function selectTile(index) {
+  selectedTileIndex = index;
+  document.querySelectorAll("[data-tile-index]").forEach(button => {
+    button.classList.toggle("selected", Number(button.dataset.tileIndex) === index);
+  });
+}
+
+function cancelTileDrag() {
+  if (!tileDrag) return;
+  const { button, pointerId, ghost } = tileDrag;
+  tileDrag = null;
+  ghost?.remove();
+  button.classList.remove("dragging");
+  try {
+    button.releasePointerCapture?.(pointerId);
+  } catch {
+    // Already released, which is the state we wanted anyway.
+  }
+  document.removeEventListener("pointermove", onTilePointerMove);
+  document.removeEventListener("pointerup", onTilePointerUp);
+  document.removeEventListener("pointercancel", cancelTileDrag);
+}
+
+// The ghost rides in screen coordinates, which saves undoing the rotation and
+// scale the table is drawn under.
+function buildDragGhost(button) {
+  const rect = button.getBoundingClientRect();
+  const ghost = button.cloneNode(true);
+  ghost.removeAttribute("data-tile-index");
+  ghost.disabled = true;
+  ghost.className = `${button.className} tile-ghost`;
+  ghost.style.width = `${rect.width}px`;
+  ghost.style.height = `${rect.height}px`;
+  return ghost;
+}
+
+function moveDragGhost(x, y) {
+  if (!tileDrag?.ghost) return;
+  tileDrag.ghost.style.transform = `translate(${x}px, ${y}px) translate(-50%, -60%)`;
+}
+
+function pointIsInHand(x, y) {
+  const hand = els.seats[0];
+  if (!hand) return false;
+  const rect = hand.getBoundingClientRect();
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 }
 
 function tileHtml(tile, small = false, winning = false, recent = false) {
@@ -2635,6 +2757,15 @@ function tileSuit(tile) {
 // so nothing inside ever reflows and browser zoom cannot break the layout. On an
 // upright phone the same transform turns the table sideways instead of squeezing
 // it into a narrow column.
+// The table is laid out once at 1280x720 and then fitted to whatever screen it
+// lands on. On top of that sits the view the player controls by pinching, which
+// is kept separate so a resize never throws their zoom away.
+const MAX_ZOOM = 3;
+let baseStageTransform = "";
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+
 function fitStage() {
   if (!els.stage) return;
   const vw = window.innerWidth;
@@ -2647,9 +2778,119 @@ function fitStage() {
   const h = STAGE_H * scale;
   // With transform-origin 0 0, rotate(90deg) maps the box to x in [-h, 0] and
   // y in [0, w], so the offsets below re-centre it in the viewport.
-  els.stage.style.transform = rotate
+  baseStageTransform = rotate
     ? `translate(${(vw + h) / 2}px, ${(vh - w) / 2}px) rotate(90deg) scale(${scale})`
     : `translate(${(vw - w) / 2}px, ${(vh - h) / 2}px) scale(${scale})`;
+  applyStageTransform();
+}
+
+// Zooms about the middle of the screen, then pans. Written as a prefix to the
+// fitted transform so the fitting maths above never has to know about zoom.
+function applyStageTransform() {
+  if (!els.stage) return;
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  clampPan();
+  els.stage.style.transform =
+    `translate(${panX}px, ${panY}px) translate(${cx}px, ${cy}px) scale(${zoom}) translate(${-cx}px, ${-cy}px) ${baseStageTransform}`;
+}
+
+// Zooming in grows the table past the screen edges; this keeps the pan within
+// the margin that growth created, so the table can never be dragged away.
+function clampPan() {
+  const limitX = (window.innerWidth * (zoom - 1)) / 2;
+  const limitY = (window.innerHeight * (zoom - 1)) / 2;
+  panX = Math.min(limitX, Math.max(-limitX, panX));
+  panY = Math.min(limitY, Math.max(-limitY, panY));
+}
+
+function setZoom(next, focusX, focusY) {
+  const clamped = Math.min(MAX_ZOOM, Math.max(1, next));
+  if (clamped === zoom) return;
+  // Keep whatever is under the pinch where it is, rather than letting the table
+  // slide out from under the fingers.
+  if (focusX !== undefined) {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const ratio = clamped / zoom;
+    panX = focusX - cx - (focusX - cx - panX) * ratio;
+    panY = focusY - cy - (focusY - cy - panY) * ratio;
+  }
+  zoom = clamped;
+  applyStageTransform();
+}
+
+function resetZoom() {
+  zoom = 1;
+  panX = 0;
+  panY = 0;
+  applyStageTransform();
+}
+
+// Two fingers work the view: pinch to zoom, slide to pan. One finger is left
+// alone so it can still pick up and throw a tile.
+function bindViewGestures() {
+  const surface = document.querySelector(".stage-viewport");
+  if (!surface) return;
+  const points = new Map();
+  let startSpread = 0;
+  let startZoom = 1;
+  let lastMidX = 0;
+  let lastMidY = 0;
+
+  const spread = () => {
+    const [a, b] = [...points.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+  const midpoint = () => {
+    const [a, b] = [...points.values()];
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  };
+
+  surface.addEventListener("pointerdown", event => {
+    if (event.pointerType === "mouse") return;
+    points.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (points.size === 2) {
+      startSpread = spread();
+      startZoom = zoom;
+      const mid = midpoint();
+      lastMidX = mid.x;
+      lastMidY = mid.y;
+      cancelTileDrag();
+    }
+  });
+
+  surface.addEventListener("pointermove", event => {
+    if (!points.has(event.pointerId)) return;
+    points.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (points.size !== 2) return;
+    event.preventDefault();
+    const mid = midpoint();
+    panX += mid.x - lastMidX;
+    panY += mid.y - lastMidY;
+    lastMidX = mid.x;
+    lastMidY = mid.y;
+    if (startSpread > 0) setZoom(startZoom * (spread() / startSpread), mid.x, mid.y);
+    else applyStageTransform();
+  }, { passive: false });
+
+  // Releases are watched on the window, not the table. A finger that went down
+  // on a tile bubbles its pointerdown up to here, but its pointerup is captured
+  // by the drag and never reaches the table — and a pointer left behind in the
+  // map puts the count past two, which quietly kills pinching from then on.
+  const release = event => points.delete(event.pointerId);
+  window.addEventListener("pointerup", release, true);
+  window.addEventListener("pointercancel", release, true);
+
+  // A way back to the whole table without pinching it down again.
+  surface.addEventListener("dblclick", resetZoom);
+
+  // Desktop still deserves a zoom, and ctrl+wheel is what a trackpad pinch sends.
+  surface.addEventListener("wheel", event => {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    setZoom(zoom * (event.deltaY < 0 ? 1.12 : 0.89), event.clientX, event.clientY);
+  }, { passive: false });
 }
 
 window.addEventListener("resize", fitStage);
@@ -2664,6 +2905,7 @@ window.visualViewport?.addEventListener("resize", fitStage);
 selectFormat(selectedFormat);
 applyLanguage();
 fitStage();
+bindViewGestures();
 // Deal immediately so the setup screen opens over a live table rather than an
 // empty one. Confirming the setup deals again with whatever format was picked.
 // A saved in-progress match takes priority over both: resume it silently and

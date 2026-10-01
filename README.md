@@ -28,7 +28,9 @@ Run locally:
 - A setup screen before the deal where you pick the match length, Tonpuusen or Hanchan, the way you pick a table before sitting at it. The choice is remembered, and it can never disturb a hand already in progress
 - A match that waits for you. The table saves itself after every move, so closing the tab or the app and coming back drops you into the same hand, down to a call you were being offered
 - Automatic scoring and score movement between players
-- A fixed 1280x720 table scaled by a single transform, so the board looks the same on a desktop, a phone, and at any browser zoom level. A phone held upright turns the table sideways rather than squeezing it into a column
+- Tiles you throw on purpose. A tap raises a tile and a second tap throws it, or you pull it out of your hand and let go over the table; dropping it back among its neighbours changes your mind. A stray tap can no longer discard, which is what made a small screen punishing
+- Pinch to zoom the table and slide two fingers to move around it, with a double tap to pull back out. One finger is left alone so it can still pick up a tile
+- A fixed 1280x720 table scaled by a single transform, so the board looks the same on a desktop, a phone, and at any browser zoom level. The Android app holds the table in landscape; in a browser, a phone held upright turns it sideways rather than squeezing it into a column
 
 ## Android
 

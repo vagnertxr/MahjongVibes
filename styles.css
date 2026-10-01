@@ -251,6 +251,24 @@ p {
   position: fixed;
   inset: 0;
   overflow: hidden;
+  /* The pinch and the tile drag are handled here, so the browser must not also
+     scroll or zoom the page out from under them. */
+  touch-action: none;
+}
+
+.tile.dragging {
+  opacity: 0.28;
+}
+
+/* Rides above the table in screen coordinates, following the finger. */
+.tile-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.95;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5);
 }
 
 .stage {
@@ -1081,6 +1099,16 @@ button.tile:hover,
 button.tile:focus-visible {
   transform: translateY(-7px);
   box-shadow: 0 9px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* A tile raised by a tap, armed for the next tap or the pull that throws it.
+   It has to sit after the hover rule and match its weight: a touch leaves
+   :hover stuck on the tile, and losing this ring to it would leave the player
+   unable to see which tile is armed. */
+button.tile.selected,
+button.tile.selected:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 0 0 2px var(--accent, #f4c35b), 0 10px 16px rgba(0, 0, 0, 0.45);
 }
 
 .action-bar {
