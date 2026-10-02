@@ -45,6 +45,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Plays shared matches between headless devices. Nothing ships if a guest
+      # can see another hand, or the table stalls when one of them drops out.
+      - name: Test the shared table
+        run: npm test
+
       - name: Copy the web app into the native project
         run: npm run sync
 

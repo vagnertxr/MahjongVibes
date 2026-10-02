@@ -11,12 +11,16 @@
   "scripts": {
     "build": "node tools/build/build-web.mjs",
     "sync": "npm run build && cap sync android",
-    "open:android": "cap open android"
+    "open:android": "cap open android",
+    "test": "node --test tests/*.test.mjs",
+    "test:soak": "node tests/shared-table.soak.mjs"
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.2",
     "@capacitor/cli": "^8.5.2",
-    "@capacitor/core": "^8.5.2"
+    "@capacitor/core": "^8.5.2",
+    "jsdom": "^26.1.0",
+    "ws": "^8.22.0"
   },
   "engines": {
     "node": ">=22.0.0"

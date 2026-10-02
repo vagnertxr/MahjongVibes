@@ -44,7 +44,17 @@ To build it yourself you need Android Studio or the Android SDK:
 npm install && npm run sync && cd android && ./gradlew assembleDebug
 ```
 
-Playing a table across a local network — one phone hosting, up to three others joining — is planned but not built yet. See [docs/ANDROID_RELEASE.md](docs/ANDROID_RELEASE.md).
+### Playing together on one network
+
+Up to four people can share a table, each on their own phone, as long as they are on the same Wi-Fi:
+
+1. On the phone that will hold the table, open **Network** and tap **Create Room**. It shows an address such as `192.168.0.12:8787`.
+2. Everyone else opens **Network**, types that address and taps **Join Room**. Joining also works from a browser; only holding a room needs the app.
+3. Once they are in, the host taps **Start Shared Match**. Any empty chair gets a bot.
+
+Each player sees the table from their own chair and only their own tiles. If someone's connection drops, a bot takes their chair and plays on; when the host closes the room, everyone goes back to the solo match they had before.
+
+`npm test` plays shared matches between headless devices to check all of this without phones. See [docs/ANDROID_RELEASE.md](docs/ANDROID_RELEASE.md) for how it works and what is still to come.
 
 ## Desktop App
 

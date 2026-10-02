@@ -90,8 +90,8 @@ const I18N = {
     lan: "Network",
     lanTitle: "Play over the local network",
     lanHeading: "Local Network",
-    lanIntro: "Connection test. Create a room and read out the address, or type the address of a phone that already has one. No hands are shared yet.",
-    lanIntroGuestOnly: "Connection test. Only the installed app can hold a room; from a browser you can join one. No hands are shared yet.",
+    lanIntro: "Create a room and read the address out to the others, or type the address of a phone that already has one. Once they are in, start the match: anyone missing is replaced by a bot.",
+    lanIntroGuestOnly: "Type the address of the phone holding the table. Only the installed app can hold a room; from a browser you can join one.",
     lanCreateRoom: "Create Room",
     lanJoinRoom: "Join Room",
     lanPing: "Send Test Message",
@@ -108,6 +108,14 @@ const I18N = {
     lanFrom: "From {id}: {text}",
     lanFromHost: "From the host: {text}",
     lanSent: "Sent: {text}",
+    lanStartMatch: "Start Shared Match",
+    lanPlayersConnected: "{count} player(s) connected. Empty chairs get a bot.",
+    lanTableRunning: "Shared match on, with {count} guest(s) at the table.",
+    lanSeated: "Seated at the host's table.",
+    lanPeerWaiting: "Player {id} connected and will be seated in the next match.",
+    lanWaitingForHost: "Waiting for the host",
+    lanHostName: "Host",
+    lanGuestName: "Player {n}",
     yakuIntro: "Every yaku this table scores. A winning shape still needs at least one of them. Han values are for a closed hand; where a hand opens for less, the open value is in brackets.",
     yakuLuck: "How the hand was won",
     yakuShape: "What the hand is made of",
@@ -219,16 +227,24 @@ const I18N = {
     sevenPairs: "Seven Pairs",
     menzen: "Menzen",
     dealerStarts: "{player} deals. Draw and discard to chase Mahjong Vibes.",
+    dealerStartsSelf: "You deal. Draw and discard to chase Mahjong Vibes.",
     playerDraws: "{player} draws.",
+    playerDrawsSelf: "You draw.",
     playerDiscards: "{player} discards {tile}.",
-    callPon: "You call Pon on {tile}. Discard a tile.",
-    callChi: "You call Chi. Discard a tile.",
-    callKan: "You call Kan on {tile}. A new tile is drawn.",
+    playerDiscardsSelf: "You discard {tile}.",
+    callPon: "{player} calls Pon on {tile}.",
+    callPonSelf: "You call Pon on {tile}. Discard a tile.",
+    callChi: "{player} calls Chi.",
+    callChiSelf: "You call Chi. Discard a tile.",
+    callKan: "{player} calls Kan on {tile}.",
+    callKanSelf: "You call Kan on {tile}. A new tile is drawn.",
     wins: "{player} {winVerb} by {type}: {hand} for {points} points.",
     exhaustiveDraw: "Exhaustive draw. Nobody completed a winning hand before the wall ran out.",
     matchComplete: "{player} {winVerb} the {format} after {round}.",
-    declareRiichi: "You declare Riichi. Discard to lock in the chase.",
-    declareKan: "You declare Kan on {tile}. A new tile is drawn.",
+    declareRiichi: "{player} declares Riichi.",
+    declareRiichiSelf: "You declare Riichi. Discard to lock in the chase.",
+    declareKan: "{player} declares Kan on {tile}.",
+    declareKanSelf: "You declare Kan on {tile}. A new tile is drawn.",
     suits: {
       m: "Characters / Manzu",
       p: "Circles / Pinzu",
@@ -263,8 +279,8 @@ const I18N = {
     lan: "Rede",
     lanTitle: "Jogar pela rede local",
     lanHeading: "Rede Local",
-    lanIntro: "Teste de conexão. Crie uma sala e diga o endereço em voz alta, ou digite o endereço de um celular que já criou uma. Ainda não há mãos compartilhadas.",
-    lanIntroGuestOnly: "Teste de conexão. Só o app instalado consegue manter uma sala; pelo navegador dá para entrar em uma. Ainda não há mãos compartilhadas.",
+    lanIntro: "Crie uma sala e diga o endereço em voz alta para os outros, ou digite o endereço de um celular que já criou uma. Com todos dentro, comece a partida: quem faltar vira bot.",
+    lanIntroGuestOnly: "Digite o endereço do celular que está com a mesa. Só o app instalado consegue manter uma sala; pelo navegador dá para entrar em uma.",
     lanCreateRoom: "Criar Sala",
     lanJoinRoom: "Entrar na Sala",
     lanPing: "Enviar Mensagem de Teste",
@@ -281,6 +297,14 @@ const I18N = {
     lanFrom: "De {id}: {text}",
     lanFromHost: "Do anfitrião: {text}",
     lanSent: "Enviado: {text}",
+    lanStartMatch: "Começar Partida em Rede",
+    lanPlayersConnected: "{count} jogador(es) conectado(s). Cadeiras vazias ficam com um bot.",
+    lanTableRunning: "Partida em rede em andamento, com {count} convidado(s) à mesa.",
+    lanSeated: "Sentado à mesa do anfitrião.",
+    lanPeerWaiting: "Jogador {id} conectou e entra na próxima partida.",
+    lanWaitingForHost: "Aguardando o anfitrião",
+    lanHostName: "Anfitrião",
+    lanGuestName: "Jogador {n}",
     yakuIntro: "Todos os yaku que esta mesa pontua. Uma mão completa ainda precisa de pelo menos um deles. Os han valem para mão fechada; quando abrir a mão reduz o valor, o valor aberto vem entre colchetes.",
     yakuLuck: "Como a mão foi vencida",
     yakuShape: "Do que a mão é feita",
@@ -394,14 +418,19 @@ const I18N = {
     dealerStarts: "{player} distribui. Compre e descarte para entrar no Mahjong Vibes.",
     playerDraws: "{player} compra.",
     playerDiscards: "{player} descarta {tile}.",
-    callPon: "Você chama Pon em {tile}. Descarte uma peça.",
-    callChi: "Você chama Chi. Descarte uma peça.",
-    callKan: "Você chama Kan em {tile}. Uma nova peça é comprada.",
+    callPon: "{player} chama Pon em {tile}.",
+    callPonSelf: "Você chama Pon em {tile}. Descarte uma peça.",
+    callChi: "{player} chama Chi.",
+    callChiSelf: "Você chama Chi. Descarte uma peça.",
+    callKan: "{player} chama Kan em {tile}.",
+    callKanSelf: "Você chama Kan em {tile}. Uma nova peça é comprada.",
     wins: "{player} {winVerb} por {type}: {hand}, {points} pontos.",
     exhaustiveDraw: "Empate exaustivo. Ninguém completou uma mão antes do muro acabar.",
     matchComplete: "{player} {winVerb} o {format} após {round}.",
-    declareRiichi: "Você declara Riichi. Descarte para travar a espera.",
-    declareKan: "Você declara Kan em {tile}. Uma nova peça é comprada.",
+    declareRiichi: "{player} declara Riichi.",
+    declareRiichiSelf: "Você declara Riichi. Descarte para travar a espera.",
+    declareKan: "{player} declara Kan em {tile}.",
+    declareKanSelf: "Você declara Kan em {tile}. Uma nova peça é comprada.",
     suits: {
       m: "Caracteres / Manzu",
       p: "Círculos / Pinzu",
@@ -603,6 +632,8 @@ const els = {
   lanStatus: document.querySelector("#lanStatus"),
   lanLog: document.querySelector("#lanLog"),
   lanPingBtn: document.querySelector("#lanPingBtn"),
+  lanStartBtn: document.querySelector("#lanStartBtn"),
+  lanPeers: document.querySelector("#lanPeers"),
   lanLeaveBtn: document.querySelector("#lanLeaveBtn"),
   closeLanBtn: document.querySelector("#closeLanBtn"),
   yakuOverlay: document.querySelector("#yakuOverlay"),
@@ -635,6 +666,7 @@ els.closeLanBtn.addEventListener("click", closeLanPanel);
 els.lanHostBtn.addEventListener("click", hostLanRoom);
 els.lanJoinBtn.addEventListener("click", joinLanRoom);
 els.lanPingBtn.addEventListener("click", sendLanPing);
+els.lanStartBtn.addEventListener("click", startSharedMatch);
 els.lanLeaveBtn.addEventListener("click", leaveLanRoom);
 els.lanOverlay.addEventListener("click", event => {
   if (event.target === els.lanOverlay) closeLanPanel();
@@ -686,8 +718,43 @@ function updateFormatChip() {
   els.formatLabel.title = t("formatTitle");
 }
 
+// Who owns each chair. The device holding the table always sits at seat 0, so a
+// solo match is simply a table whose other three chairs are bots. Guests are
+// seated by the host when a match over the network begins.
+const SOLO_SEATS = [{ controller: "host" }, { controller: "bot" }, { controller: "bot" }, { controller: "bot" }];
+
+function currentSeats() {
+  return lanTable?.seats ?? SOLO_SEATS;
+}
+
+function controllerOf(seat) {
+  return state.players[seat]?.controller ?? (seat === 0 ? "host" : "bot");
+}
+
+function isBotSeat(seat) {
+  return controllerOf(seat) === "bot";
+}
+
+function isHumanSeat(seat) {
+  return !isBotSeat(seat);
+}
+
+// Every pause the table takes — a bot thinking, a ron about to land — goes
+// through here. Anything that swaps the table out from under a pending timer
+// (a new hand, joining someone else's room) bumps the epoch, and the stale
+// timer then fires into nothing instead of acting on a table it was not meant for.
+let tableEpoch = 0;
+
+function schedule(callback, delay) {
+  const epoch = tableEpoch;
+  setTimeout(() => {
+    if (epoch === tableEpoch) callback();
+  }, delay);
+}
+
 function startMatch() {
-  clearSavedGame();
+  if (isGuest()) return;
+  if (!lanTable) clearSavedGame();
   state.format = selectedFormat;
   updateFormatChip();
   state.round = 0;
@@ -701,10 +768,12 @@ function startMatch() {
 }
 
 function startHand() {
+  if (isGuest()) return;
   if (state.matchOver) {
     startMatch();
     return;
   }
+  tableEpoch += 1;
   playSound("shuffle");
   state.wall = shuffle(buildWall());
   state.deadWall = state.wall.splice(-14);
@@ -718,8 +787,15 @@ function startHand() {
   state.callHappenedThisHand = false;
   state.discardCount = 0;
   state.drawTenpaiSeats = [];
+  state.pendingAction = null;
+  const seats = currentSeats();
   state.players = Array.from({ length: 4 }, (_, i) => ({
     name: NAMES[i],
+    // The absolute chair number. A guest's view is rotated so they sit at index
+    // 0, and this is what still tells them "Player 3" is the one across.
+    seat: i,
+    controller: seats[i].controller,
+    clientId: seats[i].clientId ?? null,
     wind: WINDS[(i - state.dealer + 4) % 4],
     score: state.players[i]?.score ?? 25000,
     hand: [],
@@ -768,6 +844,7 @@ function compareTiles(a, b) {
 }
 
 function drawForTurn() {
+  if (isGuest()) return;
   if (state.wall.length === 0) {
     endDraw();
     return;
@@ -785,14 +862,17 @@ function drawForTurn() {
     return;
   }
 
-  if (state.turn !== 0) {
+  // A human's turn needs nothing armed: the table already shows them as owing a
+  // discard, on whichever device they are holding.
+  if (isBotSeat(state.turn)) {
     state.pendingAction = { type: "awaitingBotTurn", seat: state.turn };
-    saveGame();
-    setTimeout(botDiscard, 550);
+    syncTable();
+    schedule(botDiscard, 550);
   }
 }
 
 function discardTile(seat, tileIndex) {
+  if (isGuest()) return;
   if (state.gameOver || !state.pendingDiscard || seat !== state.turn) return;
   // The hand is about to change shape, so a remembered index would point at a
   // different tile than the one the player raised.
@@ -821,43 +901,86 @@ function discardTile(seat, tileIndex) {
   playSound("discard");
   setMessage("playerDiscards", { playerSeat: seat, tile: tileText(tile) });
   render();
+  resolveDiscardClaims(tile, seat, []);
+}
 
-  const ronSeat = findRon(tile, seat);
+// A discard can be claimed, and with more than one person at the table more
+// than one of them may want it. Ron is asked first, in turn order from the
+// discarder; then pon and kan; then chi, which only the next seat may make.
+// `passedRon` carries the seats that already let a ron go on this tile, so the
+// next one in line still gets their chance.
+function resolveDiscardClaims(tile, fromSeat, passedRon) {
+  const ronSeat = findRon(tile, fromSeat, {}, passedRon);
   if (ronSeat !== null) {
-    if (ronSeat === 0) {
-      offerHumanRon(0, seat);
+    if (isHumanSeat(ronSeat)) {
+      offerHumanRon(ronSeat, fromSeat, passedRon);
       return;
     }
-    state.pendingAction = { type: "awaitingBotRon", winner: ronSeat, loser: seat };
-    saveGame();
-    setTimeout(() => winHand(ronSeat, seat, "Ron"), 650);
+    state.pendingAction = { type: "awaitingBotRon", winner: ronSeat, loser: fromSeat };
+    syncTable();
+    schedule(() => winHand(ronSeat, fromSeat, "Ron"), 650);
     return;
   }
 
-  if (seat !== 0 && canHumanCall(tile, seat)) {
-    state.pendingAction = { type: "awaitingHumanCall", tile, fromSeat: seat };
-    saveGame();
-    showCallActions(tile, seat);
+  const claimants = callClaimants(tile, fromSeat);
+  if (claimants.length > 0) {
+    offerCall(tile, fromSeat, claimants);
     return;
   }
 
   state.pendingAction = { type: "awaitingNextTurn" };
-  saveGame();
-  setTimeout(nextTurn, 450);
+  syncTable();
+  schedule(nextTurn, 450);
 }
 
-function offerHumanRon(winner, loser) {
-  state.pendingAction = { type: "awaitingHumanRon", winner, loser };
-  saveGame();
-  showActions([
-    { labelKey: "ron", cls: "win", onClick: () => winHand(winner, loser, "Ron") },
-    { labelKey: "pass", cls: "pass", onClick: nextTurn }
-  ]);
+function offerHumanRon(winner, loser, passed = []) {
+  state.pendingAction = { type: "awaitingHumanRon", winner, loser, passed };
+  refreshTable();
 }
 
-function findRon(tile, fromSeat, extra = {}) {
+// The first claimant is asked; the rest wait in the queue and are asked in turn
+// if they pass. Nobody sees the queue but the host, since knowing who else can
+// call a tile is knowing something about their hand.
+function offerCall(tile, fromSeat, claimants) {
+  const [seat, ...queue] = claimants;
+  state.pendingAction = { type: "awaitingHumanCall", seat, tile, fromSeat, queue };
+  refreshTable();
+}
+
+function callClaimants(tile, fromSeat) {
+  const ponOrKan = [];
+  const chiOnly = [];
   for (let offset = 1; offset < 4; offset += 1) {
     const seat = (fromSeat + offset) % 4;
+    if (isBotSeat(seat)) continue;
+    const player = state.players[seat];
+    if (player.riichi) continue;
+    const same = player.hand.filter(t => t === tile).length;
+    if (same >= 2) ponOrKan.push(seat);
+    else if (offset === 1 && chiOptions(player.hand, tile).length > 0) chiOnly.push(seat);
+  }
+  return [...ponOrKan, ...chiOnly];
+}
+
+function passOffer(seat) {
+  const pending = state.pendingAction;
+  if (!pending || state.gameOver) return;
+  if (pending.type === "awaitingHumanRon" && pending.winner === seat) {
+    state.pendingAction = null;
+    resolveDiscardClaims(state.lastDiscard, pending.loser, [...(pending.passed ?? []), seat]);
+    return;
+  }
+  if (pending.type === "awaitingHumanCall" && pending.seat === seat) {
+    state.pendingAction = null;
+    if (pending.queue?.length) offerCall(pending.tile, pending.fromSeat, pending.queue);
+    else nextTurn();
+  }
+}
+
+function findRon(tile, fromSeat, extra = {}, skip = []) {
+  for (let offset = 1; offset < 4; offset += 1) {
+    const seat = (fromSeat + offset) % 4;
+    if (skip.includes(seat)) continue;
     const player = state.players[seat];
     if (!canWin([...player.hand, tile], player.melds.length)) continue;
     if (isFuriten(player)) continue;
@@ -866,58 +989,47 @@ function findRon(tile, fromSeat, extra = {}) {
   return null;
 }
 
-function canHumanCall(tile, fromSeat) {
-  const human = state.players[0];
-  if (human.riichi) return false;
-  const same = human.hand.filter(t => t === tile).length;
-  return same >= 2 || (fromSeat === 3 && chiOptions(human.hand, tile).length > 0);
+// What a seat may do with someone else's discard. The same list drives the
+// buttons a player sees and the check the host runs on what they send back, so
+// a guest cannot claim a call the table would not have offered them.
+function callOptions(seat, tile, fromSeat) {
+  const player = state.players[seat];
+  const same = player.hand.filter(t => t === tile).length;
+  return {
+    kan: same >= 3,
+    pon: same >= 2,
+    chi: seat === (fromSeat + 1) % 4 ? chiOptions(player.hand, tile) : []
+  };
 }
 
-function showCallActions(tile, fromSeat) {
-  const human = state.players[0];
-  const actions = [];
-  if (human.hand.filter(t => t === tile).length >= 3) {
-    actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => callMinkan(tile, fromSeat) });
-  }
-  if (human.hand.filter(t => t === tile).length >= 2) {
-    actions.push({ labelKey: "pon", onClick: () => callPon(tile, fromSeat) });
-  }
-  for (const option of chiOptions(human.hand, tile)) {
-    actions.push({ labelKey: "chi", labelParams: { tiles: option.map(tileText).join("") }, onClick: () => callChi(tile, option, fromSeat) });
-  }
-  actions.push({ labelKey: "pass", cls: "pass", onClick: nextTurn });
-  showActions(actions);
-}
-
-function callPon(tile, fromSeat) {
+function callPon(seat, tile, fromSeat) {
   state.pendingAction = null;
-  const human = state.players[0];
-  removeTiles(human.hand, [tile, tile]);
-  human.melds.push({ type: "pon", tiles: [tile, tile, tile], from: fromSeat });
-  // The caller is always the human today; pass the caller seat once bots learn to call.
-  markDiscardCalled(fromSeat, 0, "pon", tile);
-  state.turn = 0;
+  const player = state.players[seat];
+  removeTiles(player.hand, [tile, tile]);
+  player.melds.push({ type: "pon", tiles: [tile, tile, tile], from: fromSeat });
+  markDiscardCalled(fromSeat, seat, "pon", tile);
+  state.turn = seat;
   state.pendingDiscard = true;
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("callPon", { tile: tileText(tile) });
+  setMessage("callPon", { playerSeat: seat, tile: tileText(tile) });
   clearActions();
   render();
 }
 
-function callChi(tile, option, fromSeat) {
+function callChi(seat, tile, option, fromSeat) {
   state.pendingAction = null;
-  const human = state.players[0];
-  removeTiles(human.hand, option);
-  human.melds.push({ type: "chi", tiles: [...option, tile].sort(compareTiles), from: fromSeat });
-  markDiscardCalled(fromSeat, 0, "chi", tile);
-  state.turn = 0;
+  const player = state.players[seat];
+  removeTiles(player.hand, option);
+  player.melds.push({ type: "chi", tiles: [...option, tile].sort(compareTiles), from: fromSeat });
+  markDiscardCalled(fromSeat, seat, "chi", tile);
+  state.turn = seat;
   state.pendingDiscard = true;
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("callChi");
+  setMessage("callChi", { playerSeat: seat });
   clearActions();
   render();
 }
@@ -972,60 +1084,64 @@ function riichiAnkanPreservesWait(player, tile) {
   return sameTileSet(preWaits, postWaits);
 }
 
-function declareAnkan(tile) {
-  const human = state.players[0];
-  if (state.turn !== 0 || !state.pendingDiscard || !legalAnkanOptions(human).includes(tile)) return;
-  removeTiles(human.hand, [tile, tile, tile, tile]);
-  human.melds.push({ type: "ankan", tiles: [tile, tile, tile, tile], from: null });
+function declareAnkan(seat, tile) {
+  const player = state.players[seat];
+  if (state.turn !== seat || !state.pendingDiscard || state.gameOver || !legalAnkanOptions(player).includes(tile)) return;
+  removeTiles(player.hand, [tile, tile, tile, tile]);
+  player.melds.push({ type: "ankan", tiles: [tile, tile, tile, tile], from: null });
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("declareKan", { tile: tileText(tile) });
+  setMessage("declareKan", { playerSeat: seat, tile: tileText(tile) });
   revealKanDora();
   clearActions();
-  if (!drawReplacementTile(human, 0)) render();
+  if (!drawReplacementTile(player, seat)) render();
 }
 
-function declareKakan(tile) {
-  const human = state.players[0];
-  if (state.turn !== 0 || !state.pendingDiscard || !kakanOptions(human).includes(tile)) return;
-  const chankanSeat = findRon(tile, 0, { isChankan: true });
+function declareKakan(seat, tile) {
+  const player = state.players[seat];
+  if (state.turn !== seat || !state.pendingDiscard || state.gameOver || player.riichi
+    || !kakanOptions(player).includes(tile)) return;
+  // Robbing a kan is taken automatically, for a person as for a bot. Declining
+  // a ron this good is vanishingly rare, and offering it would need the kan to
+  // be resumable halfway through.
+  const chankanSeat = findRon(tile, seat, { isChankan: true });
   if (chankanSeat !== null) {
-    removeTiles(human.hand, [tile]);
+    removeTiles(player.hand, [tile]);
     state.lastDiscard = tile;
-    state.lastDiscardFrom = 0;
-    state.pendingAction = { type: "awaitingChankan", winner: chankanSeat };
-    saveGame();
-    setTimeout(() => winHand(chankanSeat, 0, "Ron", { isChankan: true }), 400);
+    state.lastDiscardFrom = seat;
+    state.pendingAction = { type: "awaitingChankan", winner: chankanSeat, loser: seat };
+    syncTable();
+    schedule(() => winHand(chankanSeat, seat, "Ron", { isChankan: true }), 400);
     return;
   }
-  const meld = human.melds.find(m => m.type === "pon" && m.tiles[0] === tile);
-  removeTiles(human.hand, [tile]);
+  const meld = player.melds.find(m => m.type === "pon" && m.tiles[0] === tile);
+  removeTiles(player.hand, [tile]);
   meld.type = "kakan";
   meld.tiles.push(tile);
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("declareKan", { tile: tileText(tile) });
+  setMessage("declareKan", { playerSeat: seat, tile: tileText(tile) });
   revealKanDora();
   clearActions();
-  if (!drawReplacementTile(human, 0)) render();
+  if (!drawReplacementTile(player, seat)) render();
 }
 
-function callMinkan(tile, fromSeat) {
+function callMinkan(seat, tile, fromSeat) {
   state.pendingAction = null;
-  const human = state.players[0];
-  removeTiles(human.hand, [tile, tile, tile]);
-  human.melds.push({ type: "minkan", tiles: [tile, tile, tile, tile], from: fromSeat });
-  markDiscardCalled(fromSeat, 0, "minkan", tile);
-  state.turn = 0;
+  const player = state.players[seat];
+  removeTiles(player.hand, [tile, tile, tile]);
+  player.melds.push({ type: "minkan", tiles: [tile, tile, tile, tile], from: fromSeat });
+  markDiscardCalled(fromSeat, seat, "minkan", tile);
+  state.turn = seat;
   state.callHappenedThisHand = true;
   breakIppatsu();
   playSound("call");
-  setMessage("callKan", { tile: tileText(tile) });
+  setMessage("callKan", { playerSeat: seat, tile: tileText(tile) });
   revealKanDora();
   clearActions();
-  if (!drawReplacementTile(human, 0)) render();
+  if (!drawReplacementTile(player, seat)) render();
 }
 
 function drawReplacementTile(player, seat) {
@@ -1050,6 +1166,7 @@ function revealKanDora() {
 }
 
 function nextTurn() {
+  if (isGuest()) return;
   state.pendingAction = null;
   clearActions();
   if (state.gameOver) return;
@@ -1059,7 +1176,7 @@ function nextTurn() {
 
 function botDiscard() {
   state.pendingAction = null;
-  if (state.gameOver || state.turn === 0) return;
+  if (state.gameOver || !isBotSeat(state.turn)) return;
   const player = state.players[state.turn];
   const tile = chooseBotDiscard(player);
   const index = player.hand.indexOf(tile);
@@ -1681,6 +1798,7 @@ function checkWin(seat, type, winTile, extra = {}) {
 }
 
 function winHand(winner, loser, type, extra = {}) {
+  if (isGuest()) return;
   state.pendingAction = null;
   const player = state.players[winner];
   const winTile = type === "Ron" ? state.lastDiscard : player.drawnTile;
@@ -1746,6 +1864,7 @@ function describeWin(player) {
 }
 
 function endDraw() {
+  if (isGuest()) return;
   state.gameOver = true;
   const tenpaiSeats = state.players
     .map((player, seat) => ({ seat, tenpai: isTenpai(player.hand, player.melds.length) }))
@@ -1782,7 +1901,9 @@ function finishHand(dealerRepeats, isDraw = false) {
   }
   if (isMatchComplete(dealerRepeats)) {
     state.matchOver = true;
-    clearSavedGame();
+    // A table shared over the network is never saved, so the save on this
+    // device is a solo match it must not throw away.
+    if (!lanTable) clearSavedGame();
     const leader = leadingPlayerSeat();
     setMessage("matchComplete", {
       winner: leader,
@@ -1808,19 +1929,20 @@ function leadingPlayerSeat() {
     .sort((a, b) => b.score - a.score || a.seat - b.seat)[0].seat;
 }
 
-function declareRiichi() {
-  const human = state.players[0];
-  if (state.turn !== 0 || !state.pendingDiscard || human.melds.length > 0 || human.score < 1000) return;
+function declareRiichi(seat) {
+  const player = state.players[seat];
+  if (state.turn !== seat || !state.pendingDiscard || state.gameOver || player.riichi) return;
+  if (player.melds.length > 0 || player.score < 1000) return;
   if (state.wall.length < 4) return;
-  if (!canDeclareRiichi(human.hand, human.melds.length)) return;
-  human.riichi = true;
-  human.riichiDeclaring = true;
-  human.doubleRiichi = human.discards.length === 0 && !state.callHappenedThisHand;
-  human.ippatsu = true;
-  human.score -= 1000;
+  if (!canDeclareRiichi(player.hand, player.melds.length)) return;
+  player.riichi = true;
+  player.riichiDeclaring = true;
+  player.doubleRiichi = player.discards.length === 0 && !state.callHappenedThisHand;
+  player.ippatsu = true;
+  player.score -= 1000;
   state.riichiPot += 1000;
   playSound("riichi");
-  setMessage("declareRiichi");
+  setMessage("declareRiichi", { playerSeat: seat });
   render();
 }
 
@@ -1846,7 +1968,8 @@ function showActions(actions) {
         .filter(Boolean)
         .join(" ");
       button.textContent = action.labelKey ? t(action.labelKey, action.labelParams) : action.label;
-      button.addEventListener("click", action.onClick);
+      if (action.disabled) button.disabled = true;
+      else button.addEventListener("click", action.onClick);
       els.actionBar.append(button);
     });
 }
@@ -1867,8 +1990,15 @@ function setMessage(key, params = {}) {
   state.message = formatMessage(key, params);
 }
 
+// The same message reads differently to the one it is about ("You call Pon")
+// and to everyone else ("Player 3 calls Pon"). Seat 0 is whoever is reading,
+// so that is all it takes to pick. Saves from before messages carried a seat
+// only ever described the player themselves, so no seat reads as theirs.
 function formatMessage(key, params = {}) {
-  return t(key, localizeMessageParams(key, params));
+  const aboutReader = params.playerSeat === undefined || params.playerSeat === 0;
+  const selfKey = `${key}Self`;
+  const chosen = aboutReader && I18N[currentLanguage][selfKey] !== undefined ? selfKey : key;
+  return t(chosen, localizeMessageParams(key, params));
 }
 
 function localizeMessageParams(key, params) {
@@ -1891,7 +2021,11 @@ function localizeMessageParams(key, params) {
 }
 
 function playerLabel(seat) {
-  return seat === 0 ? t("you") : NAMES[seat];
+  if (seat === 0) return t("you");
+  const player = state.players[seat];
+  if (player?.controller === "host") return t("lanHostName");
+  if (player?.controller === "guest") return t("lanGuestName", { n: (player.seat ?? seat) + 1 });
+  return player?.name ?? NAMES[seat];
 }
 
 function winVerb(seat) {
@@ -1976,6 +2110,7 @@ function applyLanguage() {
   els.lanHostBtn.textContent = copy.lanCreateRoom;
   els.lanJoinBtn.textContent = copy.lanJoinRoom;
   els.lanPingBtn.textContent = copy.lanPing;
+  els.lanStartBtn.textContent = copy.lanStartMatch;
   els.lanLeaveBtn.textContent = copy.lanLeave;
   updateLanPanel();
   els.yakuOverlayTitle.textContent = copy.yakuList;
@@ -2034,10 +2169,207 @@ function closeWelcome() {
   els.welcomeOverlay.hidden = true;
 }
 
-// Phase 2 of the LAN work: this panel proves two devices can reach each other
-// and exchange a message. It carries no game state yet — the lobby with seats
-// and the shared table come later.
+// Playing over the local network. One device holds the table and is the only
+// one that runs the game; the others are shown a view of it and send back what
+// their player wants to do. The panel opens a room, lets others in, and starts
+// a match with whoever is connected, seating bots in any empty chair.
 let lanConnection = null;
+// Host side, while a shared match is on: who sits where.
+let lanTable = null;
+// Guest side, while seated at somebody else's table.
+let guestTable = null;
+let viewSeq = 0;
+
+function isGuest() {
+  return guestTable !== null;
+}
+
+// Called whenever the table settles: keep the solo save current, and send every
+// guest their view of it. Both are no-ops when they do not apply.
+function syncTable() {
+  saveGame();
+  broadcastViews();
+}
+
+// For the moments the table changes without a full redraw: an offer made, a
+// claim passed on.
+function refreshTable() {
+  renderActionBar();
+  syncTable();
+}
+
+function broadcastViews() {
+  if (!lanTable || lanConnection?.kind !== "host") return;
+  viewSeq += 1;
+  state.players.forEach((player, seat) => {
+    if (player.controller !== "guest" || !player.clientId) return;
+    const message = { type: "view", seq: viewSeq, view: tableViewFor(state, seat) };
+    Promise.resolve(lanConnection.room.send(player.clientId, message)).catch(() => {
+      // They are gone; peerLeft hands their chair to a bot.
+    });
+  });
+}
+
+function rotateSeat(value, seat) {
+  return Number.isInteger(value) ? (value - seat + 4) % 4 : value;
+}
+
+// What one guest is allowed to know about the table, turned so that their own
+// chair is seat 0. Turning the data rather than the drawing means the whole
+// renderer, which has always assumed "you are seat 0", works unchanged on a guest.
+//
+// Concealment happens here, in the data. Hiding a bot's hand used to be only a
+// matter of not drawing it, but anything sent over the wire can be read off it,
+// so every hand but the recipient's goes out as blanks, and so do the wall and
+// the dead wall. Their lengths survive: the wall counter and haitei need them.
+function tableViewFor(source, seat) {
+  const view = JSON.parse(JSON.stringify(source));
+  const turned = value => rotateSeat(value, seat);
+  view.players.forEach((player, index) => {
+    if (index !== seat) {
+      player.hand = player.hand.map(() => null);
+      player.drawnTile = null;
+    }
+    player.clientId = null;
+    player.discards.forEach(entry => { entry.calledBy = turned(entry.calledBy); });
+    player.melds.forEach(meld => { meld.from = turned(meld.from); });
+  });
+  view.players = [0, 1, 2, 3].map(index => view.players[(index + seat) % 4]);
+  view.wall = view.wall.map(() => null);
+  view.deadWall = view.deadWall.map(() => null);
+  view.turn = turned(view.turn);
+  view.dealer = turned(view.dealer);
+  view.lastDiscardFrom = turned(view.lastDiscardFrom);
+  view.drawTenpaiSeats = view.drawTenpaiSeats.map(turned);
+  if (view.win) view.win.winner = turned(view.win.winner);
+  view.messageParams = { ...view.messageParams };
+  for (const key of ["playerSeat", "winner"]) view.messageParams[key] = turned(view.messageParams[key]);
+  view.message = "";
+  view.pendingAction = pendingViewFor(source.pendingAction, seat);
+  return view;
+}
+
+// A guest only learns about an offer made to them. One made to someone else
+// says that player can win on, or call, the tile just thrown — exactly what a
+// real table keeps hidden.
+function pendingViewFor(pending, seat) {
+  if (pending?.type === "awaitingHumanRon" && pending.winner === seat) {
+    return { type: pending.type, winner: 0, loser: rotateSeat(pending.loser, seat) };
+  }
+  if (pending?.type === "awaitingHumanCall" && pending.seat === seat) {
+    return { type: pending.type, seat: 0, tile: pending.tile, fromSeat: rotateSeat(pending.fromSeat, seat) };
+  }
+  return null;
+}
+
+function startSharedMatch() {
+  if (lanConnection?.kind !== "host" || lanConnection.peers.size === 0) return;
+  const guests = [...lanConnection.peers].slice(0, 3);
+  lanTable = {
+    seats: [
+      { controller: "host" },
+      ...[0, 1, 2].map(i => guests[i] ? { controller: "guest", clientId: guests[i] } : { controller: "bot" })
+    ]
+  };
+  // The solo match is left in the save, untouched, for when the room closes.
+  closeLanPanel();
+  closeWelcome();
+  startMatch();
+}
+
+function handleGuestIntent(clientId, intent) {
+  if (!lanTable) return;
+  const seat = state.players.findIndex(p => p.controller === "guest" && p.clientId === clientId);
+  if (seat >= 0) applyIntent(seat, intent);
+}
+
+// A guest who drops out leaves their chair to a bot, which plays on from
+// exactly where they were. Whatever the table was waiting on from them is
+// settled the way a bot would settle it.
+function handOverToBot(seat) {
+  if (!lanTable) return;
+  lanTable.seats[seat] = { controller: "bot" };
+  const player = state.players[seat];
+  player.controller = "bot";
+  player.clientId = null;
+  const pending = state.pendingAction;
+  if (!state.gameOver) {
+    if (pending?.type === "awaitingHumanRon" && pending.winner === seat) {
+      state.pendingAction = { type: "awaitingBotRon", winner: seat, loser: pending.loser };
+      schedule(() => winHand(seat, pending.loser, "Ron"), 400);
+    } else if (pending?.type === "awaitingHumanCall" && pending.seat === seat) {
+      passOffer(seat);
+    } else if (state.turn === seat && state.pendingDiscard) {
+      state.pendingAction = { type: "awaitingBotTurn", seat };
+      schedule(botDiscard, 550);
+    }
+  }
+  render();
+}
+
+function endSharedMatch() {
+  if (!lanTable) return;
+  state.players.forEach((player, seat) => {
+    if (player.controller === "guest") handOverToBot(seat);
+  });
+  lanTable = null;
+  // From here the match is a solo one again, and is saved like one.
+  render();
+}
+
+function sendIntentToHost(intent) {
+  if (lanConnection?.kind !== "guest") return;
+  lanConnection.guest.send({ type: "intent", intent });
+}
+
+function applyView(message) {
+  if (!message?.view || !Number.isInteger(message.seq)) return;
+  if (guestTable && message.seq <= guestTable.lastSeq) return;
+  if (!guestTable) enterGuestTable();
+  guestTable.lastSeq = message.seq;
+  const before = JSON.parse(JSON.stringify(state));
+  Object.assign(state, message.view);
+  if (!(state.turn === 0 && state.pendingDiscard)) selectedTileIndex = null;
+  playViewSounds(before, state);
+  updateFormatChip();
+  render();
+}
+
+// The host plays its sounds as it moves the table; a guest has to work out
+// from the change what just happened.
+function playViewSounds(before, after) {
+  if (!before.players?.length) return;
+  if (after.win && !before.win) playSound("win");
+  else if (after.discardCount === 0 && before.discardCount > 0) playSound("shuffle");
+  else if (after.players.some((p, i) => p.riichi && !before.players[i]?.riichi)) playSound("riichi");
+  else if (after.players.some((p, i) => p.melds.length > (before.players[i]?.melds.length ?? 0))) playSound("call");
+  else if (after.discardCount > before.discardCount) playSound("discard");
+}
+
+function enterGuestTable() {
+  guestTable = { lastSeq: 0 };
+  // Whatever this device's own bots were about to do is cancelled: the table
+  // they would have acted on is about to be replaced by the host's.
+  tableEpoch += 1;
+  selectedTileIndex = null;
+  cancelTileDrag();
+  resetZoom();
+  closeLanPanel();
+  closeWelcome();
+  updateLanPanel();
+}
+
+// Back to the solo match this device was playing before it sat down, which the
+// shared match never touched.
+function leaveGuestTable() {
+  if (!guestTable) return;
+  guestTable = null;
+  tableEpoch += 1;
+  selectedTileIndex = null;
+  updateFormatChip();
+  if (!tryResumeSavedGame()) startMatch();
+  updateLanPanel();
+}
 
 function openLanPanel() {
   els.lanOverlay.hidden = false;
@@ -2052,12 +2384,23 @@ function closeLanPanel() {
 
 function updateLanPanel() {
   const connected = lanConnection !== null;
+  const hosting = lanConnection?.kind === "host";
+  const peers = hosting ? lanConnection.peers.size : 0;
   els.lanHostBtn.disabled = connected;
   els.lanJoinBtn.disabled = connected;
   els.lanAddress.disabled = connected;
   els.lanPingBtn.disabled = !connected;
   els.lanLeaveBtn.disabled = !connected;
+  els.lanStartBtn.hidden = !hosting || lanTable !== null;
+  els.lanStartBtn.disabled = peers === 0;
   els.lanIntro.textContent = LanNet.canHost() ? t("lanIntro") : t("lanIntroGuestOnly");
+  if (hosting) {
+    els.lanPeers.textContent = lanTable
+      ? t("lanTableRunning", { count: state.players.filter(p => p.controller === "guest").length })
+      : t("lanPlayersConnected", { count: peers });
+  } else {
+    els.lanPeers.textContent = isGuest() ? t("lanSeated") : "";
+  }
 }
 
 function setLanStatus(key, params = {}) {
@@ -2074,17 +2417,32 @@ function lanLog(text) {
 async function hostLanRoom() {
   try {
     setLanStatus("lanOpening");
+    const peers = new Set();
     const room = await LanNet.openRoom({
-      onPeerJoined: id => { lanLog(t("lanPeerJoined", { id })); },
-      onPeerLeft: id => { lanLog(t("lanPeerLeft", { id })); },
+      onPeerJoined: id => {
+        peers.add(id);
+        lanLog(t(lanTable ? "lanPeerWaiting" : "lanPeerJoined", { id }));
+        updateLanPanel();
+      },
+      onPeerLeft: id => {
+        peers.delete(id);
+        lanLog(t("lanPeerLeft", { id }));
+        const seat = state.players.findIndex(p => p.controller === "guest" && p.clientId === id);
+        if (seat >= 0) handOverToBot(seat);
+        updateLanPanel();
+      },
       onMessage: (id, message) => {
+        if (message?.type === "intent") {
+          handleGuestIntent(id, message.intent);
+          return;
+        }
         lanLog(t("lanFrom", { id, text: JSON.stringify(message) }));
-        // Answer so the guest's round trip completes without game logic.
-        room.send(id, { type: "pong", at: Date.now() });
+        // Answer a ping so the connection test still completes on its own.
+        if (message?.type === "ping") room.send(id, { type: "pong", at: Date.now() });
       },
       onError: error => lanLog(error.message)
     });
-    lanConnection = { kind: "host", room };
+    lanConnection = { kind: "host", room, peers };
     setLanStatus("lanHosting", { address: room.address ?? "?", port: room.port });
     updateLanPanel();
   } catch (error) {
@@ -2097,12 +2455,19 @@ async function joinLanRoom() {
     setLanStatus("lanJoining");
     const guest = await LanNet.joinRoom({
       address: els.lanAddress.value,
-      onMessage: message => lanLog(t("lanFromHost", { text: JSON.stringify(message) })),
+      onMessage: message => {
+        if (message?.type === "view") {
+          applyView(message);
+          return;
+        }
+        lanLog(t("lanFromHost", { text: JSON.stringify(message) }));
+      },
       onClose: () => {
         // Hanging up on purpose clears lanConnection first, so reaching here
         // with it still set is the host going away rather than us leaving.
         if (!lanConnection) return;
         lanConnection = null;
+        leaveGuestTable();
         setLanStatus("lanDisconnected");
         updateLanPanel();
       },
@@ -2127,7 +2492,11 @@ function sendLanPing() {
 async function leaveLanRoom() {
   if (!lanConnection) return;
   const connection = lanConnection;
+  // The host's guests are handed to bots before the room goes, so the match
+  // plays on; a guest goes back to their own solo match.
+  if (connection.kind === "host") endSharedMatch();
   lanConnection = null;
+  if (connection.kind === "guest") leaveGuestTable();
   try {
     if (connection.kind === "host") await connection.room.close();
     else connection.guest.close();
@@ -2217,6 +2586,10 @@ function saveGame() {
   // A finished match is not worth resuming, and render() runs after finishHand
   // clears the save, so bail out here rather than writing it straight back.
   if (state.matchOver) return;
+  // Only a solo table is saved. A shared one cannot be resumed alone, and on a
+  // guest the table is somebody else's, turned to face them: writing it would
+  // overwrite the solo match they will want back when they leave.
+  if (lanTable || isGuest()) return;
   try {
     const payload = { version: SAVE_SCHEMA_VERSION, savedAt: Date.now(), state };
     window.localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(payload));
@@ -2254,6 +2627,7 @@ function tryResumeSavedGame() {
     return false;
   }
   Object.assign(state, saved);
+  upgradeLoadedState();
   render();
   resumePendingAction();
   return true;
@@ -2261,29 +2635,40 @@ function tryResumeSavedGame() {
 
 // The setTimeout that would normally fire this is lost across a reload, so a
 // resumed pendingAction is re-armed here instead of waiting on real wall-clock time.
+// Offers to a person need nothing: render() reads them off the table.
 function resumePendingAction() {
   const pending = state.pendingAction;
   if (!pending) return;
   switch (pending.type) {
     case "awaitingBotTurn":
-      setTimeout(botDiscard, 300);
+      schedule(botDiscard, 300);
       break;
     case "awaitingBotRon":
-      setTimeout(() => winHand(pending.winner, pending.loser, "Ron"), 300);
+      schedule(() => winHand(pending.winner, pending.loser, "Ron"), 300);
       break;
     case "awaitingNextTurn":
-      setTimeout(nextTurn, 300);
+      schedule(nextTurn, 300);
       break;
     case "awaitingChankan":
-      setTimeout(() => winHand(pending.winner, 0, "Ron", { isChankan: true }), 300);
-      break;
-    case "awaitingHumanRon":
-      offerHumanRon(pending.winner, pending.loser);
-      break;
-    case "awaitingHumanCall":
-      showCallActions(pending.tile, pending.fromSeat);
+      schedule(() => winHand(pending.winner, pending.loser ?? 0, "Ron", { isChankan: true }), 300);
       break;
   }
+}
+
+// Saves written before seats had owners still load. Everything missing is filled
+// in as the solo table it was: you at seat 0, bots everywhere else.
+function upgradeLoadedState() {
+  state.players.forEach((player, seat) => {
+    player.seat ??= seat;
+    player.controller ??= seat === 0 ? "host" : "bot";
+    player.clientId ??= null;
+  });
+  const pending = state.pendingAction;
+  if (pending?.type === "awaitingHumanCall" && pending.seat === undefined) {
+    pending.seat = 0;
+    pending.queue = [];
+  }
+  if (pending?.type === "awaitingHumanRon") pending.passed ??= [];
 }
 
 function render() {
@@ -2322,40 +2707,144 @@ function render() {
 
     const riverEl = els.riverBlocks[seat];
     if (riverEl) {
-      riverEl.setAttribute("aria-label", seat === 0 ? t("yourRiver") : t("riverOf", { player: NAMES[seat] }));
+      riverEl.setAttribute("aria-label", seat === 0 ? t("yourRiver") : t("riverOf", { player: playerLabel(seat) }));
       riverEl.innerHTML = renderRiver(player, seat);
     }
   });
 
-  if (state.turn === 0 && state.pendingDiscard && !state.gameOver) {
-    const actions = [];
-    const human = state.players[0];
-    if (!human.riichi && human.melds.length === 0 && human.score >= 1000 && state.wall.length >= 4
-      && canDeclareRiichi(human.hand, human.melds.length)) {
-      actions.push({ labelKey: "riichi", onClick: declareRiichi });
-    }
-    for (const tile of legalAnkanOptions(human)) {
-      actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareAnkan(tile) });
-    }
-    if (!human.riichi) {
-      for (const tile of kakanOptions(human)) {
-        actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => declareKakan(tile) });
-      }
-    }
-    if (canWin(human.hand, human.melds.length) && checkWin(0, "Tsumo", human.drawnTile)) {
-      actions.push({ labelKey: "tsumo", cls: "win", onClick: () => winHand(0, 0, "Tsumo") });
-    }
-    showActions(actions);
-  }
+  renderActionBar();
+  syncTable();
+}
 
+// The action bar is read off the table, never pushed from the middle of the
+// game logic. That one rule is what lets the same table be drawn on the host,
+// on a guest's phone from a view the host sent, and after a reload — without
+// any of them having seen the moment the offer was made.
+// Seat 0 is always whoever is looking: the host's own chair, or a guest's
+// chair once their view has been turned to face them.
+function renderActionBar() {
+  showActions(viewerActions());
+}
+
+function viewerActions() {
   if (state.gameOver) {
-    showActions([state.matchOver
+    if (isGuest()) return [{ labelKey: "lanWaitingForHost", cls: "pass", disabled: true }];
+    return [state.matchOver
       ? { labelKey: "newMatch", cls: "win", onClick: startMatch }
-      : { labelKey: "nextHand", cls: "win", onClick: startHand }
-    ]);
+      : { labelKey: "nextHand", cls: "win", onClick: startHand }];
   }
 
-  saveGame();
+  const pending = state.pendingAction;
+  if (pending?.type === "awaitingHumanRon" && pending.winner === 0) {
+    return [
+      { labelKey: "ron", cls: "win", onClick: () => act({ type: "ron" }) },
+      { labelKey: "pass", cls: "pass", onClick: () => act({ type: "pass" }) }
+    ];
+  }
+  if (pending?.type === "awaitingHumanCall" && pending.seat === 0) {
+    const options = callOptions(0, pending.tile, pending.fromSeat);
+    const actions = [];
+    if (options.kan) {
+      actions.push({ labelKey: "kan", labelParams: { tile: tileText(pending.tile) }, onClick: () => act({ type: "minkan" }) });
+    }
+    if (options.pon) actions.push({ labelKey: "pon", onClick: () => act({ type: "pon" }) });
+    for (const option of options.chi) {
+      actions.push({
+        labelKey: "chi",
+        labelParams: { tiles: option.map(tileText).join("") },
+        onClick: () => act({ type: "chi", option })
+      });
+    }
+    actions.push({ labelKey: "pass", cls: "pass", onClick: () => act({ type: "pass" }) });
+    return actions;
+  }
+
+  if (state.turn !== 0 || !state.pendingDiscard) return [];
+  const actions = [];
+  const me = state.players[0];
+  if (!me.riichi && me.melds.length === 0 && me.score >= 1000 && state.wall.length >= 4
+    && canDeclareRiichi(me.hand, me.melds.length)) {
+    actions.push({ labelKey: "riichi", onClick: () => act({ type: "riichi" }) });
+  }
+  for (const tile of legalAnkanOptions(me)) {
+    actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => act({ type: "ankan", tile }) });
+  }
+  if (!me.riichi) {
+    for (const tile of kakanOptions(me)) {
+      actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => act({ type: "kakan", tile }) });
+    }
+  }
+  if (canWin(me.hand, me.melds.length) && checkWin(0, "Tsumo", me.drawnTile)) {
+    actions.push({ labelKey: "tsumo", cls: "win", onClick: () => act({ type: "tsumo" }) });
+  }
+  return actions;
+}
+
+// Everything a player does goes through here. On the device holding the table
+// it is applied at once to seat 0; on a guest's phone it is sent to the host,
+// which applies it to the guest's real chair and sends the table back.
+function act(intent) {
+  if (isGuest()) {
+    sendIntentToHost(intent);
+    return;
+  }
+  applyIntent(0, intent);
+}
+
+// The host's single door for moves, its own and everyone else's. A guest's
+// message is only a request: each case re-checks it against the table, and
+// where the table already knows something — who discarded, which tile — that
+// is what gets used, not what the message claimed.
+function applyIntent(seat, intent) {
+  if (!intent || typeof intent.type !== "string" || isBotSeat(seat)) return;
+  const pending = state.pendingAction;
+  const offeredRon = pending?.type === "awaitingHumanRon" && pending.winner === seat;
+  const offeredCall = pending?.type === "awaitingHumanCall" && pending.seat === seat;
+  const player = state.players[seat];
+
+  switch (intent.type) {
+    case "discard":
+      discardTile(seat, Number(intent.tileIndex));
+      break;
+    case "riichi":
+      declareRiichi(seat);
+      break;
+    case "ankan":
+      declareAnkan(seat, intent.tile);
+      break;
+    case "kakan":
+      declareKakan(seat, intent.tile);
+      break;
+    case "tsumo":
+      if (state.turn === seat && state.pendingDiscard && !state.gameOver
+        && canWin(player.hand, player.melds.length) && checkWin(seat, "Tsumo", player.drawnTile)) {
+        winHand(seat, seat, "Tsumo");
+      }
+      break;
+    case "ron":
+      if (offeredRon) winHand(seat, pending.loser, "Ron");
+      break;
+    case "pon":
+      if (offeredCall && callOptions(seat, pending.tile, pending.fromSeat).pon) {
+        callPon(seat, pending.tile, pending.fromSeat);
+      }
+      break;
+    case "minkan":
+      if (offeredCall && callOptions(seat, pending.tile, pending.fromSeat).kan) {
+        callMinkan(seat, pending.tile, pending.fromSeat);
+      }
+      break;
+    case "chi": {
+      if (!offeredCall || !Array.isArray(intent.option)) break;
+      const wanted = intent.option.join(",");
+      const option = callOptions(seat, pending.tile, pending.fromSeat).chi.find(o => o.join(",") === wanted);
+      if (option) callChi(seat, pending.tile, option, pending.fromSeat);
+      break;
+    }
+    case "pass":
+      passOffer(seat);
+      break;
+  }
 }
 
 function normalizeFormat(format) {
@@ -2638,7 +3127,7 @@ function onTilePointerUp(event) {
 
 function discard(index) {
   selectedTileIndex = null;
-  discardTile(0, index);
+  act({ type: "discard", tileIndex: index });
 }
 
 function selectTile(index) {
