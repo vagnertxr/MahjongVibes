@@ -152,7 +152,11 @@ test("a guest calls an open kan and then declares a closed one", async () => {
   assert.equal(host.run("state.players[1].melds[0].type"), "minkan");
   assert.equal(host.run("state.doraIndicators.length"), indicators + 1, "a kan turns another indicator");
 
-  await until(() => buttons(guest1).includes("kan"), 3000, "the closed kan to be offered");
+  // Wait for guest1's own screen to show the open kan first. Until then it still
+  // shows the offer it just answered — which also has a "kan" button.
+  await until(() => guest1.run("state.players[0].melds.length === 1 && state.turn === 0 && state.pendingDiscard"),
+    3000, "guest1 to see its open kan");
+  assert.ok(buttons(guest1).includes("kan"), "the closed kan is offered");
   press(guest1, "kan");
   await until(() => host.run("state.players[1].melds.length") === 2, 3000, "the closed kan");
   assert.equal(host.run("state.players[1].melds[1].type"), "ankan");

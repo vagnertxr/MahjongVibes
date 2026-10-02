@@ -50,6 +50,15 @@ jobs:
       - name: Test the shared table
         run: npm test
 
+      # Again, with every message to a guest held back as a real Wi-Fi would.
+      # A test that only passes when views arrive at once is reading a screen
+      # that has not caught up — that is how a flaky kan test once blocked a
+      # release.
+      - name: Test the shared table over a slow network
+        run: npm test
+        env:
+          RELAY_LATENCY_MS: 80
+
       - name: Copy the web app into the native project
         run: npm run sync
 

@@ -17,6 +17,12 @@ const ROOT = process.env.GAME_ROOT ?? path.resolve(path.dirname(fileURLToPath(im
 // test has no one watching, so every pause is cut down to this.
 const PACE_MS = 20;
 
+// RELAY_LATENCY_MS slows every message to a guest, the way a busy machine or a
+// real Wi-Fi does. A test that only passes when views arrive at once is reading
+// a screen that has not caught up yet; run the suite with a delay to flush
+// those out. Messages to one guest still arrive in the order they were sent.
+const LATENCY_MS = Number(process.env.RELAY_LATENCY_MS ?? 0);
+
 export function startRelay() {
   const server = new WebSocketServer({ port: 0, host: "127.0.0.1" });
   let host = null;
@@ -29,7 +35,11 @@ export function startRelay() {
       host = socket;
       socket.on("message", raw => {
         const op = JSON.parse(raw.toString());
-        const deliver = (id, text) => { const g = guests.get(id); if (g?.readyState === 1) g.send(text); };
+        const deliver = (id, text) => {
+          const send = () => { const g = guests.get(id); if (g?.readyState === 1) g.send(text); };
+          if (LATENCY_MS > 0) setTimeout(send, LATENCY_MS);
+          else send();
+        };
         if (op.op === "send") deliver(op.clientId, op.message);
         if (op.op === "broadcast") for (const id of guests.keys()) deliver(id, op.message);
       });
