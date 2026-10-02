@@ -1,6 +1,6 @@
 {
   "name": "mahjong-vibes",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A lightweight Riichi Mahjong game, packaged for Android.",
   "license": "MIT",
   "private": true,
