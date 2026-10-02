@@ -5,5 +5,11 @@
   "backgroundColor": "#08382f",
   "android": {
     "backgroundColor": "#08382f"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "disable",
+      "hidden": true
+    }
   }
 }
