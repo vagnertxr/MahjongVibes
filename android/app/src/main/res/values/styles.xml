@@ -13,6 +13,8 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- The DayNight default is a grey that showed as bands around the table. -->
+        <item name="android:windowBackground">@color/tableCloth</item>
     </style>
 
 

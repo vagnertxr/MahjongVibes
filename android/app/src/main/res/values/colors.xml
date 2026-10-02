@@ -5,4 +5,7 @@
     <color name="colorPrimary">#116149</color>
     <color name="colorPrimaryDark">#08382F</color>
     <color name="colorAccent">#F4C35B</color>
+    <!-- Behind the page before it has drawn, and in any edge the WebView does
+         not reach on older phones: cloth rather than the theme's grey. -->
+    <color name="tableCloth">#0A3D2C</color>
 </resources>

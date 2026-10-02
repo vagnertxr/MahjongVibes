@@ -3578,8 +3578,11 @@ let panY = 0;
 
 function fitStage() {
   if (!els.stage) return;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  // The table fits the safe area — clear of a phone's camera cutout and any
+  // system bar still showing — while the cloth runs under all of it.
+  const inset = safeAreaInsets();
+  const vw = window.innerWidth - inset.left - inset.right;
+  const vh = window.innerHeight - inset.top - inset.bottom;
   const rotate = vh > vw;
   const availW = rotate ? vh : vw;
   const availH = rotate ? vw : vh;
@@ -3587,11 +3590,34 @@ function fitStage() {
   const w = STAGE_W * scale;
   const h = STAGE_H * scale;
   // With transform-origin 0 0, rotate(90deg) maps the box to x in [-h, 0] and
-  // y in [0, w], so the offsets below re-centre it in the viewport.
+  // y in [0, w], so the offsets below re-centre it in the safe area.
   baseStageTransform = rotate
-    ? `translate(${(vw + h) / 2}px, ${(vh - w) / 2}px) rotate(90deg) scale(${scale})`
-    : `translate(${(vw - w) / 2}px, ${(vh - h) / 2}px) scale(${scale})`;
+    ? `translate(${inset.left + (vw + h) / 2}px, ${inset.top + (vh - w) / 2}px) rotate(90deg) scale(${scale})`
+    : `translate(${inset.left + (vw - w) / 2}px, ${inset.top + (vh - h) / 2}px) scale(${scale})`;
   applyStageTransform();
+}
+
+// Where the screen is not safe to put the table. Browsers report it through
+// env(safe-area-inset-*), which only resolves inside CSS, so a hidden element
+// carries it as padding to be read back. The Android app's bridge also writes
+// it as --safe-area-inset-* on the root; whichever is larger wins.
+let safeAreaProbe = null;
+
+function safeAreaInsets() {
+  if (!safeAreaProbe) {
+    safeAreaProbe = document.createElement("div");
+    safeAreaProbe.setAttribute("aria-hidden", "true");
+    safeAreaProbe.style.cssText = "position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;"
+      + "padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)";
+    document.body.append(safeAreaProbe);
+  }
+  const probe = getComputedStyle(safeAreaProbe);
+  const root = getComputedStyle(document.documentElement);
+  const side = name => Math.max(
+    parseFloat(probe[`padding${name[0].toUpperCase()}${name.slice(1)}`]) || 0,
+    parseFloat(root.getPropertyValue(`--safe-area-inset-${name}`)) || 0
+  );
+  return { top: side("top"), right: side("right"), bottom: side("bottom"), left: side("left") };
 }
 
 // Zooms about the middle of the screen, then pans. Written as a prefix to the
@@ -3711,6 +3737,9 @@ if (typeof ResizeObserver === "function") {
   new ResizeObserver(fitStage).observe(document.documentElement);
 }
 window.visualViewport?.addEventListener("resize", fitStage);
+// The Android bridge writes the safe area onto the root's style after the page
+// has loaded, and again whenever it changes, without any event to listen for.
+new MutationObserver(fitStage).observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
 
 els.lanName.value = cleanName(getStoredPreference(NAME_STORAGE_KEY)) ?? "";
 selectFormat(selectedFormat);
