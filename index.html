@@ -262,6 +262,10 @@
         </div>
         <div class="welcome-body">
           <p class="intro-copy" id="lanIntro"></p>
+          <label class="lan-name">
+            <span id="lanNameLabel">Your name</span>
+            <input id="lanName" type="text" maxlength="16" autocomplete="nickname" spellcheck="false" placeholder="Name shown at the table">
+          </label>
           <div class="lan-row">
             <button id="lanHostBtn" type="button">Create Room</button>
           </div>
@@ -271,14 +275,12 @@
           </div>
           <p class="lan-status" id="lanStatus" role="status" aria-live="polite"></p>
           <p class="lan-peers" id="lanPeers"></p>
+          <ol class="lan-seats" id="lanSeats"></ol>
           <div class="lan-row">
             <button id="lanStartBtn" type="button" class="win" hidden>Start Shared Match</button>
-          </div>
-          <ul class="lan-log" id="lanLog"></ul>
-          <div class="lan-row">
-            <button id="lanPingBtn" type="button">Send Test Message</button>
             <button id="lanLeaveBtn" type="button" class="pass">Disconnect</button>
           </div>
+          <ul class="lan-log" id="lanLog"></ul>
         </div>
       </section>
     </div>

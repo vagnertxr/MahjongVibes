@@ -4,28 +4,29 @@ This is the plan for shipping Mahjong Vibes as an installable Android `.apk`
 playable over a local network: one player creates the table, up to three others
 join from their own phones.
 
-**Phases 1, 2, 3 and 5 have landed.** The app packages and builds, and up to
-four people can play one table across phones on the same network, with bots in
-any empty chair. What is left is the lobby around it (Phase 4): names, a seat
-list, and coming back after a dropped connection.
+**All five phases have landed.** The app packages and builds, and up to four
+people can play one table across phones on the same network: they gather in a
+lobby by name, bots take any empty chair, someone whose connection drops can
+come back to their chair and their hand, and someone who arrives late is dealt
+in at the next hand. What is left is mostly proving it on real phones — see
+[What Is Left](#what-is-left).
 
 The companion document [RELEASE.md](RELEASE.md) covers the shipping web, PWA and
 desktop envelopes, all of which stay as they are. The Android app is another
 envelope around the same static files, not a fork of them.
 
-## What the Networking Work Still Faces
+## Where It Started
 
-Worth stating plainly, because it shapes the phases that are left:
+Worth keeping, because it explains the shape of the phases:
 
-- There is **no networking code of any kind**. No WebSocket, no WebRTC, no
+- There was **no networking code of any kind**. No WebSocket, no WebRTC, no
   fetch to another host. `tools/server.py` binds `0.0.0.0` and prints the LAN
-  address, but it only serves static files — it is a debug convenience, not a
-  backend, and it is not what will carry multiplayer traffic.
-- **Seat 0 is the human, structurally.** `state.players[0]` and `seat === 0`
-  are hardcoded in roughly a dozen places. There is no per-seat role flag. Real
-  multiplayer cannot happen until that assumption is replaced.
-- The bot AI (`chooseBotDiscard`, `tileValue`) is small and cleanly isolated,
-  which makes it easy to keep as the fallback for unclaimed or dropped seats.
+  address, but it only serves static files — a debug convenience, not a backend.
+- **Seat 0 was the human, structurally.** `state.players[0]` and `seat === 0`
+  were hardcoded in roughly a dozen places, with no per-seat role. Phase 3 is
+  what replaced that.
+- The bot AI (`chooseBotDiscard`, `tileValue`) was small and cleanly isolated,
+  which made it easy to keep as the player for unclaimed and abandoned chairs.
 
 ## Decisions Already Made
 
@@ -194,7 +195,7 @@ What it deliberately does not do yet:
 - **Chankan is automatic** for people as well as bots. Offering it would need a
   kan to be resumable halfway through; declining a ron that good is rare.
 - **Only the host deals the next hand.** Guests see the result and wait.
-- **No rejoining.** A guest who drops stays a bot for the rest of the match.
+- **No rejoining** — until Phase 4, which added it.
 - **The host's screen sleeping pauses the table**, since the WebView stops its
   timers. Untested on a phone.
 
@@ -217,48 +218,82 @@ the 136 tiles are conserved, that no view carries a tile it should not, and that
 every caught-up guest sees exactly the host's table turned to face it. The CI
 runs `npm test` before building, so no APK ships if either breaks.
 
-## Phase 4 — Creating and Joining a Table
+## Phase 4 — Creating and Joining a Table — **done**
 
-- **Host:** "Create Room" starts the Phase 2 server and displays the device's
-  LAN address plus a short room code. The code is a visual confirmation for the
-  people typing the address in, not a matchmaking identifier — there is no
-  discovery service for it to resolve against.
-- **Guest:** "Join Room" takes an address, connects, and receives a seat and an
-  initial redacted state from the host.
-- **Lobby:** the host sees all four seats and who holds each one. Because bots
-  fill unclaimed seats, the host can start whenever they want; waiting for three
-  humans is never required.
-- **Disconnects:** a dropped player's seat reverts to bot control and play
-  continues. The joining device holds a rejoin token so it can reclaim its seat
-  for the rest of the match if it comes back.
+**Names.** Everyone types a name in the Network panel; it is remembered on the
+device. The host's chair shows the host's name to the guests, and each guest's
+chair shows theirs. Without a name, a chair reads "Host" or "Player 3".
 
-Already in place from Phase 3: the host can start a shared match with whoever is
-connected, seated in join order with bots in the empty chairs, and a dropped
-guest's chair goes to a bot. What remains is the lobby itself — names, the seat
-list, the room code, rejoining with a token, seating people who connect after the
-match started, and a guest's "New Match" button, which does nothing at a table it
-does not hold.
+Names are typed on other people's phones and are drawn into every device's
+markup, so they are treated as hostile: cut down on arrival to sixteen
+characters of plain text, and escaped wherever they meet HTML. A name like
+`<img src=x onerror=…>` arrives on every screen as those characters. The lobby
+list is built from text nodes and never touches markup at all.
+
+**The lobby.** The panel lists the four chairs in turn order, by name, marking
+which is yours: the host, the guests in the order they arrived, and "Empty — a
+bot plays" for the rest. Every guest sees the same list, sent by the host as
+people come and go. The host can start whenever they like.
+
+**Coming back.** Each device makes itself a random token, keeps it, and sends it
+when it joins. It is never shown to anyone else, so nobody can claim a chair by
+quoting it. When a guest drops, a bot plays their chair, but the chair is held
+for them for the rest of the match; reconnecting with the same token puts them
+back in it, with the hand they left. This also covers the common Wi-Fi case of a
+phone reconnecting before the host has noticed its old connection die: the
+chair moves to the new connection, and the stale one can no longer act for it or
+hand the chair to a bot when it finally closes.
+
+**Arriving late.** Someone who connects while a match is on waits, and is dealt
+in at the next hand into a bot's chair — never into a chair being kept for
+someone who left. If there is none, they wait for the next match, which frees
+the chairs of people who did not come back. Anyone past the third guest waits
+the same way.
+
+**The guest's New Match button** is hidden while they are seated, since only the
+host can deal a new match. It comes back when they leave.
+
+Two things came out differently from the plan above:
+
+- **No room code.** It was meant as a visual check that people had typed the
+  right address. The host's name in the lobby does the same job, and is one
+  thing fewer to read aloud across a room.
+- **The connection test is gone.** Phase 2's "Send Test Message" button proved
+  two phones could reach each other. A lobby that fills with names proves the
+  same thing, and the button would only confuse players. The event log stays,
+  because it is what helps when something goes wrong on a phone.
+
+The lobby is covered by `tests/lobby.test.mjs` alongside the table's own tests:
+names everywhere, a hostile name kept as text, a name changed mid-match,
+reconnecting to the same chair and hand, a reconnect that beats the old
+connection's timeout, late arrivals skipping kept chairs, and a fourth guest
+waiting. Each was checked against a deliberately broken copy of the game.
 
 ## What Is Left
 
-Phase 4, the lobby. The table it gathers people around already works; the lobby
-is what makes it pleasant to gather them.
-
-Because the build already runs, every one of those phases can be tested on a
-real phone as it lands, rather than accumulating unverified work behind a
-toolchain that was never proven.
+- **The host has never run on a phone.** `LanServerPlugin` compiles and its JS
+  side is tested over a stand-in relay, but the first real match between two
+  phones is still the test that matters most.
+- **A sleeping host pauses the table.** When the host's screen turns off, the
+  WebView stops its timers and the bots stop moving. Keeping the screen awake
+  would need another native plugin, and should wait until a real match shows
+  how much it matters.
+- **Chankan is automatic**, and **only the host deals the next hand** — both
+  deliberate, both described under Phase 3.
+- **Play Store distribution** is out of scope for a sideloaded LAN game; see
+  below for what it would take.
 
 ## Assumptions Worth Revisiting
 
 These were resolved toward the simplest option rather than asked about. Any of
-them can be reopened before Phase 2 starts, but each would change scope:
+them can be reopened, but each would change scope:
 
 - **Sideload only, no Play Store.** This is what makes debug signing adequate.
   Store distribution would require a release keystore, a privacy policy, content
   rating and review.
 - **The `android/` project is committed.** Capacitor's convention, but it is a
   large generated tree in a repo that has so far stayed very small.
-- **The room code is decorative.** It confirms people typed the right address;
-  it does not route anything.
+- **No room code.** The host's name in the lobby confirms people reached the
+  right table.
 - **The host plays too.** The hosting device occupies a seat rather than acting
   as a dedicated referee.

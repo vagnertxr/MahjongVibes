@@ -147,7 +147,14 @@ export function device(name, { relay = null, storage = {} } = {}) {
     errors,
     run: code => dom.window.eval(code),
     close() {
-      sockets.forEach(socket => socket.terminate());
+      // A closed page hears nothing more from its sockets; without this their
+      // close events would still run the game's handlers against a window that
+      // no longer has a document.
+      sockets.forEach(socket => {
+        socket.removeAllListeners();
+        socket.on("error", () => {});
+        socket.terminate();
+      });
       dom.window.close();
     }
   };

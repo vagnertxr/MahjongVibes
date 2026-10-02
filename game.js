@@ -54,6 +54,8 @@ const LANGUAGE_STORAGE_KEY = "mahjong-vibes-language";
 const FORMAT_STORAGE_KEY = "mahjong-vibes-format";
 const SOUND_STORAGE_KEY = "mahjong-vibes-sound";
 const SAVE_STORAGE_KEY = "mahjong-vibes-save";
+const NAME_STORAGE_KEY = "mahjong-vibes-name";
+const DEVICE_STORAGE_KEY = "mahjong-vibes-device";
 const SAVE_SCHEMA_VERSION = 1;
 const SFX = {
   discard: new Audio("assets/sfx/discard.ogg"),
@@ -94,7 +96,6 @@ const I18N = {
     lanIntroGuestOnly: "Type the address of the phone holding the table. Only the installed app can hold a room; from a browser you can join one.",
     lanCreateRoom: "Create Room",
     lanJoinRoom: "Join Room",
-    lanPing: "Send Test Message",
     lanLeave: "Disconnect",
     lanOpening: "Opening the room...",
     lanJoining: "Reaching the table...",
@@ -103,19 +104,28 @@ const I18N = {
     lanFailed: "{reason}",
     lanDisconnected: "The connection dropped.",
     lanClosed: "Disconnected.",
-    lanPeerJoined: "Player {id} joined.",
-    lanPeerLeft: "Player {id} left.",
-    lanFrom: "From {id}: {text}",
-    lanFromHost: "From the host: {text}",
-    lanSent: "Sent: {text}",
+    lanPeerJoined: "Someone connected ({id}).",
+    lanPeerLeft: "{id} disconnected.",
     lanStartMatch: "Start Shared Match",
     lanPlayersConnected: "{count} player(s) connected. Empty chairs get a bot.",
     lanTableRunning: "Shared match on, with {count} guest(s) at the table.",
     lanSeated: "Seated at the host's table.",
-    lanPeerWaiting: "Player {id} connected and will be seated in the next match.",
     lanWaitingForHost: "Waiting for the host",
     lanHostName: "Host",
     lanGuestName: "Player {n}",
+    lanTheHost: "the host",
+    lanNameLabel: "Your name",
+    lanNamePlaceholder: "Name shown at the table",
+    lanSeatHost: "{name} (host)",
+    lanSeatYou: "{label} — you",
+    lanSeatBot: "{name} (bot)",
+    lanSeatOpen: "Empty — a bot plays",
+    lanSeatAway: "{name} — away; a bot plays until they return",
+    lanWaitingCount: "{count} waiting for a chair.",
+    lanGuestWaitingStart: "Waiting for {host} to start the match.",
+    lanGuestWaitingHand: "A match is under way. You will be dealt in at the next hand with a free chair.",
+    lanGuestSeatedAt: "Seated at {host}'s table.",
+    lanRejoined: "{name} is back at the table.",
     yakuIntro: "Every yaku this table scores. A winning shape still needs at least one of them. Han values are for a closed hand; where a hand opens for less, the open value is in brackets.",
     yakuLuck: "How the hand was won",
     yakuShape: "What the hand is made of",
@@ -283,7 +293,6 @@ const I18N = {
     lanIntroGuestOnly: "Digite o endereço do celular que está com a mesa. Só o app instalado consegue manter uma sala; pelo navegador dá para entrar em uma.",
     lanCreateRoom: "Criar Sala",
     lanJoinRoom: "Entrar na Sala",
-    lanPing: "Enviar Mensagem de Teste",
     lanLeave: "Desconectar",
     lanOpening: "Abrindo a sala...",
     lanJoining: "Procurando a mesa...",
@@ -292,19 +301,28 @@ const I18N = {
     lanFailed: "{reason}",
     lanDisconnected: "A conexão caiu.",
     lanClosed: "Desconectado.",
-    lanPeerJoined: "Jogador {id} entrou.",
-    lanPeerLeft: "Jogador {id} saiu.",
-    lanFrom: "De {id}: {text}",
-    lanFromHost: "Do anfitrião: {text}",
-    lanSent: "Enviado: {text}",
+    lanPeerJoined: "Alguém conectou ({id}).",
+    lanPeerLeft: "{id} desconectou.",
     lanStartMatch: "Começar Partida em Rede",
     lanPlayersConnected: "{count} jogador(es) conectado(s). Cadeiras vazias ficam com um bot.",
     lanTableRunning: "Partida em rede em andamento, com {count} convidado(s) à mesa.",
     lanSeated: "Sentado à mesa do anfitrião.",
-    lanPeerWaiting: "Jogador {id} conectou e entra na próxima partida.",
     lanWaitingForHost: "Aguardando o anfitrião",
     lanHostName: "Anfitrião",
     lanGuestName: "Jogador {n}",
+    lanTheHost: "o anfitrião",
+    lanNameLabel: "Seu nome",
+    lanNamePlaceholder: "Nome que aparece na mesa",
+    lanSeatHost: "{name} (anfitrião)",
+    lanSeatYou: "{label} — você",
+    lanSeatBot: "{name} (bot)",
+    lanSeatOpen: "Vazia — um bot joga",
+    lanSeatAway: "{name} — saiu; um bot joga até voltar",
+    lanWaitingCount: "{count} aguardando uma cadeira.",
+    lanGuestWaitingStart: "Aguardando {host} começar a partida.",
+    lanGuestWaitingHand: "Há uma partida em andamento. Você entra na próxima mão que tiver cadeira livre.",
+    lanGuestSeatedAt: "Sentado à mesa de {host}.",
+    lanRejoined: "{name} voltou à mesa.",
     yakuIntro: "Todos os yaku que esta mesa pontua. Uma mão completa ainda precisa de pelo menos um deles. Os han valem para mão fechada; quando abrir a mão reduz o valor, o valor aberto vem entre colchetes.",
     yakuLuck: "Como a mão foi vencida",
     yakuShape: "Do que a mão é feita",
@@ -631,9 +649,11 @@ const els = {
   lanJoinBtn: document.querySelector("#lanJoinBtn"),
   lanStatus: document.querySelector("#lanStatus"),
   lanLog: document.querySelector("#lanLog"),
-  lanPingBtn: document.querySelector("#lanPingBtn"),
   lanStartBtn: document.querySelector("#lanStartBtn"),
   lanPeers: document.querySelector("#lanPeers"),
+  lanSeats: document.querySelector("#lanSeats"),
+  lanName: document.querySelector("#lanName"),
+  lanNameLabel: document.querySelector("#lanNameLabel"),
   lanLeaveBtn: document.querySelector("#lanLeaveBtn"),
   closeLanBtn: document.querySelector("#closeLanBtn"),
   yakuOverlay: document.querySelector("#yakuOverlay"),
@@ -665,8 +685,8 @@ els.lanBtn.addEventListener("click", openLanPanel);
 els.closeLanBtn.addEventListener("click", closeLanPanel);
 els.lanHostBtn.addEventListener("click", hostLanRoom);
 els.lanJoinBtn.addEventListener("click", joinLanRoom);
-els.lanPingBtn.addEventListener("click", sendLanPing);
 els.lanStartBtn.addEventListener("click", startSharedMatch);
+els.lanName.addEventListener("change", onNameChanged);
 els.lanLeaveBtn.addEventListener("click", leaveLanRoom);
 els.lanOverlay.addEventListener("click", event => {
   if (event.target === els.lanOverlay) closeLanPanel();
@@ -755,6 +775,8 @@ function schedule(callback, delay) {
 function startMatch() {
   if (isGuest()) return;
   if (!lanTable) clearSavedGame();
+  // A new match frees the chairs held for people who left during the last one.
+  releaseReservedSeats();
   state.format = selectedFormat;
   updateFormatChip();
   state.round = 0;
@@ -788,9 +810,12 @@ function startHand() {
   state.discardCount = 0;
   state.drawTenpaiSeats = [];
   state.pendingAction = null;
+  seatWaitingGuests();
   const seats = currentSeats();
   state.players = Array.from({ length: 4 }, (_, i) => ({
-    name: NAMES[i],
+    // A person's own name, or none and a label is made up for them; a bot is
+    // always its bot, even in a chair being kept for someone who left.
+    name: seats[i].controller === "bot" ? NAMES[i] : (seats[i].name ?? null),
     // The absolute chair number. A guest's view is rotated so they sit at index
     // 0, and this is what still tells them "Player 3" is the one across.
     seat: i,
@@ -814,6 +839,7 @@ function startHand() {
     }
   }
   sortAllHands();
+  if (lanTable) broadcastLobby();
   setMessage("dealerStarts", { playerSeat: state.dealer });
   drawForTurn();
 }
@@ -2023,9 +2049,15 @@ function localizeMessageParams(key, params) {
 function playerLabel(seat) {
   if (seat === 0) return t("you");
   const player = state.players[seat];
-  if (player?.controller === "host") return t("lanHostName");
-  if (player?.controller === "guest") return t("lanGuestName", { n: (player.seat ?? seat) + 1 });
+  if (player?.controller === "host") return player.name ?? t("lanHostName");
+  if (player?.controller === "guest") return player.name ?? t("lanGuestName", { n: (player.seat ?? seat) + 1 });
   return player?.name ?? NAMES[seat];
+}
+
+// For the few places a player's name goes into markup. Names are typed on other
+// people's phones; "<img onerror=...>" must arrive as those characters.
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 }
 
 function winVerb(seat) {
@@ -2109,8 +2141,9 @@ function applyLanguage() {
   els.closeLanBtn.textContent = copy.close;
   els.lanHostBtn.textContent = copy.lanCreateRoom;
   els.lanJoinBtn.textContent = copy.lanJoinRoom;
-  els.lanPingBtn.textContent = copy.lanPing;
   els.lanStartBtn.textContent = copy.lanStartMatch;
+  els.lanNameLabel.textContent = copy.lanNameLabel;
+  els.lanName.placeholder = copy.lanNamePlaceholder;
   els.lanLeaveBtn.textContent = copy.lanLeave;
   updateLanPanel();
   els.yakuOverlayTitle.textContent = copy.yakuList;
@@ -2262,19 +2295,119 @@ function pendingViewFor(pending, seat) {
   return null;
 }
 
+// Names are typed by other people and end up in every device's markup, so
+// they are cut down to plain text of a sensible length on the way in, and
+// escaped again on the way out wherever they meet HTML.
+function cleanName(raw) {
+  const name = String(raw ?? "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 16);
+  return name || null;
+}
+
+function myName() {
+  return cleanName(els.lanName.value);
+}
+
+// Who this device is, across connections. A guest sends it when it joins; if
+// its connection drops, coming back with the same token returns it to its
+// chair. It is never shown to anyone else, so nobody can take a chair that is
+// not theirs by quoting it.
+let cachedDeviceToken = null;
+
+function deviceToken() {
+  if (cachedDeviceToken) return cachedDeviceToken;
+  let token = cleanToken(getStoredPreference(DEVICE_STORAGE_KEY));
+  if (!token) {
+    const bytes = new Uint8Array(16);
+    if (window.crypto?.getRandomValues) window.crypto.getRandomValues(bytes);
+    else bytes.forEach((_, i) => { bytes[i] = Math.floor(Math.random() * 256); });
+    token = [...bytes].map(b => b.toString(16).padStart(2, "0")).join("");
+    setStoredPreference(DEVICE_STORAGE_KEY, token);
+  }
+  cachedDeviceToken = token;
+  return token;
+}
+
+function cleanToken(raw) {
+  return typeof raw === "string" && /^[A-Za-z0-9-]{8,64}$/.test(raw) ? raw : null;
+}
+
+function hostSeatInfo() {
+  return { controller: "host", name: myName() };
+}
+
+function guestSeatInfo(clientId) {
+  const member = lanConnection?.members.get(clientId) ?? {};
+  return { controller: "guest", clientId, token: member.token ?? null, name: member.name ?? null };
+}
+
+// Seats the people connected so far in the order they arrived, with bots in
+// any chair left over. Anyone past the third waits for a chair to come free.
 function startSharedMatch() {
   if (lanConnection?.kind !== "host" || lanConnection.peers.size === 0) return;
-  const guests = [...lanConnection.peers].slice(0, 3);
+  const arrived = [...lanConnection.peers];
   lanTable = {
-    seats: [
-      { controller: "host" },
-      ...[0, 1, 2].map(i => guests[i] ? { controller: "guest", clientId: guests[i] } : { controller: "bot" })
-    ]
+    seats: [hostSeatInfo(), ...[0, 1, 2].map(i => arrived[i] ? guestSeatInfo(arrived[i]) : { controller: "bot" })],
+    waiting: arrived.slice(3)
   };
   // The solo match is left in the save, untouched, for when the room closes.
   closeLanPanel();
   closeWelcome();
   startMatch();
+}
+
+// A chair someone left is held for them for the rest of the match, with a bot
+// playing it. A new match frees those chairs for whoever is waiting.
+function releaseReservedSeats() {
+  if (!lanTable) return;
+  lanTable.seats = lanTable.seats.map(seat => (seat.controller === "bot" ? { controller: "bot" } : seat));
+}
+
+// Called as each hand is dealt: people who connected while a match was on take
+// a bot's chair, as long as it is not being kept for someone who left.
+function seatWaitingGuests() {
+  if (!lanTable) return;
+  lanTable.waiting = lanTable.waiting.filter(id => lanConnection?.peers.has(id));
+  for (let seat = 1; seat < 4 && lanTable.waiting.length > 0; seat += 1) {
+    const chair = lanTable.seats[seat];
+    if (chair.controller === "bot" && !chair.token) lanTable.seats[seat] = guestSeatInfo(lanTable.waiting.shift());
+  }
+}
+
+function handleHello(clientId, message) {
+  const member = { name: cleanName(message?.name), token: cleanToken(message?.token) };
+  lanConnection.members.set(clientId, member);
+  if (lanTable) {
+    let seat = lanTable.seats.findIndex(chair => chair.controller === "guest" && chair.clientId === clientId);
+    // Same device, new connection: a dropped player coming back, or a phone
+    // whose Wi-Fi blinked before the host noticed the old connection die.
+    if (seat < 0 && member.token) seat = lanTable.seats.findIndex((chair, i) => i > 0 && chair.token === member.token);
+    if (seat >= 0) seatGuestAgain(seat, clientId, member);
+    else if (!lanTable.waiting.includes(clientId)) lanTable.waiting.push(clientId);
+  }
+  broadcastLobby();
+  updateLanPanel();
+}
+
+function seatGuestAgain(seat, clientId, member) {
+  const returning = lanTable.seats[seat].clientId !== clientId;
+  lanTable.seats[seat] = { controller: "guest", clientId, token: member.token, name: member.name };
+  lanTable.waiting = lanTable.waiting.filter(id => id !== clientId);
+  const player = state.players[seat];
+  if (player) {
+    player.controller = "guest";
+    player.clientId = clientId;
+    player.name = member.name;
+    // The bot that was about to discard for them stands down: the chair owes
+    // that discard to its person again. Its timer finds the chair no longer a
+    // bot's and does nothing.
+    if (state.pendingAction?.type === "awaitingBotTurn" && state.pendingAction.seat === seat) state.pendingAction = null;
+  }
+  if (returning) lanLog(t("lanRejoined", { name: member.name ?? t("lanGuestName", { n: seat + 1 }) }));
+  render();
 }
 
 function handleGuestIntent(clientId, intent) {
@@ -2285,13 +2418,15 @@ function handleGuestIntent(clientId, intent) {
 
 // A guest who drops out leaves their chair to a bot, which plays on from
 // exactly where they were. Whatever the table was waiting on from them is
-// settled the way a bot would settle it.
+// settled the way a bot would settle it. The chair stays theirs to come back to.
 function handOverToBot(seat) {
   if (!lanTable) return;
-  lanTable.seats[seat] = { controller: "bot" };
+  const left = lanTable.seats[seat];
+  lanTable.seats[seat] = { controller: "bot", token: left.token ?? null, name: left.name ?? null };
   const player = state.players[seat];
   player.controller = "bot";
   player.clientId = null;
+  player.name = NAMES[seat];
   const pending = state.pendingAction;
   if (!state.gameOver) {
     if (pending?.type === "awaitingHumanRon" && pending.winner === seat) {
@@ -2315,6 +2450,61 @@ function endSharedMatch() {
   lanTable = null;
   // From here the match is a solo one again, and is saved like one.
   render();
+}
+
+// Who sits where, as the lobby shows it. Before a match starts it is who would
+// sit where if it started now. Connection ids stay on the host.
+function lobbySeats() {
+  const arrived = lanConnection?.kind === "host" ? [...lanConnection.peers] : [];
+  const chairs = lanTable?.seats
+    ?? [hostSeatInfo(), ...[0, 1, 2].map(i => arrived[i] ? guestSeatInfo(arrived[i]) : { controller: "bot" })];
+  return chairs.map((chair, seat) => ({
+    kind: chair.controller === "bot" ? (chair.token ? "away" : "bot") : chair.controller,
+    name: chair.controller === "bot" && !chair.token ? NAMES[seat] : (chair.name ?? null),
+    clientId: chair.clientId ?? null
+  }));
+}
+
+function broadcastLobby() {
+  if (lanConnection?.kind !== "host") return;
+  const seats = lobbySeats();
+  const waiting = lanTable ? lanTable.waiting : [...lanConnection.peers].slice(3);
+  const shared = seats.map(({ clientId, ...visible }) => visible);
+  for (const id of lanConnection.peers) {
+    const message = {
+      type: "lobby",
+      started: lanTable !== null,
+      you: seats.findIndex(chair => chair.clientId === id),
+      waiting: waiting.length,
+      seats: shared
+    };
+    Promise.resolve(lanConnection.room.send(id, message)).catch(() => {});
+  }
+  lanLobby = { started: lanTable !== null, you: 0, waiting: waiting.length, seats: shared };
+  updateLanPanel();
+}
+
+// The lobby as this device last heard it: built locally on the host, sent by
+// the host to each guest.
+let lanLobby = null;
+
+function onNameChanged() {
+  const name = myName();
+  els.lanName.value = name ?? "";
+  setStoredPreference(NAME_STORAGE_KEY, name ?? "");
+  if (lanConnection?.kind === "guest") sayHello();
+  if (lanConnection?.kind === "host") {
+    if (lanTable) {
+      lanTable.seats[0].name = name;
+      if (state.players[0]) state.players[0].name = name;
+      render();
+    }
+    broadcastLobby();
+  }
+}
+
+function sayHello() {
+  lanConnection?.guest?.send({ type: "hello", name: myName(), token: deviceToken() });
 }
 
 function sendIntentToHost(intent) {
@@ -2356,6 +2546,8 @@ function enterGuestTable() {
   resetZoom();
   closeLanPanel();
   closeWelcome();
+  // Only the host can deal a new match at a shared table.
+  els.newGameBtn.hidden = true;
   updateLanPanel();
 }
 
@@ -2366,6 +2558,7 @@ function leaveGuestTable() {
   guestTable = null;
   tableEpoch += 1;
   selectedTileIndex = null;
+  els.newGameBtn.hidden = false;
   updateFormatChip();
   if (!tryResumeSavedGame()) startMatch();
   updateLanPanel();
@@ -2385,22 +2578,51 @@ function closeLanPanel() {
 function updateLanPanel() {
   const connected = lanConnection !== null;
   const hosting = lanConnection?.kind === "host";
-  const peers = hosting ? lanConnection.peers.size : 0;
   els.lanHostBtn.disabled = connected;
   els.lanJoinBtn.disabled = connected;
   els.lanAddress.disabled = connected;
-  els.lanPingBtn.disabled = !connected;
   els.lanLeaveBtn.disabled = !connected;
   els.lanStartBtn.hidden = !hosting || lanTable !== null;
-  els.lanStartBtn.disabled = peers === 0;
+  els.lanStartBtn.disabled = !hosting || lanConnection.peers.size === 0;
   els.lanIntro.textContent = LanNet.canHost() ? t("lanIntro") : t("lanIntroGuestOnly");
+  els.lanPeers.textContent = lobbySummary(hosting);
+  renderLobbyList();
+}
+
+function lobbySummary(hosting) {
+  if (!lanConnection || !lanLobby) return "";
+  const waiting = lanLobby.waiting > 0 ? ` ${t("lanWaitingCount", { count: lanLobby.waiting })}` : "";
   if (hosting) {
-    els.lanPeers.textContent = lanTable
-      ? t("lanTableRunning", { count: state.players.filter(p => p.controller === "guest").length })
-      : t("lanPlayersConnected", { count: peers });
-  } else {
-    els.lanPeers.textContent = isGuest() ? t("lanSeated") : "";
+    return (lanTable
+      ? t("lanTableRunning", { count: lanLobby.seats.filter(s => s.kind === "guest").length })
+      : t("lanPlayersConnected", { count: lanConnection.peers.size })) + waiting;
   }
+  const hostName = lanLobby.seats[0]?.name;
+  if (lanLobby.started && lanLobby.you < 0) return t("lanGuestWaitingHand");
+  if (!lanLobby.started) return t("lanGuestWaitingStart", { host: hostName ?? t("lanTheHost") });
+  return hostName ? t("lanGuestSeatedAt", { host: hostName }) : t("lanSeated");
+}
+
+// Four chairs, in turn order from the host's. Built as text, never markup:
+// these names were typed on other people's phones.
+function renderLobbyList() {
+  els.lanSeats.replaceChildren();
+  if (!lanConnection || !lanLobby) return;
+  lanLobby.seats.forEach((chair, seat) => {
+    const entry = document.createElement("li");
+    entry.className = `lan-seat ${chair.kind}`;
+    let label;
+    if (chair.kind === "host") label = t("lanSeatHost", { name: chair.name ?? t("lanHostName") });
+    else if (chair.kind === "guest") label = chair.name ?? t("lanGuestName", { n: seat + 1 });
+    else if (chair.kind === "away") label = t("lanSeatAway", { name: chair.name ?? t("lanGuestName", { n: seat + 1 }) });
+    else label = t(lanLobby.started ? "lanSeatBot" : "lanSeatOpen", { name: chair.name });
+    if (seat === lanLobby.you) {
+      label = t("lanSeatYou", { label });
+      entry.classList.add("you");
+    }
+    entry.textContent = label;
+    els.lanSeats.append(entry);
+  });
 }
 
 function setLanStatus(key, params = {}) {
@@ -2418,33 +2640,32 @@ async function hostLanRoom() {
   try {
     setLanStatus("lanOpening");
     const peers = new Set();
+    const members = new Map();
     const room = await LanNet.openRoom({
       onPeerJoined: id => {
         peers.add(id);
-        lanLog(t(lanTable ? "lanPeerWaiting" : "lanPeerJoined", { id }));
-        updateLanPanel();
+        lanLog(t("lanPeerJoined", { id }));
+        broadcastLobby();
       },
       onPeerLeft: id => {
         peers.delete(id);
-        lanLog(t("lanPeerLeft", { id }));
+        const name = members.get(id)?.name;
+        members.delete(id);
+        if (lanTable) lanTable.waiting = lanTable.waiting.filter(waiting => waiting !== id);
+        lanLog(t("lanPeerLeft", { id: name ?? id }));
         const seat = state.players.findIndex(p => p.controller === "guest" && p.clientId === id);
         if (seat >= 0) handOverToBot(seat);
-        updateLanPanel();
+        broadcastLobby();
       },
       onMessage: (id, message) => {
-        if (message?.type === "intent") {
-          handleGuestIntent(id, message.intent);
-          return;
-        }
-        lanLog(t("lanFrom", { id, text: JSON.stringify(message) }));
-        // Answer a ping so the connection test still completes on its own.
-        if (message?.type === "ping") room.send(id, { type: "pong", at: Date.now() });
+        if (message?.type === "intent") handleGuestIntent(id, message.intent);
+        else if (message?.type === "hello") handleHello(id, message);
       },
       onError: error => lanLog(error.message)
     });
-    lanConnection = { kind: "host", room, peers };
+    lanConnection = { kind: "host", room, peers, members };
     setLanStatus("lanHosting", { address: room.address ?? "?", port: room.port });
-    updateLanPanel();
+    broadcastLobby();
   } catch (error) {
     setLanStatus("lanFailed", { reason: error.message });
   }
@@ -2456,17 +2677,18 @@ async function joinLanRoom() {
     const guest = await LanNet.joinRoom({
       address: els.lanAddress.value,
       onMessage: message => {
-        if (message?.type === "view") {
-          applyView(message);
-          return;
+        if (message?.type === "view") applyView(message);
+        else if (message?.type === "lobby") {
+          lanLobby = message;
+          updateLanPanel();
         }
-        lanLog(t("lanFromHost", { text: JSON.stringify(message) }));
       },
       onClose: () => {
         // Hanging up on purpose clears lanConnection first, so reaching here
         // with it still set is the host going away rather than us leaving.
         if (!lanConnection) return;
         lanConnection = null;
+        lanLobby = null;
         leaveGuestTable();
         setLanStatus("lanDisconnected");
         updateLanPanel();
@@ -2474,19 +2696,12 @@ async function joinLanRoom() {
       onError: error => lanLog(error.message)
     });
     lanConnection = { kind: "guest", guest };
+    sayHello();
     setLanStatus("lanJoined", { address: els.lanAddress.value.trim() });
     updateLanPanel();
   } catch (error) {
     setLanStatus("lanFailed", { reason: error.message });
   }
-}
-
-function sendLanPing() {
-  if (!lanConnection) return;
-  const message = { type: "ping", at: Date.now() };
-  if (lanConnection.kind === "host") lanConnection.room.broadcast(message);
-  else lanConnection.guest.send(message);
-  lanLog(t("lanSent", { text: JSON.stringify(message) }));
 }
 
 async function leaveLanRoom() {
@@ -2496,6 +2711,7 @@ async function leaveLanRoom() {
   // plays on; a guest goes back to their own solo match.
   if (connection.kind === "host") endSharedMatch();
   lanConnection = null;
+  lanLobby = null;
   if (connection.kind === "guest") leaveGuestTable();
   try {
     if (connection.kind === "host") await connection.room.close();
@@ -2697,7 +2913,7 @@ function render() {
     seatEl.innerHTML = `
       <div class="seat-header">
         <div>
-          <div class="name">${windMarkHtml(player.wind)}${playerLabel(seat)}</div>
+          <div class="name">${windMarkHtml(player.wind)}${escapeHtml(playerLabel(seat))}</div>
           <div class="score">${player.score.toLocaleString()} ${t("points")}</div>
         </div>
         <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}${seat === 0 && isFuriten(player) ? `<span class="badge">${t("furiten")}</span>` : ""}${state.gameOver && !state.win && state.drawTenpaiSeats.includes(seat) ? `<span class="badge">${t("tenpaiBadge")}</span>` : ""}</div>
@@ -2995,7 +3211,7 @@ function renderTileLane(label, className, content) {
 }
 
 function renderWinReveal() {
-  const winner = playerLabel(state.win.winner);
+  const winner = escapeHtml(playerLabel(state.win.winner));
   const handTiles = state.win.hand.map((tile, index) => {
     const isWinTile = state.win.tile && index === state.win.hand.lastIndexOf(state.win.tile);
     return tileHtml(tile, true, isWinTile);
@@ -3391,6 +3607,7 @@ if (typeof ResizeObserver === "function") {
 }
 window.visualViewport?.addEventListener("resize", fitStage);
 
+els.lanName.value = cleanName(getStoredPreference(NAME_STORAGE_KEY)) ?? "";
 selectFormat(selectedFormat);
 applyLanguage();
 fitStage();
