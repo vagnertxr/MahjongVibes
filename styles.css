@@ -29,10 +29,15 @@ body {
 body {
   margin: 0;
   overflow: hidden;
+  /* The whole screen is the cloth. On a phone the table's 16:9 never matches
+     the screen, and a cloth that stops at the stage's edge leaves it floating
+     in dark bars; one that runs to the edges makes the bars part of the table. */
   background:
-    radial-gradient(circle at 18% 10%, rgba(244, 195, 91, 0.18), transparent 18rem),
-    radial-gradient(circle at 86% 18%, rgba(228, 86, 79, 0.13), transparent 16rem),
-    linear-gradient(140deg, #071d22, #103f34 48%, #1a1922);
+    radial-gradient(ellipse 70% 80% at 50% 45%, rgba(255, 255, 255, 0.10), transparent 70%),
+    radial-gradient(ellipse 120% 120% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.45)),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 7px),
+    linear-gradient(160deg, #146b4c, #0e5038 55%, #0a3d2c);
   color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-tap-highlight-color: transparent;
@@ -71,21 +76,12 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 8px solid var(--rail);
-  border-radius: 8px;
-  background:
-    linear-gradient(45deg, rgba(255,255,255,0.035) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.035) 75%),
-    radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 42%),
-    var(--felt);
-  background-size: 22px 22px, 100% 100%, auto;
-  box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.24), 0 18px 54px rgba(0, 0, 0, 0.32);
-  padding: 10px;
-  overflow: hidden;
+  padding: 10px 18px 12px;
   position: relative;
 }
 
 .topbar {
-  height: 40px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -101,20 +97,22 @@ button:disabled {
 }
 
 .logo {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   flex: 0 0 auto;
-  border-radius: 8px;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.92);
-  padding: 4px;
-  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.28);
+  padding: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
 }
 
+/* During play the name is a signature, not a headline. */
 h1 {
   margin: 0;
-  font-size: 1.32rem;
+  font-size: 1.06rem;
   line-height: 1;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
+  color: rgba(251, 246, 234, 0.82);
 }
 
 p {
@@ -124,21 +122,33 @@ p {
   font-weight: 800;
 }
 
+/* One quiet strip of controls rather than seven separate buttons. */
 .meters {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.24);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.meters > span,
-.status {
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.28);
-  padding: 6px 9px;
-  font-size: 0.82rem;
+.meters > span {
+  padding: 0 10px;
+  color: var(--accent);
+  font-size: 0.78rem;
   font-weight: 850;
+  letter-spacing: 0.02em;
+}
+
+.status {
+  border-radius: 999px;
+  background: rgba(2, 16, 16, 0.72);
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .status {
@@ -146,8 +156,29 @@ p {
 }
 
 .topbar button {
-  min-height: 32px;
-  font-size: 0.82rem;
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 750;
+  color: rgba(251, 246, 234, 0.9);
+}
+
+.topbar button:hover {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.topbar button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* The one that changes the game gets a little weight. */
+.topbar #newGameBtn {
+  background: rgba(244, 195, 91, 0.16);
+  color: #ffe6a6;
 }
 
 /* Match setup: two cards instead of a live dropdown, picked before the deal. */
@@ -213,7 +244,7 @@ p {
   /* Stops short of the right-hand plate: the free felt between the ring and
      that plate is the only strip wide enough that nothing collides. */
   right: 150px;
-  bottom: 108px;
+  bottom: 128px;
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -289,7 +320,9 @@ p {
      plates sit inline with the tiles instead of stacked above them. Side seats
      stand their tiles in a narrow column, which frees the board corners. */
   grid-template-columns: 132px 1fr 132px;
-  grid-template-rows: 50px 1fr 96px;
+  /* The bottom row is the one that gets touched: it carries the larger tiles
+     of your own hand, and the middle gives up the height for it. */
+  grid-template-rows: 50px 1fr 112px;
   gap: 6px;
 }
 
@@ -350,14 +383,18 @@ p {
      middle of its row. */
   align-items: flex-end;
   gap: 12px;
-  padding: 6px 8px 4px;
+  padding: 6px 10px 6px;
+  /* A raised tile lifts above the row; it must not be clipped there. */
+  overflow: visible;
+  background: linear-gradient(180deg, rgba(4, 20, 20, 0.62), rgba(4, 20, 20, 0.82));
 }
 
 .seat-bottom .seat-header {
   flex: 0 0 auto;
-  width: 128px;
-  margin-bottom: 0;
+  width: 112px;
+  margin-bottom: 4px;
   display: block;
+  align-self: flex-end;
 }
 
 .seat-bottom .badges {
@@ -879,68 +916,95 @@ p {
 /* The human's row is hand-first: the hand takes the height it needs and the
    melds sit beside it rather than stacking above and pushing it off the table. */
 .human-table {
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex: 1 1 auto;
-  flex-direction: row-reverse;
-  align-items: center;
-  gap: 8px;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
 }
 
 .human-public {
-  min-height: 0;
-  width: 232px;
-  flex: 0 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.human-public .section-label {
-  margin-top: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+  align-self: flex-end;
+  margin-bottom: 8px;
 }
 
 .human-public .melds {
-  min-height: 40px;
-  max-height: 62px;
-  overflow: auto;
-  align-content: flex-start;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
 
+/* The rack: a wooden ledge the hand stands on. */
 .hand-row {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
-  padding: 5px 7px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.09);
+  padding: 0 10px 7px;
+  border-radius: 0 0 8px 8px;
+  background:
+    linear-gradient(180deg, transparent 0 calc(100% - 9px), #6b4a2f calc(100% - 9px), #4a311f);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.28);
 }
 
 .hand {
-  min-height: 62px;
+  min-height: 72px;
   justify-content: center;
   flex-wrap: nowrap;
   overflow: visible;
+  gap: 3px;
 }
 
 .draw-slot {
-  width: 44px;
-  min-height: 62px;
+  width: 52px;
+  min-height: 72px;
   display: grid;
-  place-items: center;
+  place-items: end center;
   flex: 0 0 auto;
-  border-left: 1px solid rgba(255, 255, 255, 0.16);
-  padding-left: 8px;
 }
 
 .draw-placeholder {
-  width: 38px;
-  height: 52px;
-  border-radius: 6px;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
-  background: rgba(0, 0, 0, 0.12);
+  width: 50px;
+  height: 70px;
+  border-radius: 7px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Your own tiles, a size made for thumbs. On a phone held sideways the stage is
+   drawn at a bit over half size, and at the old 38x52 a tile was a 22px target. */
+.seat-bottom button.tile {
+  width: 50px;
+  height: 70px;
+  min-height: 70px;
+  border-radius: 7px;
+  border-bottom-width: 5px;
+}
+
+/* Waiting for your turn is not "unavailable": the hand stays in full colour, so
+   it does not flash grey every time a bot plays. A riichi-locked hand dims. */
+.seat-bottom button.tile:disabled {
+  opacity: 1;
+  cursor: default;
+  filter: saturate(0.88) brightness(0.94);
+}
+
+.seat-bottom button.tile.locked:disabled {
+  filter: saturate(0.5) brightness(0.72);
+}
+
+.seat-bottom .human-public .tile.small {
+  width: 30px;
+  height: 41px;
 }
 
 .tile.drawn {
@@ -960,58 +1024,227 @@ p {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
   z-index: 4;
-  width: min(100%, 32rem);
+  width: min(100%, 560px);
   max-height: 100%;
   overflow: auto;
-  background: rgba(2, 18, 18, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-  padding: 8px;
+  padding: 16px 20px 18px;
+  border-radius: 14px;
+  /* Opaque: the centerpiece under it must not show through the text. */
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(244, 195, 91, 0.16), transparent 60%),
+    #071a1a;
+  border: 1px solid rgba(244, 195, 91, 0.35);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 24px 60px rgba(0, 0, 0, 0.55);
+  text-align: center;
+  transform: translate(-50%, -50%);
+  animation: result-in 360ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
 
-.win-reveal .section-label {
-  margin-top: 0;
-  text-align: left;
+@keyframes result-in {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.92); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.result-kind {
+  font-size: 2.1rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 0 22px rgba(244, 195, 91, 0.35);
+}
+
+.result-kind.draw {
+  font-size: 1.5rem;
+  color: var(--ink);
+  text-shadow: none;
+}
+
+.result-who {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 800;
 }
 
 .win-hand {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
-  gap: 4px;
-  margin-top: 6px;
+  align-items: flex-end;
+  gap: 3px;
+  margin-top: 14px;
+}
+
+.win-hand .tile.small {
+  width: 30px;
+  height: 41px;
+}
+
+.result-meld {
+  display: inline-flex;
+  gap: 1px;
+  margin-left: 4px;
 }
 
 .win-divider {
   width: 1px;
-  height: 28px;
-  margin: 0 4px;
+  height: 34px;
+  margin: 0 6px;
   background: rgba(255, 255, 255, 0.22);
 }
 
 .win-yaku-list {
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  margin: 10px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 4px 14px;
+  margin: 14px 0 0;
   padding: 0;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.86rem;
+  text-align: left;
 }
 
 .win-yaku-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+}
+
+.result-han {
+  color: var(--accent);
+  font-weight: 900;
   white-space: nowrap;
 }
 
 .win-score {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.result-points {
+  font-size: 2rem;
+  font-weight: 950;
+  color: #fff3d2;
+  letter-spacing: 0.01em;
+}
+
+.result-unit {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.result-hanfu {
+  width: 100%;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* Who gained and who paid, in seat order from your chair. */
+.result-deltas {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+.delta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.delta-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.delta-value {
+  font-size: 0.95rem;
+  font-weight: 950;
+}
+
+.delta.up .delta-value { color: #7fe0a6; }
+.delta.down .delta-value { color: #ff8f86; }
+.delta.even .delta-value { color: var(--muted); }
+
+.result-final {
+  margin-top: 16px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.result-standings {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+/* On the last hand the card has the most to say; it keeps the hand but gives
+   up some breathing room so it stays on a phone's screen. */
+.win-reveal.match-over {
+  padding-block: 12px 14px;
+}
+
+.win-reveal.match-over .win-hand,
+.win-reveal.match-over .win-yaku-list,
+.win-reveal.match-over .win-score,
+.win-reveal.match-over .result-deltas {
   margin-top: 8px;
-  font-weight: 700;
-  color: var(--accent, #f4c35b);
+}
+
+.win-reveal.match-over .result-points {
+  font-size: 1.5rem;
+}
+
+.result-standings li {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr auto;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  text-align: left;
+  font-weight: 800;
+}
+
+.result-standings li.first {
+  background: linear-gradient(90deg, rgba(244, 195, 91, 0.28), rgba(244, 195, 91, 0.08));
+  color: #fff3d2;
+}
+
+.result-standings .place {
+  color: var(--accent);
+  font-weight: 950;
+}
+
+.standing-score {
+  font-variant-numeric: tabular-nums;
 }
 
 .tile {
@@ -1045,8 +1278,11 @@ p {
   -webkit-user-drag: none;
 }
 
+/* A back is drawn in CSS: a lacquered back with the cream of the tile's face
+   showing along the edge nearest the table's middle, the way a standing tile
+   looks from across a real one. The bundled artwork was a flat red block. */
 .tile.back .tile-face {
-  padding: 0;
+  display: none;
 }
 
 .tile.small {
@@ -1059,10 +1295,23 @@ p {
 
 .tile.back {
   background:
-    linear-gradient(145deg, rgba(255,255,255,0.08), transparent 45%),
-    linear-gradient(145deg, #315071, #14263d);
-  border-color: #0f1d30;
+    radial-gradient(130% 70% at 30% 12%, rgba(255, 255, 255, 0.28), transparent 52%),
+    linear-gradient(165deg, #3d78a8, #255383 55%, #1c4269);
+  border: 1px solid #143457;
+  border-bottom: 3px solid #eadfc3;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
   color: transparent;
+}
+
+/* Side seats' tiles stand facing the middle, so their cream edge does too. */
+.seat-left .tile.back {
+  border-bottom-width: 1px;
+  border-right: 3px solid #eadfc3;
+}
+
+.seat-right .tile.back {
+  border-bottom-width: 1px;
+  border-left: 3px solid #eadfc3;
 }
 
 .tile.bamboo {
@@ -1635,4 +1884,121 @@ h3 {
     height: 28px;
     font-size: 0.58rem;
   }
+}
+
+/* ---- Motion -------------------------------------------------------------
+   Each of these plays once, when the thing it belongs to arrives: game.js
+   only adds "fresh" or "pop" on the redraw where something is new. */
+
+/* A discard slides out from the player who threw it. The river block is
+   rotated to face its owner, so "from below" is from them, on every side. */
+.river-slot.fresh .tile {
+  animation: discard-in 260ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes discard-in {
+  from { opacity: 0; transform: translateY(26px) scale(1.18); }
+  60% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+
+/* The sideways riichi tile keeps its own rotation while it lands. */
+.river-slot.sideways.fresh .tile {
+  animation-name: riichi-in;
+}
+
+@keyframes riichi-in {
+  from { opacity: 0; transform: translateY(calc((var(--river-tile-w) - var(--river-tile-h)) / 2 + 26px)) rotate(-90deg) scale(1.18); }
+  to { opacity: 1; transform: translateY(calc((var(--river-tile-w) - var(--river-tile-h)) / 2)) rotate(-90deg); }
+}
+
+/* The drawn tile drops in from the wall's side. */
+.seat-bottom button.tile.drawn.fresh {
+  animation: draw-in 300ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes draw-in {
+  from { opacity: 0; transform: translateY(-34px) rotate(-6deg); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Calls jump up when they are offered, so they are noticed. */
+.action-bar button.pop {
+  animation: call-pop 280ms cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+
+.action-bar button.pop:nth-child(2) { animation-delay: 40ms; }
+.action-bar button.pop:nth-child(3) { animation-delay: 80ms; }
+.action-bar button.pop:nth-child(4) { animation-delay: 120ms; }
+
+@keyframes call-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.8); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The winning tile keeps glowing while the result is read. */
+.win-reveal .tile.winning {
+  animation: winning-glow 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes winning-glow {
+  from { box-shadow: 0 0 0 2px var(--accent), 0 0 6px rgba(244, 195, 91, 0.3); }
+  to { box-shadow: 0 0 0 2px var(--accent), 0 0 22px rgba(244, 195, 91, 0.75); }
+}
+
+/* Whose turn it is, felt rather than only read: the plate glows softly. */
+.seat.turn {
+  transition: box-shadow 240ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---- Calls show their tiles ------------------------------------------- */
+.action-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.act-tiles {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.act-tile {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 27px;
+  border-radius: 4px;
+  border: 1px solid var(--tile-edge);
+  border-bottom-width: 2px;
+  background: linear-gradient(#fffdf4, var(--tile));
+  overflow: hidden;
+}
+
+.act-tile .tile-face {
+  padding: 10%;
+}
+
+/* ---- Match setup ------------------------------------------------------- */
+/* The dialog's generic button rule squeezed these to a 34px line and cut the
+   top off the name; the cards set their own size. */
+.welcome-dialog .format-card {
+  min-height: 0;
+  padding: 10px 14px;
+  gap: 2px;
+  border-radius: 10px;
+}
+
+.welcome-dialog .format-card:hover {
+  outline: none;
+  border-color: rgba(244, 195, 91, 0.6);
 }

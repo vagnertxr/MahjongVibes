@@ -114,6 +114,11 @@ const I18N = {
     lanHostName: "Host",
     lanGuestName: "Player {n}",
     lanTheHost: "the host",
+    resultWinner: "{player} won",
+    resultDraw: "Exhaustive draw",
+    resultTenpai: "Tenpai: {names}",
+    resultNoTenpai: "Nobody was tenpai",
+    resultMatchOver: "Match over",
     lanNameLabel: "Your name",
     lanNamePlaceholder: "Name shown at the table",
     lanSeatHost: "{name} (host)",
@@ -311,6 +316,11 @@ const I18N = {
     lanHostName: "Anfitrião",
     lanGuestName: "Jogador {n}",
     lanTheHost: "o anfitrião",
+    resultWinner: "{player} venceu",
+    resultDraw: "Empate exaustivo",
+    resultTenpai: "Tenpai: {names}",
+    resultNoTenpai: "Ninguém estava em tenpai",
+    resultMatchOver: "Fim da partida",
     lanNameLabel: "Seu nome",
     lanNamePlaceholder: "Nome que aparece na mesa",
     lanSeatHost: "{name} (anfitrião)",
@@ -823,6 +833,8 @@ function startHand() {
     clientId: seats[i].clientId ?? null,
     wind: WINDS[(i - state.dealer + 4) % 4],
     score: state.players[i]?.score ?? 25000,
+    // What they sat down to the hand with; the result card shows the change.
+    handStartScore: state.players[i]?.score ?? 25000,
     hand: [],
     discards: [],
     melds: [],
@@ -1193,9 +1205,11 @@ function revealKanDora() {
 
 function nextTurn() {
   if (isGuest()) return;
+  // Checked before touching the action bar: a timer arriving after the hand has
+  // ended would otherwise wipe its "Next Hand" button.
+  if (state.gameOver) return;
   state.pendingAction = null;
   clearActions();
-  if (state.gameOver) return;
   state.turn = (state.lastDiscardFrom + 1) % 4;
   drawForTurn();
 }
@@ -1984,16 +1998,28 @@ function actionRank(labelKey) {
 }
 
 function showActions(actions) {
+  const key = actions.map(a => `${a.labelKey}:${(a.tiles ?? []).join("")}`).join("|");
+  const pop = key !== "" && key !== shownActionsKey;
+  shownActionsKey = key;
   els.actionBar.innerHTML = "";
   [...actions]
     .sort((a, b) => actionRank(a.labelKey) - actionRank(b.labelKey))
     .forEach(action => {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = [action.cls ?? "", action.labelKey ? `act-${action.labelKey}` : ""]
+      button.className = [action.cls ?? "", action.labelKey ? `act-${action.labelKey}` : "", pop ? "pop" : ""]
         .filter(Boolean)
         .join(" ");
-      button.textContent = action.labelKey ? t(action.labelKey, action.labelParams) : action.label;
+      button.textContent = (action.labelKey ? t(action.labelKey, action.labelParams) : action.label).trim();
+      // A call names its tiles by showing them: "Chi" and a 4 and 6 of bamboo
+      // reads at a glance where "Chi 4S6S" has to be decoded.
+      if (action.tiles?.length) {
+        const tiles = document.createElement("span");
+        tiles.className = "act-tiles";
+        tiles.setAttribute("aria-label", action.tiles.map(tileName).join(", "));
+        tiles.innerHTML = action.tiles.map(tile => `<span class="act-tile">${tileImage(tile)}</span>`).join("");
+        button.append(tiles);
+      }
       if (action.disabled) button.disabled = true;
       else button.addEventListener("click", action.onClick);
       els.actionBar.append(button);
@@ -2032,6 +2058,7 @@ function localizeMessageParams(key, params) {
   if (Number.isInteger(params.playerSeat)) {
     localized.player = playerLabel(params.playerSeat);
   }
+  if (Number.isFinite(params.points)) localized.points = formatPoints(params.points);
   if (key === "wins") {
     localized.player = playerLabel(params.winner);
     localized.winVerb = winVerb(params.winner);
@@ -2901,11 +2928,13 @@ function render() {
   els.statusText.textContent = state.messageKey ? formatMessage(state.messageKey, state.messageParams) : t("loading");
   const winReveal = document.querySelector("#winReveal");
   if (winReveal) winReveal.remove();
-  if (state.win) {
-    // Over the board, not in the action dock: the dock now floats just above the
+  if (state.gameOver) {
+    // Over the board, not in the action dock: the dock floats just above the
     // hand and is too small to host a full hand reveal.
-    els.centerPanel.insertAdjacentHTML("beforeend", renderWinReveal());
+    els.centerPanel.insertAdjacentHTML("beforeend", renderHandResult());
   }
+  // The result card says what the status line would, so only one of them shows.
+  els.statusText.hidden = state.gameOver;
 
   state.players.forEach((player, seat) => {
     const seatEl = els.seats[seat];
@@ -2914,7 +2943,7 @@ function render() {
       <div class="seat-header">
         <div>
           <div class="name">${windMarkHtml(player.wind)}${escapeHtml(playerLabel(seat))}</div>
-          <div class="score">${player.score.toLocaleString()} ${t("points")}</div>
+          <div class="score">${formatPoints(player.score)} ${t("points")}</div>
         </div>
         <div class="badges">${player.riichi ? `<span class="badge">${t("riichi")}</span>` : ""}${seat === state.dealer ? `<span class="badge">${t("dealer")}</span>` : ""}${seat === 0 && isFuriten(player) ? `<span class="badge">${t("furiten")}</span>` : ""}${state.gameOver && !state.win && state.drawTenpaiSeats.includes(seat) ? `<span class="badge">${t("tenpaiBadge")}</span>` : ""}</div>
       </div>
@@ -2927,6 +2956,8 @@ function render() {
       riverEl.innerHTML = renderRiver(player, seat);
     }
   });
+  // Whatever just landed has now been shown landing. A new hand restarts the count.
+  shownDiscardSeq = state.discardCount;
 
   renderActionBar();
   syncTable();
@@ -2953,7 +2984,7 @@ function viewerActions() {
   const pending = state.pendingAction;
   if (pending?.type === "awaitingHumanRon" && pending.winner === 0) {
     return [
-      { labelKey: "ron", cls: "win", onClick: () => act({ type: "ron" }) },
+      { labelKey: "ron", cls: "win", tiles: state.lastDiscard ? [state.lastDiscard] : [], onClick: () => act({ type: "ron" }) },
       { labelKey: "pass", cls: "pass", onClick: () => act({ type: "pass" }) }
     ];
   }
@@ -2961,13 +2992,14 @@ function viewerActions() {
     const options = callOptions(0, pending.tile, pending.fromSeat);
     const actions = [];
     if (options.kan) {
-      actions.push({ labelKey: "kan", labelParams: { tile: tileText(pending.tile) }, onClick: () => act({ type: "minkan" }) });
+      actions.push({ labelKey: "kan", labelParams: { tile: "" }, tiles: [pending.tile], onClick: () => act({ type: "minkan" }) });
     }
-    if (options.pon) actions.push({ labelKey: "pon", onClick: () => act({ type: "pon" }) });
+    if (options.pon) actions.push({ labelKey: "pon", tiles: [pending.tile], onClick: () => act({ type: "pon" }) });
     for (const option of options.chi) {
       actions.push({
         labelKey: "chi",
-        labelParams: { tiles: option.map(tileText).join("") },
+        labelParams: { tiles: "" },
+        tiles: option,
         onClick: () => act({ type: "chi", option })
       });
     }
@@ -2983,11 +3015,11 @@ function viewerActions() {
     actions.push({ labelKey: "riichi", onClick: () => act({ type: "riichi" }) });
   }
   for (const tile of legalAnkanOptions(me)) {
-    actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => act({ type: "ankan", tile }) });
+    actions.push({ labelKey: "kan", labelParams: { tile: "" }, tiles: [tile], onClick: () => act({ type: "ankan", tile }) });
   }
   if (!me.riichi) {
     for (const tile of kakanOptions(me)) {
-      actions.push({ labelKey: "kan", labelParams: { tile: tileText(tile) }, onClick: () => act({ type: "kakan", tile }) });
+      actions.push({ labelKey: "kan", labelParams: { tile: "" }, tiles: [tile], onClick: () => act({ type: "kakan", tile }) });
     }
   }
   if (canWin(me.hand, me.melds.length) && checkWin(0, "Tsumo", me.drawnTile)) {
@@ -3078,13 +3110,14 @@ function renderSeatBody(player, seat) {
   const hand = renderHand(player, seat);
   const melds = renderMeldTiles(player);
 
+  // Your calls sit to the right of your hand, the way they are laid out at a
+  // real table, and only once there are some: an empty "Melds" box used to take
+  // a quarter of the row the hand needs.
   if (seat === 0) {
     return `
       <div class="human-table">
         ${hand}
-        <div class="human-public">
-          ${renderTileLane(t("melds"), "melds", melds)}
-        </div>
+        ${melds ? `<div class="human-public" aria-label="${t("melds")}"><div class="melds">${melds}</div></div>` : ""}
       </div>
     `;
   }
@@ -3158,11 +3191,19 @@ function renderRiver(player, seat) {
   return `<div class="river-rows">${rows.join("")}</div>`;
 }
 
+// The table is redrawn far more often than anything happens on it, so an
+// animation keyed to "this is the latest tile" would replay on every redraw.
+// These remember what has already been shown arriving.
+let shownDiscardSeq = 0;
+let shownDrawKey = "";
+let shownActionsKey = "";
+
 function riverSlotHtml(entry, recent) {
   const classes = ["river-slot"];
   if (entry.riichi) classes.push("sideways");
   if (entry.tsumogiri) classes.push("tsumogiri");
   if (recent) classes.push("recent-slot");
+  if (recent && entry.seq > shownDiscardSeq) classes.push("fresh");
   // entry.seq is deliberately not drawn: the wall counter already tells you how
   // far into the hand you are, and a number on every tile buried the tiles.
   // It stays in the accessible label, where it costs no visual noise.
@@ -3210,28 +3251,82 @@ function renderTileLane(label, className, content) {
   `;
 }
 
-function renderWinReveal() {
-  const winner = escapeHtml(playerLabel(state.win.winner));
-  const handTiles = state.win.hand.map((tile, index) => {
-    const isWinTile = state.win.tile && index === state.win.hand.lastIndexOf(state.win.tile);
-    return tileHtml(tile, true, isWinTile);
-  }).join("");
-  const meldTiles = state.win.melds.flat().map(tile => tileHtml(tile, true)).join("");
-  const evaluation = state.win.evaluation;
-  const yakuLines = evaluation
-    ? evaluation.yakuList.map(y => `<li>${yakuDisplayName(y)}${y.yakuman ? "" : ` · ${y.han}han`}</li>`).join("")
-    : "";
-  const scoreLine = evaluation
-    ? `<div class="win-score">${evaluation.isYakuman ? "" : `${evaluation.han}han ${evaluation.fu}fu · `}${evaluation.points.toLocaleString()} ${t("points")}</div>`
-    : "";
+// What happened, at the moment the hand ends — a win, a draw, or the last hand
+// of the match. It replaces the status line for that moment rather than
+// repeating it, and shows what each player gained or lost, which is the thing
+// everyone at a table actually looks up to see.
+function renderHandResult() {
+  const evaluation = state.win?.evaluation;
+  let heading;
+  let detail = "";
+  let body = "";
+
+  if (state.win) {
+    heading = `<div class="result-kind">${state.win.type}!</div>
+      <div class="result-who">${escapeHtml(t("resultWinner", { player: playerLabel(state.win.winner) }))}</div>`;
+    const handTiles = state.win.hand.map((tile, index) => {
+      const isWinTile = state.win.tile && index === state.win.hand.lastIndexOf(state.win.tile);
+      return tileHtml(tile, true, isWinTile);
+    }).join("");
+    const meldTiles = state.win.melds.map(meld => `<span class="result-meld">${meld.map(tile => tileHtml(tile, true)).join("")}</span>`).join("");
+    body += `<div class="win-hand">${handTiles}${meldTiles ? `<span class="win-divider"></span>${meldTiles}` : ""}</div>`;
+    if (evaluation) {
+      const rows = evaluation.yakuList.map(y => `<li><span>${escapeHtml(yakuDisplayName(y))}</span><span class="result-han">${y.yakuman ? t("yakuManLabel") : t("yakuHan", { han: y.han })}</span></li>`).join("");
+      body += `<ul class="win-yaku-list">${rows}</ul>`;
+      detail = `<div class="win-score">
+        <span class="result-points">${formatPoints(evaluation.points)}</span>
+        <span class="result-unit">${t("points")}</span>
+        ${evaluation.isYakuman ? "" : `<span class="result-hanfu">${evaluation.han} han · ${evaluation.fu} fu</span>`}
+      </div>`;
+    }
+  } else {
+    const tenpai = state.drawTenpaiSeats.map(seat => escapeHtml(playerLabel(seat)));
+    heading = `<div class="result-kind draw">${t("resultDraw")}</div>
+      <div class="result-who">${tenpai.length ? t("resultTenpai", { names: tenpai.join(", ") }) : t("resultNoTenpai")}</div>`;
+  }
+
+  // Read top to bottom the way it happened: the hand, what it scored, who paid,
+  // and — if that was the last hand — where everyone finished.
   return `
-    <div id="winReveal" class="win-reveal" aria-live="polite">
-      <div class="section-label">${t("winningHand")} · ${winner}</div>
-      <div class="win-hand">${handTiles}${meldTiles ? `<span class="win-divider"></span>${meldTiles}` : ""}</div>
-      ${yakuLines ? `<ul class="win-yaku-list">${yakuLines}</ul>` : ""}
-      ${scoreLine}
+    <div id="winReveal" class="win-reveal${state.matchOver ? " match-over" : ""}" aria-live="polite">
+      ${heading}
+      ${body}
+      ${detail}
+      ${renderScoreChanges()}
+      ${state.matchOver ? renderStandings() : ""}
     </div>
   `;
+}
+
+// Each player's net for the hand, in seat order from your chair. Saves from
+// before this was recorded have no starting score, and simply show nothing.
+function renderScoreChanges() {
+  if (state.players.some(p => typeof p.handStartScore !== "number")) return "";
+  const cells = state.players.map((player, seat) => {
+    const delta = player.score - player.handStartScore;
+    const tone = delta > 0 ? "up" : delta < 0 ? "down" : "even";
+    const sign = delta > 0 ? "+" : delta < 0 ? "−" : "±";
+    return `<li class="delta ${tone}"><span class="delta-name">${escapeHtml(playerLabel(seat))}</span><span class="delta-value">${sign}${formatPoints(Math.abs(delta))}</span></li>`;
+  }).join("");
+  return `<ul class="result-deltas">${cells}</ul>`;
+}
+
+function renderStandings() {
+  const order = state.players
+    .map((player, seat) => ({ seat, score: player.score }))
+    .sort((a, b) => b.score - a.score || a.seat - b.seat);
+  const rows = order.map((entry, place) => `<li class="${place === 0 ? "first" : ""}">
+      <span class="place">${place + 1}º</span>
+      <span class="standing-name">${escapeHtml(playerLabel(entry.seat))}</span>
+      <span class="standing-score">${formatPoints(entry.score)}</span>
+    </li>`).join("");
+  return `<div class="result-final">${t("resultMatchOver")}</div><ol class="result-standings">${rows}</ol>`;
+}
+
+// Points read the way the player's language writes numbers: 25.000 in
+// Portuguese, 25,000 in English.
+function formatPoints(value) {
+  return Number(value).toLocaleString(currentLanguage === "pt" ? "pt-BR" : "en-US");
 }
 
 function renderHand(player, seat) {
@@ -3252,7 +3347,7 @@ function renderHand(player, seat) {
     .map(entry => tileButton(entry.tile, entry.index, "", handLocked))
     .join("");
   const drawSlot = drawnIndex >= 0
-    ? tileButton(player.hand[drawnIndex], drawnIndex, "drawn")
+    ? tileButton(player.hand[drawnIndex], drawnIndex, freshDrawClass(player))
     : `<span class="draw-placeholder" aria-hidden="true"></span>`;
   setTimeout(bindHumanTiles, 0);
   return `
@@ -3263,10 +3358,20 @@ function renderHand(player, seat) {
   `;
 }
 
+function freshDrawClass(player) {
+  const key = `${state.round}:${state.honba}:${state.discardCount}:${player.drawnTile}`;
+  if (key === shownDrawKey) return "drawn";
+  shownDrawKey = key;
+  return "drawn fresh";
+}
+
 function tileButton(tile, index, extraClass = "", forceDisabled = false) {
     const disabled = forceDisabled || state.turn !== 0 || !state.pendingDiscard || state.gameOver ? "disabled" : "";
     const title = t("discardTitle", { tile: tileName(tile) });
-    return `<button type="button" class="tile ${extraClass} ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="${title}" aria-label="${title}">${tileImage(tile)}</button>`;
+    // "locked" is the riichi hand that may not change: the one case where a
+    // greyed tile says something. Otherwise a tile is merely not yours to play yet.
+    const locked = forceDisabled ? "locked" : "";
+    return `<button type="button" class="tile ${extraClass} ${locked} ${tileClass(tile)}" data-tile-index="${index}" ${disabled} title="${title}" aria-label="${title}">${tileImage(tile)}</button>`;
 }
 
 // Discarding is a deliberate act: pull the tile out of your hand and let go, or
