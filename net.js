@@ -60,9 +60,56 @@ const LanNet = (() => {
     };
   }
 
+  // In the app the connection is made natively. Its page is served over
+  // https://localhost, and a page served over https may not open a plain ws://
+  // connection: the WebView refuses it as mixed content. A table on home Wi-Fi
+  // has no certificate to offer, so the app's own socket carries it instead.
+  function nativeClient() {
+    const capacitor = window.Capacitor;
+    if (!capacitor?.isNativePlatform?.()) return null;
+    return capacitor.Plugins?.LanClient ?? null;
+  }
+
+  async function joinRoomNatively(client, url, handlers) {
+    const listeners = [
+      await client.addListener("message", e => handlers.onMessage?.(decode(e.message))),
+      await client.addListener("close", e => {
+        removeAll();
+        handlers.onClose?.({ code: e.code, clean: !e.remote });
+      }),
+      await client.addListener("error", e => handlers.onError?.(new Error(e.message)))
+    ];
+    function removeAll() {
+      listeners.splice(0).forEach(listener => listener.remove());
+    }
+    try {
+      await client.connect({ url });
+    } catch {
+      removeAll();
+      throw new Error("Could not reach that table.");
+    }
+    return {
+      send: message => client.send({ message: encode(message) }),
+      close: () => {
+        removeAll();
+        client.close();
+      }
+    };
+  }
+
   // Join a room being held by another device. Resolves once the socket is open
   // so the caller can tell "connected" from "wrong address" without guessing.
   function joinRoom({ address, port = DEFAULT_PORT, ...handlers } = {}) {
+    const client = nativeClient();
+    if (client) {
+      let url;
+      try {
+        url = buildUrl(address, port);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+      return joinRoomNatively(client, url, handlers);
+    }
     return new Promise((resolve, reject) => {
       let socket;
       try {

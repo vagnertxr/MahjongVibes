@@ -29,6 +29,7 @@ public class MainActivity extends BridgeActivity {
         // Registered before the bridge starts so the web layer can ask whether
         // this device is able to hold a table as soon as it loads.
         registerPlugin(LanServerPlugin.class);
+        registerPlugin(LanClientPlugin.class);
         super.onCreate(savedInstanceState);
         drawIntoCutout();
         hideSystemBars();
