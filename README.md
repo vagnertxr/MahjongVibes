@@ -50,7 +50,7 @@ Up to four people can share a table, each on their own phone, as long as they ar
 
 1. Everyone opens **Network** and types the name they want shown at the table.
 2. On the phone that will hold the table, tap **Create Room**. It shows an address such as `192.168.0.12:8787`.
-3. Everyone else types that address and taps **Join Room**. Joining also works from a browser; only holding a room needs the app.
+3. Everyone else types that address in their app and taps **Join Room**. A browser can join too, but only when the game is opened over plain http on the same network (as `tools/server.py` serves it): the web version on GitHub Pages is https, and browsers will not let an https page reach a table on the local network.
 4. The panel lists the four chairs by name as people arrive. The host taps **Start Shared Match** whenever they like; any empty chair gets a bot.
 
 Each player sees the table from their own chair and only their own tiles. If someone's connection drops, a bot plays their chair until they join again, which puts them back in it with the hand they left. Someone who arrives during a match is dealt in at the next hand. When the host closes the room, everyone goes back to the solo match they had before.

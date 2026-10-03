@@ -93,7 +93,8 @@ const I18N = {
     lanTitle: "Play over the local network",
     lanHeading: "Local Network",
     lanIntro: "Create a room and read the address out to the others, or type the address of a phone that already has one. Once they are in, start the match: anyone missing is replaced by a bot.",
-    lanIntroGuestOnly: "Type the address of the phone holding the table. Only the installed app can hold a room; from a browser you can join one.",
+    lanIntroGuestOnly: "Type the address of the phone holding the table. Holding a room needs the app. A browser can join only when the game is opened over plain http on the same network, as tools/server.py serves it.",
+    lanNeedsApp: "This page is served securely (https), and browsers will not let it reach a table on the local network. Join from the app instead.",
     lanCreateRoom: "Create Room",
     lanJoinRoom: "Join Room",
     lanLeave: "Disconnect",
@@ -295,7 +296,8 @@ const I18N = {
     lanTitle: "Jogar pela rede local",
     lanHeading: "Rede Local",
     lanIntro: "Crie uma sala e diga o endereço em voz alta para os outros, ou digite o endereço de um celular que já criou uma. Com todos dentro, comece a partida: quem faltar vira bot.",
-    lanIntroGuestOnly: "Digite o endereço do celular que está com a mesa. Só o app instalado consegue manter uma sala; pelo navegador dá para entrar em uma.",
+    lanIntroGuestOnly: "Digite o endereço do celular que está com a mesa. Criar uma sala exige o app. Pelo navegador só dá para entrar quando o jogo é aberto por http simples na mesma rede, como o tools/server.py serve.",
+    lanNeedsApp: "Esta página é servida de forma segura (https), e o navegador não deixa ela alcançar uma mesa na rede local. Entre pelo app.",
     lanCreateRoom: "Criar Sala",
     lanJoinRoom: "Entrar na Sala",
     lanLeave: "Desconectar",
@@ -2753,7 +2755,10 @@ async function joinLanRoom() {
     setLanStatus("lanJoined", { address: els.lanAddress.value.trim() });
     updateLanPanel();
   } catch (error) {
-    setLanStatus("lanFailed", { reason: error.message });
+    // A page served over https may not open ws:// at all; say why in words a
+    // player can act on rather than the browser's own message.
+    if (error?.name === "SecurityError") setLanStatus("lanNeedsApp");
+    else setLanStatus("lanFailed", { reason: error.message });
   }
 }
 

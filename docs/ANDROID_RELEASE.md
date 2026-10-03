@@ -90,9 +90,14 @@ npm install && npm run sync && cd android && ./gradlew assembleDebug
 
 ## Phase 2 — A Local Server on the Host Device — **done**
 
-Joining was the easy half: `new WebSocket('ws://<host>:<port>')` works from
-ordinary JavaScript inside the WebView, with no plugin and no permission beyond
-the `INTERNET` Capacitor already declares.
+Joining looked like the easy half: `new WebSocket('ws://<host>:<port>')` from
+ordinary JavaScript. It works in a browser page served over http, but not in the
+app: Capacitor serves the page from `https://localhost`, and the WebView refuses
+an insecure `ws://` connection from a secure page. So the app joins through a
+second small plugin, `LanClientPlugin` (a WebSocket client in Java, the same
+library as the server), and `net.js` only falls back to the browser's
+`WebSocket` outside the app. A browser on an https page — GitHub Pages, for
+one — cannot join at all and says so.
 
 Hosting needed native code, because a WebView can open a socket but never listen
 on one. `LanServerPlugin` is that server. It exposes `start`, `stop`, `send`,
@@ -271,9 +276,11 @@ waiting. Each was checked against a deliberately broken copy of the game.
 
 ## What Is Left
 
-- **The host has never run on a phone.** `LanServerPlugin` compiles and its JS
-  side is tested over a stand-in relay, but the first real match between two
-  phones is still the test that matters most.
+- **No match between two real phones yet.** `tests/device/android-e2e.mjs`
+  runs the real app on an Android emulator and plays both roles against a Node
+  device — the app joining a table, and the app holding one — which is how the
+  https problem above was found and its fix proven. Two phones on one Wi-Fi is
+  still the test that matters most.
 - **A sleeping host pauses the table.** When the host's screen turns off, the
   WebView stops its timers and the bots stop moving. Keeping the screen awake
   would need another native plugin, and should wait until a real match shows
