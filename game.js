@@ -530,6 +530,29 @@ function yakuDisplayName(entry) {
 // open hand, and `closed` marks the ones an open hand cannot have at all.
 // Keep this in step with scoreHand: it is a description of that function, and a
 // yaku listed here that the code never awards is a lie to the player.
+// Shorthand for writing example hands: a run of three, and n of a kind.
+function exampleRun(start, suit) {
+  return [0, 1, 2].map(step => `${start + step}${suit}`);
+}
+
+function exampleSet(tile, count) {
+  return Array.from({ length: count }, () => tile);
+}
+
+// Every yaku this game actually scores, in the order the reference screen shows
+// them. `han` is what scoreHand awards; `openHan` is the reduced value for an
+// open hand, and `closed` marks the ones an open hand cannot have at all.
+// Keep this in step with scoreHand: it is a description of that function, and a
+// yaku listed here that the code never awards is a lie to the player.
+//
+// `example` is a whole winning hand, in groups. `mark` picks out the groups the
+// yaku is about ("all" when it is the whole hand), `open` the ones that were
+// called — drawn with the called tile turned — and `win` how it was finished
+// when that matters (default: drawing the last tile shown). Yaku that are about
+// a moment rather than a shape — riichi, haitei, rinshan — have none: a hand
+// would not show what they are. tests/yaku-examples.test.mjs scores every
+// example with the game's own evaluator and fails if the yaku is not awarded,
+// so a picture here cannot drift from the rules.
 const YAKU_REFERENCE = [
   {
     section: "yakuLuck",
@@ -547,21 +570,23 @@ const YAKU_REFERENCE = [
   {
     section: "yakuShape",
     items: [
-      { key: "tanyao", han: 1 },
-      { key: "yakuhai", han: 1 },
-      { key: "pinfu", han: 1, closed: true },
-      { key: "iipeiko", han: 1, closed: true },
-      { key: "sanshokuDoujun", han: 2, openHan: 1 },
-      { key: "ittsuu", han: 2, openHan: 1 },
-      { key: "chanta", han: 2, openHan: 1 },
-      { key: "junchan", han: 3, openHan: 2 },
-      { key: "toitoi", han: 2 },
-      { key: "sanankou", han: 2 },
-      { key: "sanshokuDoukou", han: 2 },
-      { key: "shousangen", han: 2 },
-      { key: "chiitoitsu", han: 2, closed: true },
-      { key: "honitsu", han: 3, openHan: 2 },
-      { key: "chinitsu", han: 6, openHan: 5 }
+      { key: "tanyao", han: 1, example: { groups: [exampleRun(2, "m"), exampleRun(4, "p"), exampleRun(6, "s"), exampleSet("3s", 3), exampleSet("5p", 2)], mark: "all" } },
+      { key: "yakuhai", han: 1, example: { groups: [exampleRun(1, "m"), exampleRun(4, "p"), exampleRun(7, "s"), exampleSet("R", 3), exampleSet("2s", 2)], mark: [3] } },
+      // Won on the 6s, waiting on both sides of the 7-8.
+      { key: "pinfu", han: 1, closed: true, example: { groups: [exampleRun(1, "m"), exampleRun(4, "m"), exampleRun(2, "p"), exampleRun(6, "s"), exampleSet("9p", 2)], mark: "all", win: { tile: "6s", by: "Ron" } } },
+      { key: "iipeiko", han: 1, closed: true, example: { groups: [exampleRun(2, "m"), exampleRun(2, "m"), exampleRun(5, "p"), exampleRun(7, "s"), exampleSet("1p", 2)], mark: [0, 1] } },
+      { key: "sanshokuDoujun", han: 2, openHan: 1, example: { groups: [exampleRun(3, "m"), exampleRun(3, "p"), exampleRun(3, "s"), exampleRun(6, "m"), exampleSet("9s", 2)], mark: [0, 1, 2] } },
+      { key: "ittsuu", han: 2, openHan: 1, example: { groups: [exampleRun(1, "p"), exampleRun(4, "p"), exampleRun(7, "p"), exampleRun(2, "s"), exampleSet("5m", 2)], mark: [0, 1, 2] } },
+      { key: "chanta", han: 2, openHan: 1, example: { groups: [exampleRun(1, "m"), exampleRun(7, "p"), exampleSet("9s", 3), exampleSet("N", 3), exampleSet("Wh", 2)], mark: "all" } },
+      { key: "junchan", han: 3, openHan: 2, example: { groups: [exampleRun(1, "m"), exampleRun(7, "m"), exampleRun(1, "p"), exampleSet("9s", 3), exampleSet("1s", 2)], mark: "all" } },
+      // Three of the triplets called: four concealed would be suuankou instead.
+      { key: "toitoi", han: 2, example: { groups: [exampleSet("2m", 3), exampleSet("5p", 3), exampleSet("7s", 3), exampleSet("N", 3), exampleSet("9m", 2)], mark: "all", open: [0, 1, 2], win: { tile: "9m", by: "Ron" } } },
+      { key: "sanankou", han: 2, example: { groups: [exampleSet("2m", 3), exampleSet("4p", 3), exampleSet("6s", 3), exampleRun(3, "m"), exampleSet("8p", 2)], mark: [0, 1, 2] } },
+      { key: "sanshokuDoukou", han: 2, example: { groups: [exampleSet("3m", 3), exampleSet("3p", 3), exampleSet("3s", 3), exampleRun(7, "m"), exampleSet("E", 2)], mark: [0, 1, 2] } },
+      { key: "shousangen", han: 2, example: { groups: [exampleSet("R", 3), exampleSet("G", 3), exampleRun(1, "m"), exampleRun(4, "p"), exampleSet("Wh", 2)], mark: [0, 1, 4] } },
+      { key: "chiitoitsu", han: 2, closed: true, example: { groups: [exampleSet("1m", 2), exampleSet("3m", 2), exampleSet("5p", 2), exampleSet("7p", 2), exampleSet("2s", 2), exampleSet("9s", 2), exampleSet("N", 2)], mark: "all" } },
+      { key: "honitsu", han: 3, openHan: 2, example: { groups: [exampleRun(1, "p"), exampleRun(3, "p"), exampleSet("7p", 3), exampleSet("W", 3), exampleSet("N", 2)], mark: "all" } },
+      { key: "chinitsu", han: 6, openHan: 5, example: { groups: [exampleRun(1, "s"), exampleRun(3, "s"), exampleSet("6s", 3), exampleRun(7, "s"), exampleSet("9s", 2)], mark: "all" } }
     ]
   },
   {
@@ -569,22 +594,23 @@ const YAKU_REFERENCE = [
     items: [
       { key: "tenhou" },
       { key: "chiihou" },
-      { key: "daisangen" },
-      { key: "shousuushii" },
-      { key: "daisuushii" },
-      { key: "tsuuiisou" },
-      { key: "chinroutou" },
-      { key: "ryuuiisou" },
-      { key: "suukantsu" },
-      { key: "suuankou", double: "yakumanSuuankou" },
-      { key: "chuurenPoutou", closed: true, double: "yakumanChuuren" },
-      { key: "kokushi", closed: true, double: "yakumanKokushi" }
+      { key: "daisangen", example: { groups: [exampleSet("Wh", 3), exampleSet("G", 3), exampleSet("R", 3), exampleRun(1, "m"), exampleSet("5p", 2)], mark: [0, 1, 2] } },
+      { key: "shousuushii", example: { groups: [exampleSet("E", 3), exampleSet("S", 3), exampleSet("W", 3), exampleRun(1, "m"), exampleSet("N", 2)], mark: [0, 1, 2, 4] } },
+      { key: "daisuushii", example: { groups: [exampleSet("E", 3), exampleSet("S", 3), exampleSet("W", 3), exampleSet("N", 3), exampleSet("5m", 2)], mark: [0, 1, 2, 3] } },
+      { key: "tsuuiisou", example: { groups: [exampleSet("E", 3), exampleSet("S", 3), exampleSet("Wh", 3), exampleSet("G", 3), exampleSet("N", 2)], mark: "all" } },
+      { key: "chinroutou", example: { groups: [exampleSet("1m", 3), exampleSet("9m", 3), exampleSet("1p", 3), exampleSet("9s", 3), exampleSet("9p", 2)], mark: "all", open: [0, 1], win: { tile: "9p", by: "Ron" } } },
+      { key: "ryuuiisou", example: { groups: [exampleRun(2, "s"), exampleRun(2, "s"), exampleSet("6s", 3), exampleSet("G", 3), exampleSet("8s", 2)], mark: "all" } },
+      { key: "suukantsu", example: { groups: [exampleSet("1m", 4), exampleSet("5p", 4), exampleSet("9s", 4), exampleSet("E", 4), exampleSet("N", 2)], mark: [0, 1, 2, 3], open: [0, 1, 2, 3] } },
+      { key: "suuankou", double: "yakumanSuuankou", example: { groups: [exampleSet("2m", 3), exampleSet("5p", 3), exampleSet("7s", 3), exampleSet("9s", 3), exampleSet("E", 2)], mark: [0, 1, 2, 3] } },
+      { key: "chuurenPoutou", closed: true, double: "yakumanChuuren", example: { groups: [["1m", "1m", "1m", "2m", "3m", "4m", "5m", "5m", "6m", "7m", "8m", "9m", "9m", "9m"]], mark: "all" } },
+      { key: "kokushi", closed: true, double: "yakumanKokushi", example: { groups: [["1m", "9m", "1p", "9p", "1s", "9s", "E", "S", "W", "N", "Wh", "G", "R", "R"]], mark: "all" } }
     ]
   },
   {
     section: "yakuBonus",
     items: [
-      { key: "dora" },
+      // An indicator and the dora it points at: the next tile in order.
+      { key: "dora", example: { indicator: "4p" } },
       { key: "uraDora" }
     ]
   }
@@ -2777,11 +2803,35 @@ function renderYakuOverlay() {
       return `<li>
         <div class="yaku-head"><span class="yaku-name">${YAKU_NAMES[item.key][currentLanguage]}</span>${tags.join("")}</div>
         <p>${copy.yakuDesc[item.key]}${note}</p>
+        ${item.example ? yakuExampleHtml(item.example) : ""}
       </li>`;
     }).join("");
     return `<section><h3>${copy[section.section]}</h3><ul class="yaku-rows">${rows}</ul></section>`;
   }).join("");
   els.yakuOverlayContent.innerHTML = `<p class="intro-copy">${copy.yakuIntro}</p>${sections}`;
+}
+
+// A winning hand laid out in its groups, the groups that make the yaku picked
+// out. A called group shows its called tile turned on its side, the way a call
+// is laid down at a real table. Decorative to a screen reader: the description
+// above it already says what the hand shows.
+function yakuExampleHtml(example) {
+  const tile = (name, extra = "") => `<span class="tile small ${tileClass(name)}${extra}">${tileImage(name)}</span>`;
+  if (example.indicator) {
+    const dora = doraFromIndicator(example.indicator);
+    return `<div class="yaku-example dora-example" aria-hidden="true">
+      <span class="yaku-group"><span class="yaku-cap">${t("indicator")}</span>${tile(example.indicator)}</span>
+      <span class="yaku-arrow">→</span>
+      <span class="yaku-group marked"><span class="yaku-cap">${t("doraWord")}</span>${tile(dora)}</span>
+    </div>`;
+  }
+  const open = new Set(example.open ?? []);
+  const groups = example.groups.map((group, index) => {
+    const marked = example.mark === "all" || example.mark?.includes(index);
+    const tiles = group.map((name, at) => tile(name, open.has(index) && at === 0 ? " called" : "")).join("");
+    return `<span class="yaku-group${marked ? " marked" : ""}${open.has(index) ? " open" : ""}">${tiles}</span>`;
+  }).join("");
+  return `<div class="yaku-example" aria-hidden="true">${groups}</div>`;
 }
 
 function toggleRules() {
